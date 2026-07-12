@@ -1,5 +1,5 @@
 ---
-name: prd-discovery
+name: zion-prd-discovery
 description: Estágio 1 do harness — conduz a descoberta enxuta (visão, persona, faz/não-faz) e grava docs/discovery.md
 argument-hint: "Ideia bruta do produto e, se houver, URLs de referência"
 metadata:
@@ -8,7 +8,7 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
-# prd-discovery — Estágio 1 do harness (Descoberta enxuta)
+# zion-prd-discovery — Estágio 1 do harness (Descoberta enxuta)
 
 Orquestra o Estágio 1 do harness (Descoberta enxuta). Sequência completa dos estágios e a
 fronteira o-quê/como em `references/process-context.md`. Contrato de 5 fases; todos os gates
@@ -39,4 +39,4 @@ Ao terminar, confira `docs/discovery.md` contra o critério **discovery** de `qu
 Emita veredito: `✓` cada item ok, ou `⚠ <item> faltando — sugiro <correção>`. Não reverta nada.
 
 ## Saída
-`docs/discovery.md` — insumo direto do `/prd-spike` (Estágio 2) e do `/prd-write` (Estágio 3).
+`docs/discovery.md` — insumo direto do `/zion-prd-spike` (Estágio 2) e do `/zion-prd-write` (Estágio 3).

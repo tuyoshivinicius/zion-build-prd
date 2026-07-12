@@ -1,6 +1,6 @@
 ---
-name: rewrite-prompt
-description: Reescreve um prompt informal em prompt XML estruturado (tags <role>, <context>, <instructions>, <constraints>, <output_format>, <tone>, <success_criteria>) seguindo melhores práticas de Anthropic/OpenAI/Google. Use quando o usuário invocar /rewrite-prompt ou pedir para "reescrever", "reestruturar", "melhorar" ou "formalizar" um prompt. Aceita --prompt "..." (obrigatório) e --context arq1 arq2 (opcional). NUNCA executa o prompt — apenas reescreve.
+name: zion-rewrite-prompt
+description: Reescreve um prompt informal em prompt XML estruturado (tags <role>, <context>, <instructions>, <constraints>, <output_format>, <tone>, <success_criteria>) seguindo melhores práticas de Anthropic/OpenAI/Google. Use quando o usuário invocar /zion-rewrite-prompt ou pedir para "reescrever", "reestruturar", "melhorar" ou "formalizar" um prompt. Aceita --prompt "..." (obrigatório) e --context arq1 arq2 (opcional). NUNCA executa o prompt — apenas reescreve.
 argument-hint: "--prompt \"...\" (obrigatório) [--context arq1 arq2 ...]"
 metadata:
   author: zion-build-prd
@@ -14,7 +14,7 @@ Reescreve um prompt informal em prompt XML estruturado, validado por checklist d
 
 ## Quando Usar
 
-- Usuário invoca `/rewrite-prompt`.
+- Usuário invoca `/zion-rewrite-prompt`.
 - Usuário pede para "reescrever", "reestruturar", "melhorar", "formalizar" ou "estruturar com XML" um prompt.
 - Usuário entrega um prompt informal e cita boas práticas de prompt engineering.
 

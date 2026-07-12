@@ -1,5 +1,5 @@
 ---
-name: prd-specify-prompt
+name: zion-prd-specify-prompt
 description: Ponte para o Spec Kit — monta o prompt do /speckit.specify de uma fatia vertical, blindando a fronteira sem-stack, e entrega para você disparar
 argument-hint: "Qual fatia vertical do backlog transformar em prompt de specify"
 metadata:
@@ -8,14 +8,14 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
-# prd-specify-prompt — Ponte do harness para o Spec Kit (Passo 5b)
+# zion-prd-specify-prompt — Ponte do harness para o Spec Kit (Passo 5b)
 
 Prepara o input do `/speckit.specify` de UMA fatia vertical. Encerra o território do harness: entrega
 o prompt pronto e para — o ciclo `/speckit.*` é seu. Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
-Deve existir um backlog de fatias verticais (saída de `/prd-decompose`). O usuário aponta **qual**
-fatia. Se não houver backlog, avise ("recomendo `/prd-decompose` antes") e pergunte se segue.
+Deve existir um backlog de fatias verticais (saída de `/zion-prd-decompose`). O usuário aponta **qual**
+fatia. Se não houver backlog, avise ("recomendo `/zion-prd-decompose` antes") e pergunte se segue.
 
 ## Fase 1 — Validar entrada bruta (aconselha)
 A fatia deve ter um **resultado observável** (o que o usuário consegue fazer/ver ao final). Se o
@@ -23,7 +23,7 @@ usuário descreve a fatia citando **biblioteca/framework/stack**, avise: "isso �
 `specify`" (veja `quality-rules.md` `#fronteira`). Não bloqueie.
 
 ## Fase 2/3 — Formatar e auto-delegar
-Invoque `rewrite-prompt` no mesmo turno para montar o prompt XML do `specify`, seguindo
+Invoque `zion-rewrite-prompt` no mesmo turno para montar o prompt XML do `specify`, seguindo
 `quality-rules.md` `#anatomia-specify`:
 - `<constraints>` — blinda "não citar linguagem/framework/bibliotecas; stack só no `plan`".
 - `<context>` — `RF-xx` e ADRs relevantes como **referência**, não como requisito.

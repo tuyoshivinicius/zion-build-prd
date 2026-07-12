@@ -1,5 +1,5 @@
 ---
-name: prd-spike
+name: zion-prd-spike
 description: Estágio 2 do harness — pesquisa trade-offs das decisões estruturantes e registra ADRs antes da PRD
 argument-hint: "Opcional: as 2–3 decisões estruturantes, se você já as conhece"
 metadata:
@@ -8,14 +8,14 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
-# prd-spike — Estágio 2 do harness (Spikes técnicos + ADRs)
+# zion-prd-spike — Estágio 2 do harness (Spikes técnicos + ADRs)
 
 Orquestra o Estágio 2 do harness (Spikes técnicos + ADRs). Sequência dos estágios e fronteira
 o-quê/como em `references/process-context.md`. Contrato de 5 fases; gates aconselham.
 Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
-`docs/discovery.md` deve existir. Se não existir, avise: "recomendo rodar `/prd-discovery` antes" e
+`docs/discovery.md` deve existir. Se não existir, avise: "recomendo rodar `/zion-prd-discovery` antes" e
 pergunte se segue mesmo assim. Não bloqueie.
 
 ## Fase 1 — Levantar e validar as decisões estruturantes (aconselha)
@@ -33,7 +33,7 @@ filtro "isso muda a PRD inteira?"; candidata que não passa, descarte ou consoli
 frase, persona nomeada, quadro Faz/Não faz. Se uma peça necessária faltar ou for vaga (ex.: sem o
 quadro Faz/Não faz não há como isolar uma fronteira de integração), **não fabrique** candidatas para
 preencher a cota: aponte qual peça falta e por quê ela trava a inferência, proponha só o que o texto
-sustenta, e peça a peça faltante ou sugira rodar `/prd-discovery`. Não bloqueie.
+sustenta, e peça a peça faltante ou sugira rodar `/zion-prd-discovery`. Não bloqueie.
 
 **Apresentação (B/C).** Entregue as 2–3 (ou só o complemento faltante) como recomendação direta e
 enxuta, cada uma com uma linha de justificativa ancorada no discovery. Sem shortlist longa.
@@ -49,7 +49,7 @@ Para cada decisão, no mesmo turno:
    `deep-research` estiver disponível, invoque-a para isso; se **não** estiver (harness antigo ou
    variante), avise "`deep-research` (built-in) indisponível — seguindo com pesquisa manual" e
    conduza o levantamento manualmente. Nunca quebre por falta dela.
-2. Invoque `adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
+2. Invoque `zion-adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
 
 ## Fase 4 — Validar saída (aconselha)
 Confira contra o critério **spike** de `quality-rules.md` `#criterios-de-conclusao`: cada decisão tem
