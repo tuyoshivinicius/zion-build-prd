@@ -87,3 +87,5 @@ custo:
   genérico ('código limpo', 'boa cobertura')". Impede platitude de virar princípio.
 - `<success_criteria>` — todo princípio é **decidível** ∧ **rastreável** a um NFR/ADR; nenhum
   genérico. É o que torna a `constitution` cobrável depois.
+
+<!-- sentinela de teste -->
