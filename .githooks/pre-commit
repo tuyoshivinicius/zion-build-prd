@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Regenera os references/ derivados a partir de assets/ e os inclui no commit.
+# Ativado por: git config core.hooksPath .githooks  (rode scripts/setup-hooks.sh).
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+# sync é só cp (barato) → roda incondicionalmente. Se falhar, aborta o commit.
+./scripts/sync-assets.sh >/dev/null
+
+# stage dos references regenerados; no-op se nada mudou.
+git add skills/*/references/
