@@ -11,7 +11,7 @@ disable-model-invocation: false
 # prd-write — Estágio 3 do harness (PRD enxuta)
 
 Orquestra o Passo 3 do guia `docs/guia-prd-para-spec-kit.md`. Contrato de 5 fases; gates aconselham.
-Regras em `.specify/prd/quality-rules.md`. Este é o coração do harness: a Fase 4 guarda a fronteira
+Regras em `references/quality-rules.md`. Este é o coração do harness: a Fase 4 guarda a fronteira
 **o-quê/por-quê vs. como**.
 
 ## Fase 0 — Pré-requisito (aconselha)
@@ -24,7 +24,7 @@ fraco. Não bloqueie.
 Não há texto novo do usuário aqui — o comando trabalha sobre os artefatos existentes.
 
 ## Fase 2 — Formatar
-Se `docs/PRD.md` ainda não existe, copie `.specify/prd/templates/prd-skeleton.md` → `docs/PRD.md`
+Se `docs/PRD.md` ainda não existe, copie `references/prd-skeleton.md` → `docs/PRD.md`
 (as 12 seções em branco) como ponto de partida.
 
 ## Fase 3 — Auto-delegar

@@ -11,7 +11,7 @@ disable-model-invocation: false
 # prd-spike — Estágio 2 do harness (Spikes técnicos + ADRs)
 
 Orquestra o Passo 2 do guia `docs/guia-prd-para-spec-kit.md`. Contrato de 5 fases; gates aconselham.
-Regras em `.specify/prd/quality-rules.md`.
+Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
 `docs/discovery.md` deve existir. Se não existir, avise: "recomendo rodar `/prd-discovery` antes" e

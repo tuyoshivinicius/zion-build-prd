@@ -11,7 +11,7 @@ disable-model-invocation: false
 # prd-specify-prompt — Ponte do harness para o Spec Kit (Passo 5b)
 
 Prepara o input do `/speckit.specify` de UMA fatia vertical. Encerra o território do harness: entrega
-o prompt pronto e para — o ciclo `/speckit.*` é seu. Regras em `.specify/prd/quality-rules.md`.
+o prompt pronto e para — o ciclo `/speckit.*` é seu. Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
 Deve existir um backlog de fatias verticais (saída de `/prd-decompose`). O usuário aponta **qual**

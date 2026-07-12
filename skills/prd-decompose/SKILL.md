@@ -11,7 +11,7 @@ disable-model-invocation: false
 # prd-decompose — Estágio 4 do harness (Decomposição)
 
 Orquestra o Passo 4 do guia `docs/guia-prd-para-spec-kit.md`. Contrato de 5 fases; gates aconselham.
-Regras em `.specify/prd/quality-rules.md`.
+Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
 `docs/PRD.md` deve existir e conter a seção de `RF-xx` por épico. Faltando → avise ("recomendo
@@ -31,7 +31,7 @@ Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-co
   demo ponta-a-ponta?". Se a resposta é "só a UI" ou "só o back", a fatia é **horizontal** → aponte e
   sugira refatiar pelos eixos do **SPIDR**.
 - O **walking skeleton** é a fatia zero (R0).
-- Injete a tabela: copie `.specify/prd/templates/traceability-table.md` para a **seção 12** de
+- Injete a tabela: copie `references/traceability-table.md` para a **seção 12** de
   `docs/PRD.md` e preencha uma linha por `RF-xx` in-scope (deixe Feature/Spec e Status pendentes).
 Emita veredito por item. Não reverta — aconselhe.
 

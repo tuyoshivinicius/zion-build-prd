@@ -12,7 +12,7 @@ disable-model-invocation: false
 
 Prepara o input do `/speckit.constitution` — o **bootstrap, uma vez por projeto**. Monta o prompt
 que deriva princípios **decidíveis** dos NFRs e restrições (ADRs) da PRD, entrega pronto e para — o
-ciclo `/speckit.*` é seu. Regras em `.specify/prd/quality-rules.md`.
+ciclo `/speckit.*` é seu. Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
 Deve existir `docs/PRD.md` (saída de `/prd-write`) com NFRs e restrições vindas de ADRs. Não depende

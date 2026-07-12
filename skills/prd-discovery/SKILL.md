@@ -11,7 +11,7 @@ disable-model-invocation: false
 # prd-discovery — Estágio 1 do harness (Descoberta enxuta)
 
 Orquestra o Passo 1 do guia `docs/guia-prd-para-spec-kit.md`. Contrato de 5 fases; todos os gates
-**aconselham** (apontam e sugerem), nunca bloqueiam. Regras em `.specify/prd/quality-rules.md`.
+**aconselham** (apontam e sugerem), nunca bloqueiam. Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito
 Nenhum. Este é a entrada do funil.
