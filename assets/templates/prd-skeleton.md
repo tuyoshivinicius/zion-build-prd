@@ -41,4 +41,4 @@ Riscos de produto/técnicos e mitigação prevista.
 `[NEEDS CLARIFICATION]` que ainda não são bloqueantes — resolvidos até o gate `/speckit.clarify` (P5b).
 
 ## 12. Rastreabilidade
-Ver `.specify/prd/templates/traceability-table.md` (mantida dentro desta PRD).
+Tabela de rastreabilidade RF → épico → fatia, injetada por `/prd-decompose` e mantida dentro desta PRD.
