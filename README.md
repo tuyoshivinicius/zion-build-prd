@@ -39,6 +39,38 @@ Alternativa (Claude Code plugin marketplace):
 | `/prd-specify-prompt` | Ponte → `/speckit.specify` |
 | `/adr-new` | Cria um ADR em `docs/adr/` |
 
+## Dependências
+
+| Dependência | Usada por | De onde vem |
+|-------------|-----------|-------------|
+| `superpowers` (skill `superpowers:brainstorming`) | `/prd-discovery`, `/prd-decompose`, `/prd-write` | Externa — plugin `obra/superpowers-marketplace` |
+| `rewrite-prompt` | `/prd-constitution-prompt`, `/prd-specify-prompt` | Incluída (skill first-party deste repo) |
+| `deep-research` | `/prd-spike` | Built-in do Claude Code (degrada para pesquisa manual se ausente) |
+| `adr-new` | `/prd-spike` | Incluída (skill deste repo) |
+
+A **única dependência externa** é o `superpowers`.
+
+**Instalado via plugin do Claude Code (B):** o `superpowers` é declarado como dependência e o
+Claude Code o instala **automaticamente** — desde que o marketplace dele já esteja registrado. Se
+não estiver, o install para com um erro acionável; basta rodar uma vez:
+
+```
+/plugin marketplace add obra/superpowers-marketplace
+```
+
+e reinstalar. As demais dependências viajam no próprio plugin ou são built-in.
+
+**Instalado via `npx skills` (A):** o ecossistema skills.sh **não resolve dependências**. Instale o
+`superpowers` manualmente:
+
+```
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+```
+
+As skills que dependem dele fazem um **preflight**: se faltar, avisam com o comando de instalação e
+param graciosamente em vez de quebrar no meio do fluxo.
+
 ## Desenvolvimento
 
 Os assets canônicos vivem em `assets/`. Após editá-los, rode:
