@@ -11,8 +11,8 @@ disable-model-invocation: false
 # adr-new — criar um Architecture Decision Record
 
 Registra uma decisão estruturante como um ADR em `docs/adr/`, com as seções
-**Contexto / Decisão / Consequências / Status**. Use no Passo 2 do guia
-`docs/guia-prd-para-spec-kit.md` para registrar as 2–3 decisões que mudam a PRD inteira,
+**Contexto / Decisão / Consequências / Status**. Use no Estágio 2 do harness (Spikes + ADRs) —
+ver `references/process-context.md` — para registrar as 2–3 decisões que mudam a PRD inteira,
 sustentadas por um spike que você de fato rodou.
 
 ## Argumento

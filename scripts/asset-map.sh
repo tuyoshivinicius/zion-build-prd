@@ -9,4 +9,5 @@ ASSET_MAP=(
   "assets/quality-rules.md                prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt"
   "assets/templates/prd-skeleton.md       prd-write"
   "assets/templates/traceability-table.md prd-decompose"
+  "assets/process-context.md              prd-discovery prd-spike prd-write prd-decompose adr-new"
 )
