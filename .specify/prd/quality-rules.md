@@ -45,6 +45,9 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
   linha por `RF-xx` in-scope.
 - **specify-prompt**: o prompt gerado declara resultado observável ∧ não cita stack ∧ RF-xx/ADR
   entram como contexto (referência), não como requisito.
+- **constitution-prompt**: o prompt gerado deriva princípios **decidíveis** (cada um com validador/
+  limiar/teste) ∧ cada princípio rastreia a um NFR ou restrição de ADR ∧ **zero** princípio genérico
+  ("código limpo", "boa cobertura").
 
 ## INVEST e SPIDR {#invest}
 
@@ -69,3 +72,18 @@ O input do `/speckit.specify` é literalmente um prompt. As três tags que pagam
   requisitos acidentais.
 - `<success_criteria>` — declara o **resultado observável** antes de rodar; é o que o gate
   `/speckit.clarify` vai cobrar em seguida, então já antecipa o gate.
+
+## Anatomia do prompt do constitution {#anatomia-constitution}
+
+O input do `/speckit.constitution` também é um prompt, montado a partir da PRD. As tags que pagam o
+custo:
+
+- `<context>` — **a fonte, não o princípio pronto**: os NFRs (`NFR-xx`) e as restrições de ADRs
+  entram como material de origem para derivar os princípios; não são princípios já formatados.
+- `<instructions>` — pede para **derivar** princípios decidíveis dessa fonte (um por
+  NFR/restrição relevante).
+- `<constraints>` — o **guardião da decidibilidade**: escreva explícito "cada princípio tem um
+  critério objetivo (validador / limiar numérico / teste) e rastreia a um NFR ou ADR; proibido
+  genérico ('código limpo', 'boa cobertura')". Impede platitude de virar princípio.
+- `<success_criteria>` — todo princípio é **decidível** ∧ **rastreável** a um NFR/ADR; nenhum
+  genérico. É o que torna a `constitution` cobrável depois.
