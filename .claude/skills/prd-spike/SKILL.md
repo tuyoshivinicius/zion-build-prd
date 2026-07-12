@@ -17,10 +17,30 @@ Regras em `.specify/prd/quality-rules.md`.
 `docs/discovery.md` deve existir. Se não existir, avise: "recomendo rodar `/prd-discovery` antes" e
 pergunte se segue mesmo assim. Não bloqueie.
 
-## Fase 1 — Validar entrada bruta (aconselha)
-O usuário deve nomear **2–3 decisões estruturantes** — as que mudam a PRD inteira, não dúvidas
-menores. Para cada candidata, aplique o filtro: "isso muda a PRD inteira?". Se surgir uma lista longa
-de dúvidas pequenas, sugira consolidar nas 2–3 realmente estruturantes.
+## Fase 1 — Levantar e validar as decisões estruturantes (aconselha)
+As **2–3 decisões estruturantes** são as que mudam a PRD inteira, não dúvidas menores. Detecte a
+origem pelo que o usuário trouxe no argumento e aplique a cada candidata — dada ou proposta — o
+filtro "isso muda a PRD inteira?"; candidata que não passa, descarte ou consolide.
+
+- **Caminho A — 2–3 decisões dadas:** não proponha; valide cada uma pelo filtro. Lista longa de
+  dúvidas pequenas → sugira consolidar nas 2–3 realmente estruturantes.
+- **Caminho C — 1–2 decisões dadas (híbrido):** trate as dadas como fixas e proponha **só as
+  faltantes** até fechar 2–3, cada complemento ancorado num trecho de `docs/discovery.md`.
+- **Caminho B — 0 decisões dadas:** proponha as 2–3, cada uma ancorada num trecho do discovery.
+
+**Guarda de suficiência (só em B/C, antes de propor).** O discovery tem três peças: visão em 1
+frase, persona nomeada, quadro Faz/Não faz. Se uma peça necessária faltar ou for vaga (ex.: sem o
+quadro Faz/Não faz não há como isolar uma fronteira de integração), **não fabrique** candidatas para
+preencher a cota: aponte qual peça falta e por quê ela trava a inferência, proponha só o que o texto
+sustenta, e peça a peça faltante ou sugira rodar `/prd-discovery`. Não bloqueie.
+
+**Apresentação (B/C).** Entregue as 2–3 (ou só o complemento faltante) como recomendação direta e
+enxuta, cada uma com uma linha de justificativa ancorada no discovery. Sem shortlist longa.
+
+**Convergência (todos os caminhos, aconselha).** Peça ao usuário para **confirmar**, **editar**
+(trocar uma) ou **substituir** (rejeitar todas e ditar as suas). Lista fraca — nenhuma passa no
+filtro, virou 4 dúvidas menores, ou ficou com 1 decisão só → aponte e sugira, mas a lista confirmada
+pelo usuário é a que vale. Não bloqueie.
 
 ## Fase 2/3 — Formatar e auto-delegar
 Para cada decisão, no mesmo turno:
