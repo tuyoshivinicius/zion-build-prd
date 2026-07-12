@@ -176,6 +176,9 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   "artefato X sempre passa no validador oficial"; "componente crítico é função pura com testes de
   snapshot") — não genéricos ("código limpo, testes").
 - **Critério de conclusão:** `constitution` escrita e rastreável aos NFRs da PRD.
+- **Ponte do harness:** `/prd-constitution-prompt` monta esse prompt para você — deriva princípios
+  decidíveis dos NFRs/ADRs, entrega o `/speckit.constitution "..."` pronto e **para** (o comando do
+  Spec Kit é seu).
 
 ---
 
@@ -264,7 +267,7 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 | `superpowers:brainstorming` | Skill tool / pedido "vamos explorar / desenhar X" | Descoberta (P1), **redação da PRD sobre o template, seção a seção (P3)** e decomposição em épicos/fatias (P4). |
 | `deep-research` | `/deep-research <pergunta>` | Trade-offs de spikes (P2). |
 | `adr-new` | `/adr-new "<título>"` | Registrar decisões estruturantes como ADR em `docs/adr/` (P2). |
-| `rewrite-prompt` | `/rewrite-prompt` ou "reescrever/estruturar prompt" | **Montar o prompt do `/speckit.specify` (P5b)** — uso central: `<constraints>` blinda a fronteira "sem stack" e `<success_criteria>` antecipa o gate `clarify`. |
+| `rewrite-prompt` | `/rewrite-prompt` ou "reescrever/estruturar prompt" | **Montar o prompt do `/speckit.constitution` (P5a)** — `<constraints>` blinda a decidibilidade dos princípios — **e do `/speckit.specify` (P5b)** — `<constraints>` blinda a fronteira "sem stack" e `<success_criteria>` antecipa o gate `clarify`. |
 | `git-commit` | `/git-commit` ou "commit" | Versionar PRD, ADRs e specs (P6). |
 
 ---
