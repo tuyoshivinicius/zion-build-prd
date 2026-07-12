@@ -1,6 +1,7 @@
 {
   "name": "zion-build-prd",
   "owner": { "name": "Tuyoshi Vinicius" },
+  "allowCrossMarketplaceDependenciesOn": ["superpowers-marketplace"],
   "plugins": [
     {
       "name": "zion-build-prd",

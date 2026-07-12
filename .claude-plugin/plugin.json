@@ -2,5 +2,8 @@
   "name": "zion-build-prd",
   "version": "1.0.0",
   "description": "Harness multi-agente para autoria de PRDs, com ponte para o GitHub Spec Kit.",
-  "author": { "name": "Tuyoshi Vinicius" }
+  "author": { "name": "Tuyoshi Vinicius" },
+  "dependencies": [
+    { "name": "superpowers", "marketplace": "superpowers-marketplace" }
+  ]
 }
