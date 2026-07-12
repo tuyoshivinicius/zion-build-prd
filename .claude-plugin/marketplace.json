@@ -1,0 +1,11 @@
+{
+  "name": "zion-build-prd",
+  "owner": { "name": "Tuyoshi Vinicius" },
+  "plugins": [
+    {
+      "name": "zion-build-prd",
+      "source": "./",
+      "description": "Harness multi-agente para autoria de PRDs, com ponte para o GitHub Spec Kit."
+    }
+  ]
+}
