@@ -3,7 +3,7 @@ name: adr-new
 description: Cria um Architecture Decision Record em docs/adr/ a partir de um título
 argument-hint: "Título da decisão estruturante (ex.: \"Escolha de biblioteca de estado\")"
 metadata:
-  author: zion-mermaid-editor
+  author: zion-build-prd
 user-invocable: true
 disable-model-invocation: false
 ---

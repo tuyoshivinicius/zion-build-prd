@@ -3,7 +3,7 @@ name: prd-decompose
 description: Estágio 4 do harness — transforma RF-xx em épicos, story map e fatias verticais validadas por INVEST, e injeta a tabela de rastreabilidade
 argument-hint: "(sem argumento — trabalha sobre docs/PRD.md)"
 metadata:
-  author: zion-mermaid-editor
+  author: zion-build-prd
 user-invocable: true
 disable-model-invocation: false
 ---

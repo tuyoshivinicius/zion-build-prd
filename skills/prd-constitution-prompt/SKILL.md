@@ -3,7 +3,7 @@ name: prd-constitution-prompt
 description: Ponte para o Spec Kit — monta o prompt do /speckit.constitution derivando princípios decidíveis dos NFRs/restrições da PRD, e entrega para você disparar
 argument-hint: "Opcional: áreas/princípios a enfatizar na constitution (senão, deriva dos NFRs/ADRs da PRD)"
 metadata:
-  author: zion-mermaid-editor
+  author: zion-build-prd
 user-invocable: true
 disable-model-invocation: false
 ---

@@ -3,7 +3,7 @@ name: prd-specify-prompt
 description: Ponte para o Spec Kit — monta o prompt do /speckit.specify de uma fatia vertical, blindando a fronteira sem-stack, e entrega para você disparar
 argument-hint: "Qual fatia vertical do backlog transformar em prompt de specify"
 metadata:
-  author: zion-mermaid-editor
+  author: zion-build-prd
 user-invocable: true
 disable-model-invocation: false
 ---

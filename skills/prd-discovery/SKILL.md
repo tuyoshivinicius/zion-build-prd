@@ -3,7 +3,7 @@ name: prd-discovery
 description: Estágio 1 do harness — conduz a descoberta enxuta (visão, persona, faz/não-faz) e grava docs/discovery.md
 argument-hint: "Ideia bruta do produto e, se houver, URLs de referência"
 metadata:
-  author: zion-mermaid-editor
+  author: zion-build-prd
 user-invocable: true
 disable-model-invocation: false
 ---

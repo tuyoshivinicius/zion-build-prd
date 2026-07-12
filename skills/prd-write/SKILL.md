@@ -3,7 +3,7 @@ name: prd-write
 description: Estágio 3 do harness — copia o esqueleto da PRD e conduz o preenchimento seção a seção, guardando a fronteira o-quê/como
 argument-hint: "(sem argumento — trabalha sobre docs/discovery.md e docs/adr/)"
 metadata:
-  author: zion-mermaid-editor
+  author: zion-build-prd
 user-invocable: true
 disable-model-invocation: false
 ---
