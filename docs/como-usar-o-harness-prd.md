@@ -1,6 +1,6 @@
 # Como usar o harness PRD → Spec Kit (exemplos do Zion Mermaid Editor)
 
-> **O que este documento é:** um **guia prático** dos 5 comandos `/prd-*` — o harness que
+> **O que este documento é:** um **guia prático** dos 6 comandos `/prd-*` — o harness que
 > *executa* o processo do `guia-prd-para-spec-kit.md`. Enquanto aquele guia **descreve** os seis
 > estágios de forma genérica, este mostra **como rodar** cada comando, com exemplos reais do
 > **Zion Mermaid Editor**.
