@@ -1,16 +1,16 @@
-# Spec — Estágio 2 (`/prd-spike`) com descoberta assistida das decisões estruturantes
+# Spec — Estágio 2 (`/zion-prd-spike`) com descoberta assistida das decisões estruturantes
 
 > **Data:** 2026-07-12
 > **Estado:** desenho refinado no brainstorming, pronto para plano de implementação.
-> **Escopo:** apenas o Estágio 2 do harness (`/prd-spike`). Não redesenha os outros estágios.
+> **Escopo:** apenas o Estágio 2 do harness (`/zion-prd-spike`). Não redesenha os outros estágios.
 > **Documentos-fonte:** `docs/superpowers/specs/2026-07-11-harness-prd-spec-kit-design.md`
-> (spec do harness) · `.claude/skills/prd-spike/SKILL.md` (contrato atual) ·
+> (spec do harness) · `.claude/skills/zion-prd-spike/SKILL.md` (contrato atual) ·
 > `docs/como-usar-o-harness-prd.md` (guia prático).
 
 ## 1. Problema
 
-Hoje a **Fase 1** do `/prd-spike` **exige** que o usuário nomeie as 2–3 decisões
-estruturantes (`prd-spike/SKILL.md`, Fase 1: *"O usuário deve nomear 2–3 decisões
+Hoje a **Fase 1** do `/zion-prd-spike` **exige** que o usuário nomeie as 2–3 decisões
+estruturantes (`zion-prd-spike/SKILL.md`, Fase 1: *"O usuário deve nomear 2–3 decisões
 estruturantes… aplique o filtro: 'isso muda a PRD inteira?'"*). Na prática isso bloqueia
 quem sabe descrever o produto (já tem `docs/discovery.md`) mas ainda **não enxerga** quais
 eixos técnicos reorganizam a PRD inteira. A descoberta dessas decisões fica fora do harness,
@@ -72,7 +72,7 @@ cota. Em vez disso:
 
 1. **Aponta qual peça falta e por quê** ela trava a inferência.
 2. **Propõe só o(s) candidato(s)** que o texto efetivamente sustenta.
-3. **Pede a peça faltante** ao usuário **ou** sugere voltar ao `/prd-discovery` para
+3. **Pede a peça faltante** ao usuário **ou** sugere voltar ao `/zion-prd-discovery` para
    enriquecer o discovery.
 
 É um **gate mole**: não bloqueia. O usuário pode fornecer a peça na hora, mandar a IA propor
@@ -111,7 +111,7 @@ que vale**. Nunca bloqueia.
 ### 3.5 Saída da Fase 1
 
 Uma lista de 2–3 decisões estruturantes confirmadas — **mesmo formato de hoje**. Alimenta as
-Fases 2/3 (`deep-research` por decisão → `adr-new`) sem qualquer mudança a jusante.
+Fases 2/3 (`deep-research` por decisão → `zion-adr-new`) sem qualquer mudança a jusante.
 
 ## 4. Fluxo das fases (mini-mapa)
 
@@ -122,16 +122,16 @@ Fase 1 · Levantar + validar decisões (aconselha)  ◀── ÚNICA MUDANÇA
     ├─ C · usuário deu 1–2 → valida as dadas (fixas) + IA propõe só as faltantes
     └─ B · usuário deu 0  → IA propõe as 2–3
          └─(B/C) guarda de suficiência: discovery magro → aponta a lacuna,
-                 propõe só o sustentável, pede a peça faltante OU sugere /prd-discovery
+                 propõe só o sustentável, pede a peça faltante OU sugere /zion-prd-discovery
     └▶ Convergência · confirma / edita / substitui   (gate aconselha; lista fraca → aponta)
-Fase 2/3 · deep-research (trade-offs) → adr-new por decisão ....... (inalterado)
+Fase 2/3 · deep-research (trade-offs) → zion-adr-new por decisão ....... (inalterado)
 Fase 4 · Validar saída (aconselha) — cada decisão tem ADR c/ spike real  (inalterado)
 Saída · docs/adr/ADR-00x-*.md → restrições da PRD §8 + constitution  (inalterado)
 ```
 
 ## 5. Artefatos afetados
 
-- **`.claude/skills/prd-spike/SKILL.md`** — único arquivo com mudança real:
+- **`.claude/skills/zion-prd-spike/SKILL.md`** — único arquivo com mudança real:
   - `argument-hint` de obrigatório → opcional;
   - texto da **Fase 1** reescrito para os quatro blocos (§3.1–§3.4).
 - **`docs/discovery.md`** — ganha um leitor a mais (consumo em B/C; nenhuma escrita).
@@ -160,12 +160,12 @@ observar o comportamento (caso ponta-a-ponta: o próprio Zion Mermaid Editor).
 
 1. **Caminho A (usuário informa).** Usuário passa 3 decisões → IA só valida, não propõe;
    segue para Fases 2/3.
-2. **Caminho B (IA descobre).** `/prd-spike` sem argumento, com discovery rico → IA propõe
+2. **Caminho B (IA descobre).** `/zion-prd-spike` sem argumento, com discovery rico → IA propõe
    3 decisões ancoradas em trechos do discovery e abre a convergência.
 3. **Caminho C (híbrido).** Usuário passa 1 decisão → IA a mantém fixa e propõe só 1–2
    faltantes; total fecha em 2–3.
 4. **Guarda de suficiência.** Discovery sem quadro Faz/Não faz → IA aponta a lacuna, propõe
-   só o sustentável, pede a peça faltante ou sugere `/prd-discovery`; **não bloqueia**.
+   só o sustentável, pede a peça faltante ou sugere `/zion-prd-discovery`; **não bloqueia**.
 5. **Convergência com lista fraca.** Usuário substitui por 1 dúvida menor → IA aponta que
    não passa no filtro e sugere, mas aceita a lista confirmada.
 6. **Fronteira intacta.** As decisões propostas descrevem eixos; o stack concreto só aparece
@@ -177,8 +177,8 @@ Cada cenário que passar vira evidência observada. Falha → bug no `SKILL.md`,
 
 ## 8. Fora de escopo (YAGNI)
 
-- Redesenho de qualquer outro estágio (`prd-discovery`, `prd-write`, `prd-decompose`,
-  `prd-specify-prompt`).
+- Redesenho de qualquer outro estágio (`zion-prd-discovery`, `zion-prd-write`, `zion-prd-decompose`,
+  `zion-prd-specify-prompt`).
 - Catálogo fixo de eixos estruturantes em `quality-rules.md` (estratégia E2 descartada:
   engessa e cria um novo dono de arquivo para manter).
 - Nova fase dedicada de descoberta + `deep-research` de varredura antes do filtro

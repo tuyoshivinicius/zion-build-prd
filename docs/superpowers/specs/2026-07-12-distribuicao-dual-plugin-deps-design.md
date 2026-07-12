@@ -40,12 +40,12 @@ Auditoria de `grep` sobre `skills/*/SKILL.md`:
 
 | Dependência | Usada por | Natureza | Estratégia |
 |---|---|---|---|
-| `superpowers:brainstorming` | prd-discovery, prd-decompose, prd-write | Plugin publicado em `obra/superpowers-marketplace` | **Única dep externa real** — declarar (B) + preflight (A) |
-| `rewrite-prompt` | prd-constitution-prompt, prd-specify-prompt | Skill pessoal do autor, **não publicada** | **Vendorizar** como 8ª skill first-party |
-| `deep-research` | prd-spike | **Built-in** do harness (não existe em disco; não vendorizável) | Assumir presente + **degradação graciosa** + doc |
-| `adr-new` | prd-spike | Interna (já em `skills/`) | Nenhuma ação |
+| `superpowers:brainstorming` | zion-prd-discovery, zion-prd-decompose, zion-prd-write | Plugin publicado em `obra/superpowers-marketplace` | **Única dep externa real** — declarar (B) + preflight (A) |
+| `zion-rewrite-prompt` | zion-prd-constitution-prompt, zion-prd-specify-prompt | Skill pessoal do autor, **não publicada** | **Vendorizar** como 8ª skill first-party |
+| `deep-research` | zion-prd-spike | **Built-in** do harness (não existe em disco; não vendorizável) | Assumir presente + **degradação graciosa** + doc |
+| `zion-adr-new` | zion-prd-spike | Interna (já em `skills/`) | Nenhuma ação |
 
-Resultado: após vendorizar `rewrite-prompt` e tratar `deep-research` como built-in, **a
+Resultado: após vendorizar `zion-rewrite-prompt` e tratar `deep-research` como built-in, **a
 única dependência externa que exige resolução é o `superpowers`**.
 
 ## Decisões (locked)
@@ -53,13 +53,13 @@ Resultado: após vendorizar `rewrite-prompt` e tratar `deep-research` como built
 1. **Uma árvore, dois porteiros.** `skills/` é fonte única; ambos os formatos a consomem.
    `npx skills` lê `skills/*/SKILL.md` direto; o plugin lê os manifestos em
    `.claude-plugin/` (auto-descoberta padrão de `skills/`). **Zero duplicação por formato.**
-2. **Vendorizar `rewrite-prompt`** como `skills/rewrite-prompt/` (8ª skill), copiado
-   verbatim de `~/.claude/skills/rewrite-prompt/SKILL.md`, com `metadata.author`
+2. **Vendorizar `zion-rewrite-prompt`** como `skills/zion-rewrite-prompt/` (8ª skill), copiado
+   verbatim de `~/.claude/skills/zion-rewrite-prompt/SKILL.md`, com `metadata.author`
    alinhado para `zion-build-prd`. É autocontido (um único SKILL.md, sem `references/`,
    sem deps externas). O autor é o mesmo → incluível sob a licença MIT do repo.
 3. **`deep-research` não é vendorizado** (built-in sem fonte acessível; reconstruir seria
-   fabricar). prd-spike passa a **degradar graciosamente**: usa se existir, senão avisa e
-   segue com pesquisa manual antes do `adr-new`. README documenta o requisito.
+   fabricar). zion-prd-spike passa a **degradar graciosamente**: usa se existir, senão avisa e
+   segue com pesquisa manual antes do `zion-adr-new`. README documenta o requisito.
 4. **Formato (B): declarar `superpowers` como dependência cross-marketplace**, sem pin de
    versão (aceita qualquer versão instalada — YAGNI).
 5. **Formato (A): garantia defensiva dupla** para o `superpowers` — preflight runtime nas
@@ -99,15 +99,15 @@ Resultado: após vendorizar `rewrite-prompt` e tratar `deep-research` como built
 }
 ```
 
-### `skills/rewrite-prompt/SKILL.md` (nova — vendorizada)
+### `skills/zion-rewrite-prompt/SKILL.md` (nova — vendorizada)
 
-Cópia verbatim de `~/.claude/skills/rewrite-prompt/SKILL.md`, com `metadata.author:
+Cópia verbatim de `~/.claude/skills/zion-rewrite-prompt/SKILL.md`, com `metadata.author:
 zion-build-prd`. Comportamento inalterado (reescreve prompt informal → XML estruturado;
-nunca executa). As pontes `prd-constitution-prompt` e `prd-specify-prompt` já a invocam por
-nome (`rewrite-prompt`) — nenhuma mudança de caminho necessária, pois skills se resolvem
+nunca executa). As pontes `zion-prd-constitution-prompt` e `zion-prd-specify-prompt` já a invocam por
+nome (`zion-rewrite-prompt`) — nenhuma mudança de caminho necessária, pois skills se resolvem
 por nome, não por caminho relativo.
 
-### Preflight `superpowers` — prd-discovery, prd-decompose, prd-write
+### Preflight `superpowers` — zion-prd-discovery, zion-prd-decompose, zion-prd-write
 
 Cada uma dessas 3 skills ganha, no início do contrato (Fase 0 / antes da auto-delegação),
 um **preflight**: se `superpowers:brainstorming` não estiver disponível, a skill **avisa
@@ -120,18 +120,18 @@ e para graciosamente** com a instrução exata:
 O preflight é advisory (não trava o harness inteiro), coerente com o padrão "gates
 aconselham" já usado nas skills.
 
-### Degradação graciosa `deep-research` — prd-spike
+### Degradação graciosa `deep-research` — zion-prd-spike
 
 A etapa de pesquisa de trade-offs passa a ser condicional: se `deep-research` disponível →
 invoca; senão → avisa ("`deep-research` (built-in) indisponível; seguindo com pesquisa
-manual") e conduz o levantamento manualmente antes de `adr-new`. Nunca quebra.
+manual") e conduz o levantamento manualmente antes de `zion-adr-new`. Nunca quebra.
 
 ### `README.md` (+ seção Dependências)
 
 Nova seção documentando, para ambos os formatos:
 
-- Tabela de dependências (superpowers = externa; rewrite-prompt = incluída; deep-research =
-  built-in; adr-new = incluída).
+- Tabela de dependências (superpowers = externa; zion-rewrite-prompt = incluída; deep-research =
+  built-in; zion-adr-new = incluída).
 - **(B) Plugin:** o `superpowers` é auto-instalado *se* o marketplace estiver registrado;
   senão o install pede `/plugin marketplace add obra/superpowers-marketplace` e resolve ao
   re-tentar. Documentar esse pré-requisito de uma linha.
@@ -143,7 +143,7 @@ Nova seção documentando, para ambos os formatos:
 - **(B) plugin:** a dependência `superpowers` é **imposta pelo Claude Code** — install
   bloqueia com erro acionável se o marketplace não estiver presente; instala
   automaticamente (transitivo) quando estiver. Não é 100% zero-setup, mas é **enforced**
-  em vez de quebrar em runtime. `rewrite-prompt` e `adr-new` viajam no próprio plugin →
+  em vez de quebrar em runtime. `zion-rewrite-prompt` e `zion-adr-new` viajam no próprio plugin →
   sempre presentes. `deep-research` é built-in.
 - **(A) npx skills:** sem resolução automática; preflight nas skills + README cobrem a
   lacuna defensivamente.
@@ -154,12 +154,12 @@ Nova seção documentando, para ambos os formatos:
 2. Guard: `plugin.json` contém `dependencies` com `superpowers`/`superpowers-marketplace`;
    `marketplace.json` contém `allowCrossMarketplaceDependenciesOn` com
    `superpowers-marketplace`.
-3. `find skills -maxdepth 2 -name SKILL.md | wc -l` → **8** (as 7 + rewrite-prompt).
-4. `skills/rewrite-prompt/SKILL.md` tem frontmatter `name` + `description` válido e
+3. `find skills -maxdepth 2 -name SKILL.md | wc -l` → **8** (as 7 + zion-rewrite-prompt).
+4. `skills/zion-rewrite-prompt/SKILL.md` tem frontmatter `name` + `description` válido e
    `metadata.author: zion-build-prd`.
-5. Grep: prd-discovery, prd-decompose, prd-write contêm o texto de preflight do superpowers;
-   prd-spike contém o ramo de degradação de `deep-research`.
-6. `./scripts/check-assets.sh` continua sem drift (rewrite-prompt não usa assets canônicos,
+5. Grep: zion-prd-discovery, zion-prd-decompose, zion-prd-write contêm o texto de preflight do superpowers;
+   zion-prd-spike contém o ramo de degradação de `deep-research`.
+6. `./scripts/check-assets.sh` continua sem drift (zion-rewrite-prompt não usa assets canônicos,
    então os scripts de sync não mudam).
 7. README contém a seção Dependências cobrindo ambos os formatos.
 

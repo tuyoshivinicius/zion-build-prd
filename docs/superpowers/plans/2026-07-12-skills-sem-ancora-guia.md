@@ -31,17 +31,17 @@ Crie `assets/process-context.md` com exatamente este conteúdo:
 
 O harness conduz a autoria da PRD em estágios encadeados, cada um alimentando o próximo:
 
-1. **Descoberta** (`/prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
-2. **Spikes + ADRs** (`/prd-spike`, `/adr-new`) — provar as 2–3 decisões estruturantes com
+1. **Descoberta** (`/zion-prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
+2. **Spikes + ADRs** (`/zion-prd-spike`, `/zion-adr-new`) — provar as 2–3 decisões estruturantes com
    código descartável e registrá-las como ADRs em `docs/adr/` **antes** de fechar a PRD.
-3. **PRD enxuta** (`/prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
+3. **PRD enxuta** (`/zion-prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
    números, restrições (das ADRs) → `docs/PRD.md`. Sem comportamento detalhado nem stack.
-4. **Decomposição** (`/prd-decompose`) — PRD → épicos → story map → fatias verticais validadas
+4. **Decomposição** (`/zion-prd-decompose`) — PRD → épicos → story map → fatias verticais validadas
    por INVEST; walking skeleton como fatia zero; tabela de rastreabilidade injetada na PRD.
    **Handoff:** cada fatia priorizada entra no Spec Kit via `/speckit.specify`.
 5. **Spec Kit por feature** — `constitution` e o ciclo
    `specify → clarify → plan → checklist → tasks → analyze → implement → converge` (fora do
-   harness; pontes montadas por `/prd-constitution-prompt` e `/prd-specify-prompt`).
+   harness; pontes montadas por `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt`).
 
 ## A fronteira o-quê/por-quê × como/com-quê
 
@@ -69,24 +69,24 @@ git commit -m "feat(assets): process-context.md — contexto de processo autocon
 
 **Files:**
 - Modify: `scripts/asset-map.sh` (adicionar 1 entrada ao array `ASSET_MAP`)
-- Create (gerado pelo sync): `skills/prd-discovery/references/process-context.md`, `skills/prd-spike/references/process-context.md`, `skills/prd-write/references/process-context.md`, `skills/prd-decompose/references/process-context.md`, `skills/adr-new/references/process-context.md`
+- Create (gerado pelo sync): `skills/zion-prd-discovery/references/process-context.md`, `skills/zion-prd-spike/references/process-context.md`, `skills/zion-prd-write/references/process-context.md`, `skills/zion-prd-decompose/references/process-context.md`, `skills/zion-adr-new/references/process-context.md`
 
 - [ ] **Step 1: Adicionar a entrada no `ASSET_MAP`**
 
 Em `scripts/asset-map.sh`, dentro do array `ASSET_MAP=( ... )`, adicione esta linha após a entrada `traceability-table.md`:
 
 ```bash
-  "assets/process-context.md              prd-discovery prd-spike prd-write prd-decompose adr-new"
+  "assets/process-context.md              zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-adr-new"
 ```
 
 O bloco resultante deve ficar:
 
 ```bash
 ASSET_MAP=(
-  "assets/quality-rules.md                prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt"
-  "assets/templates/prd-skeleton.md       prd-write"
-  "assets/templates/traceability-table.md prd-decompose"
-  "assets/process-context.md              prd-discovery prd-spike prd-write prd-decompose adr-new"
+  "assets/quality-rules.md                zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-prd-constitution-prompt zion-prd-specify-prompt"
+  "assets/templates/prd-skeleton.md       zion-prd-write"
+  "assets/templates/traceability-table.md zion-prd-decompose"
+  "assets/process-context.md              zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-adr-new"
 )
 ```
 
@@ -100,13 +100,13 @@ Expected: termina com `sync-assets: ok` (sem erro).
 Run: `./scripts/check-assets.sh`
 Expected: `check-assets: sem drift`
 
-Run: `ls skills/prd-discovery/references/process-context.md skills/prd-spike/references/process-context.md skills/prd-write/references/process-context.md skills/prd-decompose/references/process-context.md skills/adr-new/references/process-context.md`
-Expected: os 5 caminhos existem (nenhum "No such file"). Confirma que `adr-new` ganhou seu primeiro `references/`.
+Run: `ls skills/zion-prd-discovery/references/process-context.md skills/zion-prd-spike/references/process-context.md skills/zion-prd-write/references/process-context.md skills/zion-prd-decompose/references/process-context.md skills/zion-adr-new/references/process-context.md`
+Expected: os 5 caminhos existem (nenhum "No such file"). Confirma que `zion-adr-new` ganhou seu primeiro `references/`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add scripts/asset-map.sh skills/prd-discovery/references/process-context.md skills/prd-spike/references/process-context.md skills/prd-write/references/process-context.md skills/prd-decompose/references/process-context.md skills/adr-new/references/process-context.md
+git add scripts/asset-map.sh skills/zion-prd-discovery/references/process-context.md skills/zion-prd-spike/references/process-context.md skills/zion-prd-write/references/process-context.md skills/zion-prd-decompose/references/process-context.md skills/zion-adr-new/references/process-context.md
 git commit -m "feat(scripts): distribuir process-context.md via asset-map para as 5 skills"
 ```
 
@@ -117,13 +117,13 @@ git commit -m "feat(scripts): distribuir process-context.md via asset-map para a
 ### Task 3: Trocar a linha de orientação de cada `SKILL.md`
 
 **Files:**
-- Modify: `skills/prd-discovery/SKILL.md:13-14`
-- Modify: `skills/prd-spike/SKILL.md:13-14`
-- Modify: `skills/prd-write/SKILL.md:13-15`
-- Modify: `skills/prd-decompose/SKILL.md:13-14`
-- Modify: `skills/adr-new/SKILL.md:13-16`
+- Modify: `skills/zion-prd-discovery/SKILL.md:13-14`
+- Modify: `skills/zion-prd-spike/SKILL.md:13-14`
+- Modify: `skills/zion-prd-write/SKILL.md:13-15`
+- Modify: `skills/zion-prd-decompose/SKILL.md:13-14`
+- Modify: `skills/zion-adr-new/SKILL.md:13-16`
 
-- [ ] **Step 1: Editar `skills/prd-discovery/SKILL.md`**
+- [ ] **Step 1: Editar `skills/zion-prd-discovery/SKILL.md`**
 
 Substitua exatamente:
 
@@ -140,7 +140,7 @@ fronteira o-quê/como em `references/process-context.md`. Contrato de 5 fases; t
 **aconselham** (apontam e sugerem), nunca bloqueiam. Regras em `references/quality-rules.md`.
 ```
 
-- [ ] **Step 2: Editar `skills/prd-spike/SKILL.md`**
+- [ ] **Step 2: Editar `skills/zion-prd-spike/SKILL.md`**
 
 Substitua exatamente:
 
@@ -157,7 +157,7 @@ o-quê/como em `references/process-context.md`. Contrato de 5 fases; gates acons
 Regras em `references/quality-rules.md`.
 ```
 
-- [ ] **Step 3: Editar `skills/prd-write/SKILL.md`**
+- [ ] **Step 3: Editar `skills/zion-prd-write/SKILL.md`**
 
 Substitua exatamente:
 
@@ -176,7 +176,7 @@ Orquestra o Estágio 3 do harness (PRD enxuta). Sequência dos estágios e front
 **o-quê/por-quê vs. como**.
 ```
 
-- [ ] **Step 4: Editar `skills/prd-decompose/SKILL.md`**
+- [ ] **Step 4: Editar `skills/zion-prd-decompose/SKILL.md`**
 
 Substitua exatamente:
 
@@ -193,7 +193,7 @@ Orquestra o Estágio 4 do harness (Decomposição). Sequência dos estágios e f
 Regras em `references/quality-rules.md`.
 ```
 
-- [ ] **Step 5: Editar `skills/adr-new/SKILL.md`**
+- [ ] **Step 5: Editar `skills/zion-adr-new/SKILL.md`**
 
 Substitua exatamente:
 
@@ -221,12 +221,12 @@ Expected: nenhuma linha de match e `exit=1` (vazio).
 - [ ] **Step 7: Verificar que cada skill aponta ao reference local**
 
 Run: `grep -rln "references/process-context.md" skills/*/SKILL.md`
-Expected: exatamente os 5 arquivos — `skills/prd-discovery/SKILL.md`, `skills/prd-spike/SKILL.md`, `skills/prd-write/SKILL.md`, `skills/prd-decompose/SKILL.md`, `skills/adr-new/SKILL.md`.
+Expected: exatamente os 5 arquivos — `skills/zion-prd-discovery/SKILL.md`, `skills/zion-prd-spike/SKILL.md`, `skills/zion-prd-write/SKILL.md`, `skills/zion-prd-decompose/SKILL.md`, `skills/zion-adr-new/SKILL.md`.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add skills/prd-discovery/SKILL.md skills/prd-spike/SKILL.md skills/prd-write/SKILL.md skills/prd-decompose/SKILL.md skills/adr-new/SKILL.md
+git add skills/zion-prd-discovery/SKILL.md skills/zion-prd-spike/SKILL.md skills/zion-prd-write/SKILL.md skills/zion-prd-decompose/SKILL.md skills/zion-adr-new/SKILL.md
 git commit -m "refactor(skills): trocar âncora ao guia por references/process-context.md"
 ```
 

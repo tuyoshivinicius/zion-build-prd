@@ -6,7 +6,7 @@
 
 ## Problema
 
-As 5 skills `prd-discovery`, `prd-spike`, `prd-write`, `prd-decompose` e `adr-new`
+As 5 skills `zion-prd-discovery`, `zion-prd-spike`, `zion-prd-write`, `zion-prd-decompose` e `zion-adr-new`
 referenciam `docs/guia-prd-para-spec-kit.md` numa linha de orientação (ex.: *"Orquestra o
 Passo N do guia `docs/guia-prd-para-spec-kit.md`"*). O procedimento operacional, as
 quality-rules e a lógica de fronteira já vivem **dentro** de cada skill (ou em seus
@@ -68,17 +68,17 @@ Conteúdo canônico:
 
 O harness conduz a autoria da PRD em estágios encadeados, cada um alimentando o próximo:
 
-1. **Descoberta** (`/prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
-2. **Spikes + ADRs** (`/prd-spike`, `/adr-new`) — provar as 2–3 decisões estruturantes com
+1. **Descoberta** (`/zion-prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
+2. **Spikes + ADRs** (`/zion-prd-spike`, `/zion-adr-new`) — provar as 2–3 decisões estruturantes com
    código descartável e registrá-las como ADRs em `docs/adr/` **antes** de fechar a PRD.
-3. **PRD enxuta** (`/prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
+3. **PRD enxuta** (`/zion-prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
    números, restrições (das ADRs) → `docs/PRD.md`. Sem comportamento detalhado nem stack.
-4. **Decomposição** (`/prd-decompose`) — PRD → épicos → story map → fatias verticais validadas
+4. **Decomposição** (`/zion-prd-decompose`) — PRD → épicos → story map → fatias verticais validadas
    por INVEST; walking skeleton como fatia zero; tabela de rastreabilidade injetada na PRD.
    **Handoff:** cada fatia priorizada entra no Spec Kit via `/speckit.specify`.
 5. **Spec Kit por feature** — `constitution` e o ciclo
    `specify → clarify → plan → checklist → tasks → analyze → implement → converge` (fora do
-   harness; pontes montadas por `/prd-constitution-prompt` e `/prd-specify-prompt`).
+   harness; pontes montadas por `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt`).
 
 ## A fronteira o-quê/por-quê × como/com-quê
 
@@ -93,13 +93,13 @@ vive no `spec.md`/`plan.md` da feature. **Todo estágio deste harness guarda ess
 Adicionar ao `ASSET_MAP` em `scripts/asset-map.sh`:
 
 ```
-"assets/process-context.md              prd-discovery prd-spike prd-write prd-decompose adr-new"
+"assets/process-context.md              zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-adr-new"
 ```
 
 Consequências automáticas (nenhuma mudança nos scripts em si):
 
 - `scripts/sync-assets.sh` passa a gerar `skills/<skill>/references/process-context.md` nas 5
-  skills. `adr-new` ganha seu primeiro diretório `references/` — o `mkdir -p` do sync o cria.
+  skills. `zion-adr-new` ganha seu primeiro diretório `references/` — o `mkdir -p` do sync o cria.
 - `scripts/check-assets.sh` e o workflow de CI (`check-assets`) passam a guardar o novo
   reference contra drift, sem alteração.
 - O pre-commit hook (`.githooks/pre-commit`) já roda o sync a partir do `ASSET_MAP`; nada a
@@ -111,28 +111,28 @@ Cada skill troca a linha de orientação que cita `docs/guia-prd-para-spec-kit.m
 autocontida que aponta ao **reference local**, padronizando o vocabulário em **"Estágio N do
 harness"** (que as skills já usam em título/descrição) e eliminando "Passo N do guia".
 
-- **`prd-discovery/SKILL.md`** (linha 13):
+- **`zion-prd-discovery/SKILL.md`** (linha 13):
   `Orquestra o Estágio 1 do harness (Descoberta enxuta). Sequência completa dos estágios e a
   fronteira o-quê/como em `references/process-context.md`. Contrato de 5 fases; todos os gates
   **aconselham** (apontam e sugerem), nunca bloqueiam. Regras em `references/quality-rules.md`.`
 
-- **`prd-spike/SKILL.md`** (linha 13):
+- **`zion-prd-spike/SKILL.md`** (linha 13):
   `Orquestra o Estágio 2 do harness (Spikes técnicos + ADRs). Sequência dos estágios e fronteira
   o-quê/como em `references/process-context.md`. Contrato de 5 fases; gates aconselham. Regras em
   `references/quality-rules.md`.`
 
-- **`prd-write/SKILL.md`** (linhas 13–15):
+- **`zion-prd-write/SKILL.md`** (linhas 13–15):
   `Orquestra o Estágio 3 do harness (PRD enxuta). Sequência dos estágios e fronteira o-quê/como
   em `references/process-context.md`. Contrato de 5 fases; gates aconselham. Regras em
   `references/quality-rules.md`. Este é o coração do harness: a Fase 4 guarda a fronteira
   **o-quê/por-quê vs. como**.`
 
-- **`prd-decompose/SKILL.md`** (linha 13):
+- **`zion-prd-decompose/SKILL.md`** (linha 13):
   `Orquestra o Estágio 4 do harness (Decomposição). Sequência dos estágios e fronteira o-quê/como
   em `references/process-context.md`. Contrato de 5 fases; gates aconselham. Regras em
   `references/quality-rules.md`.`
 
-- **`adr-new/SKILL.md`** (linhas 13–16):
+- **`zion-adr-new/SKILL.md`** (linhas 13–16):
   `Registra uma decisão estruturante como um ADR em `docs/adr/`, com as seções
   **Contexto / Decisão / Consequências / Status**. Use no Estágio 2 do harness (Spikes + ADRs) —
   ver `references/process-context.md` — para registrar as 2–3 decisões que mudam a PRD inteira,
@@ -144,7 +144,7 @@ local; (c) o vocabulário seja "Estágio N do harness".
 
 ## Fora de escopo (deliberadamente)
 
-- **Bridge skills** `prd-constitution-prompt` e `prd-specify-prompt`: não referenciam o guia
+- **Bridge skills** `zion-prd-constitution-prompt` e `zion-prd-specify-prompt`: não referenciam o guia
   hoje → não recebem `process-context.md` e ficam intocadas.
 - **`docs/guia-prd-para-spec-kit.md`:** não muda. Segue como fonte da verdade dev-facing e pode
   continuar citando as skills (direção dev→skill é aceitável e desejada).

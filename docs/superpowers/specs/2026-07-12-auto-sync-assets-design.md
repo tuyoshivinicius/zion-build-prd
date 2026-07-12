@@ -66,9 +66,9 @@ scripts (e pelo hook). Adicionar uma skill nova passa a ser **1 edição**.
 # Cada entrada: "CAMINHO_CANONICO_RELATIVO_A_ROOT  skill1 skill2 ..."
 # A cópia vai para skills/<skill>/references/<basename do canônico>.
 ASSET_MAP=(
-  "assets/quality-rules.md                prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt"
-  "assets/templates/prd-skeleton.md       prd-write"
-  "assets/templates/traceability-table.md prd-decompose"
+  "assets/quality-rules.md                zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-prd-constitution-prompt zion-prd-specify-prompt"
+  "assets/templates/prd-skeleton.md       zion-prd-write"
+  "assets/templates/traceability-table.md zion-prd-decompose"
 )
 ```
 

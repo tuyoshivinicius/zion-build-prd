@@ -4,7 +4,7 @@
 
 **Goal:** Entregar o repositório `zion-build-prd` em dois formatos simultâneos (npx skills + plugin/marketplace do Claude Code) sem duplicar arquivos, com a dependência externa `superpowers` auto-instalada pelo plugin e defesa por preflight+doc no npx skills.
 
-**Architecture:** Uma única árvore `skills/` serve os dois formatos. Vendoriza-se `rewrite-prompt` como 8ª skill first-party (elimina uma dep externa). A única dep externa restante (`superpowers`) é declarada em `plugin.json` (`dependencies`) com allowlist cross-marketplace em `marketplace.json` para o formato plugin, e coberta por preflight runtime nas 3 skills que a usam + documentação no README para o formato npx skills. `deep-research` (built-in) ganha degradação graciosa no prd-spike.
+**Architecture:** Uma única árvore `skills/` serve os dois formatos. Vendoriza-se `zion-rewrite-prompt` como 8ª skill first-party (elimina uma dep externa). A única dep externa restante (`superpowers`) é declarada em `plugin.json` (`dependencies`) com allowlist cross-marketplace em `marketplace.json` para o formato plugin, e coberta por preflight runtime nas 3 skills que a usam + documentação no README para o formato npx skills. `deep-research` (built-in) ganha degradação graciosa no zion-prd-spike.
 
 **Tech Stack:** Markdown (SKILL.md), JSON (manifestos de plugin/marketplace do Claude Code), bash (guards de validação), git.
 
@@ -14,35 +14,35 @@
 
 ---
 
-### Task 1: Vendorizar `rewrite-prompt` como 8ª skill first-party
+### Task 1: Vendorizar `zion-rewrite-prompt` como 8ª skill first-party
 
 **Files:**
-- Create: `skills/rewrite-prompt/SKILL.md` (cópia verbatim do corpo, com frontmatter alinhado)
+- Create: `skills/zion-rewrite-prompt/SKILL.md` (cópia verbatim do corpo, com frontmatter alinhado)
 
 - [ ] **Step 1: Copiar o SKILL.md pessoal para dentro do repo**
 
 Run:
 ```bash
 cd ~/projects/personal/zion-build-prd
-mkdir -p skills/rewrite-prompt
-cp ~/.claude/skills/rewrite-prompt/SKILL.md skills/rewrite-prompt/SKILL.md
+mkdir -p skills/zion-rewrite-prompt
+cp ~/.claude/skills/zion-rewrite-prompt/SKILL.md skills/zion-rewrite-prompt/SKILL.md
 ```
 Expected: sem saída (arquivo copiado).
 
 - [ ] **Step 2: Alinhar o frontmatter ao padrão das outras 7 skills**
 
-O frontmatter original do `rewrite-prompt` só tem `name` + `description`. Alinhá-lo ao padrão
+O frontmatter original do `zion-rewrite-prompt` só tem `name` + `description`. Alinhá-lo ao padrão
 das skills-irmãs (adicionar bloco `metadata.author` + flags de invocação). Usar a ferramenta
-Edit em `skills/rewrite-prompt/SKILL.md`.
+Edit em `skills/zion-rewrite-prompt/SKILL.md`.
 
 old_string (as 3 primeiras linhas do frontmatter, terminando na linha `---` de fechamento):
 ```
-description: Reescreve um prompt informal em prompt XML estruturado (tags <role>, <context>, <instructions>, <constraints>, <output_format>, <tone>, <success_criteria>) seguindo melhores práticas de Anthropic/OpenAI/Google. Use quando o usuário invocar /rewrite-prompt ou pedir para "reescrever", "reestruturar", "melhorar" ou "formalizar" um prompt. Aceita --prompt "..." (obrigatório) e --context arq1 arq2 (opcional). NUNCA executa o prompt — apenas reescreve.
+description: Reescreve um prompt informal em prompt XML estruturado (tags <role>, <context>, <instructions>, <constraints>, <output_format>, <tone>, <success_criteria>) seguindo melhores práticas de Anthropic/OpenAI/Google. Use quando o usuário invocar /zion-rewrite-prompt ou pedir para "reescrever", "reestruturar", "melhorar" ou "formalizar" um prompt. Aceita --prompt "..." (obrigatório) e --context arq1 arq2 (opcional). NUNCA executa o prompt — apenas reescreve.
 ---
 ```
 new_string:
 ```
-description: Reescreve um prompt informal em prompt XML estruturado (tags <role>, <context>, <instructions>, <constraints>, <output_format>, <tone>, <success_criteria>) seguindo melhores práticas de Anthropic/OpenAI/Google. Use quando o usuário invocar /rewrite-prompt ou pedir para "reescrever", "reestruturar", "melhorar" ou "formalizar" um prompt. Aceita --prompt "..." (obrigatório) e --context arq1 arq2 (opcional). NUNCA executa o prompt — apenas reescreve.
+description: Reescreve um prompt informal em prompt XML estruturado (tags <role>, <context>, <instructions>, <constraints>, <output_format>, <tone>, <success_criteria>) seguindo melhores práticas de Anthropic/OpenAI/Google. Use quando o usuário invocar /zion-rewrite-prompt ou pedir para "reescrever", "reestruturar", "melhorar" ou "formalizar" um prompt. Aceita --prompt "..." (obrigatório) e --context arq1 arq2 (opcional). NUNCA executa o prompt — apenas reescreve.
 argument-hint: "--prompt \"...\" (obrigatório) [--context arq1 arq2 ...]"
 metadata:
   author: zion-build-prd
@@ -56,13 +56,13 @@ disable-model-invocation: false
 Run:
 ```bash
 cd ~/projects/personal/zion-build-prd
-f=skills/rewrite-prompt/SKILL.md
-grep -qm1 '^name: rewrite-prompt$' "$f" \
+f=skills/zion-rewrite-prompt/SKILL.md
+grep -qm1 '^name: zion-rewrite-prompt$' "$f" \
   && grep -qm1 '^description:' "$f" \
   && grep -qm1 '^  author: zion-build-prd$' "$f" \
-  && echo "frontmatter rewrite-prompt ok"
+  && echo "frontmatter zion-rewrite-prompt ok"
 ```
-Expected: `frontmatter rewrite-prompt ok`
+Expected: `frontmatter zion-rewrite-prompt ok`
 
 - [ ] **Step 4: Guard — o corpo veio verbatim (sem perda de conteúdo)**
 
@@ -72,8 +72,8 @@ cabeçalho para não depender da contagem de linhas do frontmatter.
 Run:
 ```bash
 diff \
-  <(sed -n '/^# Rewrite Prompt/,$p' ~/.claude/skills/rewrite-prompt/SKILL.md) \
-  <(sed -n '/^# Rewrite Prompt/,$p' skills/rewrite-prompt/SKILL.md) \
+  <(sed -n '/^# Rewrite Prompt/,$p' ~/.claude/skills/zion-rewrite-prompt/SKILL.md) \
+  <(sed -n '/^# Rewrite Prompt/,$p' skills/zion-rewrite-prompt/SKILL.md) \
   && echo "corpo identico ao original"
 ```
 Expected: `corpo identico ao original` (o corpo é idêntico; apenas o frontmatter cresceu).
@@ -86,8 +86,8 @@ Expected: `8`
 - [ ] **Step 6: Commit**
 
 ```bash
-git add skills/rewrite-prompt/SKILL.md
-git commit -m "feat(skills): vendorizar rewrite-prompt como skill first-party"
+git add skills/zion-rewrite-prompt/SKILL.md
+git commit -m "feat(skills): vendorizar zion-rewrite-prompt como skill first-party"
 ```
 
 ---
@@ -177,13 +177,13 @@ git commit -m "feat(plugin): declarar dependencia cross-marketplace de superpowe
 ### Task 3: Preflight de `superpowers` nas 3 skills que o usam
 
 **Files:**
-- Modify: `skills/prd-discovery/SKILL.md` (Fase 2/3)
-- Modify: `skills/prd-decompose/SKILL.md` (Fase 2/3)
-- Modify: `skills/prd-write/SKILL.md` (Fase 3)
+- Modify: `skills/zion-prd-discovery/SKILL.md` (Fase 2/3)
+- Modify: `skills/zion-prd-decompose/SKILL.md` (Fase 2/3)
+- Modify: `skills/zion-prd-write/SKILL.md` (Fase 3)
 
-- [ ] **Step 1: Inserir o preflight em `prd-discovery`**
+- [ ] **Step 1: Inserir o preflight em `zion-prd-discovery`**
 
-Editar `skills/prd-discovery/SKILL.md` com a ferramenta Edit.
+Editar `skills/zion-prd-discovery/SKILL.md` com a ferramenta Edit.
 
 old_string:
 ```
@@ -202,9 +202,9 @@ marketplace está registrado.)
 Invoque `superpowers:brainstorming` no mesmo turno, com este enquadramento fixo:
 ```
 
-- [ ] **Step 2: Inserir o preflight em `prd-decompose`**
+- [ ] **Step 2: Inserir o preflight em `zion-prd-decompose`**
 
-Editar `skills/prd-decompose/SKILL.md` com a ferramenta Edit.
+Editar `skills/zion-prd-decompose/SKILL.md` com a ferramenta Edit.
 
 old_string:
 ```
@@ -223,9 +223,9 @@ marketplace está registrado.)
 Invoque `superpowers:brainstorming` no mesmo turno para: (1) agrupar os `RF-xx` em épicos;
 ```
 
-- [ ] **Step 3: Inserir o preflight em `prd-write`**
+- [ ] **Step 3: Inserir o preflight em `zion-prd-write`**
 
-Editar `skills/prd-write/SKILL.md` com a ferramenta Edit.
+Editar `skills/zion-prd-write/SKILL.md` com a ferramenta Edit.
 
 old_string:
 ```
@@ -254,31 +254,31 @@ echo "skills com preflight: $n"
 grep -rl 'Preflight (dependência)' skills/ | sort
 [ "$n" -eq 3 ] && echo "preflight em 3 skills ok"
 ```
-Expected: `skills com preflight: 3`, as três linhas `prd-discovery`, `prd-decompose`, `prd-write`, e `preflight em 3 skills ok`.
+Expected: `skills com preflight: 3`, as três linhas `zion-prd-discovery`, `zion-prd-decompose`, `zion-prd-write`, e `preflight em 3 skills ok`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add skills/prd-discovery/SKILL.md skills/prd-decompose/SKILL.md skills/prd-write/SKILL.md
+git add skills/zion-prd-discovery/SKILL.md skills/zion-prd-decompose/SKILL.md skills/zion-prd-write/SKILL.md
 git commit -m "feat(skills): preflight defensivo de superpowers nas skills que o usam"
 ```
 
 ---
 
-### Task 4: Degradação graciosa de `deep-research` no `prd-spike`
+### Task 4: Degradação graciosa de `deep-research` no `zion-prd-spike`
 
 **Files:**
-- Modify: `skills/prd-spike/SKILL.md` (Fase 2/3, passo 1)
+- Modify: `skills/zion-prd-spike/SKILL.md` (Fase 2/3, passo 1)
 
 - [ ] **Step 1: Tornar a chamada a `deep-research` condicional**
 
-Editar `skills/prd-spike/SKILL.md` com a ferramenta Edit.
+Editar `skills/zion-prd-spike/SKILL.md` com a ferramenta Edit.
 
 old_string:
 ```
 Para cada decisão, no mesmo turno:
 1. Invoque `deep-research` para levantar os trade-offs das opções (custo de manutenção, limites).
-2. Invoque `adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
+2. Invoque `zion-adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
 ```
 new_string:
 ```
@@ -287,7 +287,7 @@ Para cada decisão, no mesmo turno:
    `deep-research` estiver disponível, invoque-a para isso; se **não** estiver (harness antigo ou
    variante), avise "`deep-research` (built-in) indisponível — seguindo com pesquisa manual" e
    conduza o levantamento manualmente. Nunca quebre por falta dela.
-2. Invoque `adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
+2. Invoque `zion-adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
 ```
 
 - [ ] **Step 2: Guard — o ramo de degradação está presente**
@@ -295,8 +295,8 @@ Para cada decisão, no mesmo turno:
 Run:
 ```bash
 cd ~/projects/personal/zion-build-prd
-grep -q 'pesquisa manual' skills/prd-spike/SKILL.md \
-  && grep -q 'deep-research` estiver disponível' skills/prd-spike/SKILL.md \
+grep -q 'pesquisa manual' skills/zion-prd-spike/SKILL.md \
+  && grep -q 'deep-research` estiver disponível' skills/zion-prd-spike/SKILL.md \
   && echo "degradacao deep-research ok"
 ```
 Expected: `degradacao deep-research ok`
@@ -304,8 +304,8 @@ Expected: `degradacao deep-research ok`
 - [ ] **Step 3: Commit**
 
 ```bash
-git add skills/prd-spike/SKILL.md
-git commit -m "feat(skills): prd-spike degrada graciosamente sem deep-research"
+git add skills/zion-prd-spike/SKILL.md
+git commit -m "feat(skills): zion-prd-spike degrada graciosamente sem deep-research"
 ```
 
 ---
@@ -329,10 +329,10 @@ new_string:
 
 | Dependência | Usada por | De onde vem |
 |-------------|-----------|-------------|
-| `superpowers` (skill `superpowers:brainstorming`) | `/prd-discovery`, `/prd-decompose`, `/prd-write` | Externa — plugin `obra/superpowers-marketplace` |
-| `rewrite-prompt` | `/prd-constitution-prompt`, `/prd-specify-prompt` | Incluída (skill first-party deste repo) |
-| `deep-research` | `/prd-spike` | Built-in do Claude Code (degrada para pesquisa manual se ausente) |
-| `adr-new` | `/prd-spike` | Incluída (skill deste repo) |
+| `superpowers` (skill `superpowers:brainstorming`) | `/zion-prd-discovery`, `/zion-prd-decompose`, `/zion-prd-write` | Externa — plugin `obra/superpowers-marketplace` |
+| `zion-rewrite-prompt` | `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` | Incluída (skill first-party deste repo) |
+| `deep-research` | `/zion-prd-spike` | Built-in do Claude Code (degrada para pesquisa manual se ausente) |
+| `zion-adr-new` | `/zion-prd-spike` | Incluída (skill deste repo) |
 
 A **única dependência externa** é o `superpowers`.
 
@@ -417,12 +417,12 @@ Run:
 ```bash
 cd ~/projects/personal/zion-build-prd
 [ "$(grep -rl 'Preflight (dependência)' skills/ | wc -l)" -eq 3 ] \
-  && grep -q 'pesquisa manual' skills/prd-spike/SKILL.md \
+  && grep -q 'pesquisa manual' skills/zion-prd-spike/SKILL.md \
   && echo "guardas de dependencia ok"
 ```
 Expected: `guardas de dependencia ok`
 
-- [ ] **Step 4: Assets canônicos sem drift (rewrite-prompt não afeta o sync)**
+- [ ] **Step 4: Assets canônicos sem drift (zion-rewrite-prompt não afeta o sync)**
 
 Run: `./scripts/check-assets.sh`
 Expected: `check-assets: sem drift`
@@ -443,9 +443,9 @@ Expected: sem saída (tudo commitado).
 
 - **Uma árvore, dois formatos:** nenhum arquivo de skill é duplicado por formato; só os manifestos
   em `.claude-plugin/` habilitam o formato plugin sobre a mesma `skills/`.
-- **`superpowers` é a única dep externa:** vendorizar `rewrite-prompt` e tratar `deep-research` como
+- **`superpowers` é a única dep externa:** vendorizar `zion-rewrite-prompt` e tratar `deep-research` como
   built-in reduz o problema a uma única dependência resolvível.
 - **Honestidade da garantia:** a auto-instalação cross-marketplace do `superpowers` **não é
   zero-setup** — exige o marketplace registrado; senão, erro acionável (não falha silenciosa).
-- **Sem mudança nos scripts de sync:** `rewrite-prompt` é autocontido (um SKILL.md, sem
+- **Sem mudança nos scripts de sync:** `zion-rewrite-prompt` é autocontido (um SKILL.md, sem
   `references/`), então `sync-assets.sh`/`check-assets.sh` permanecem intactos.

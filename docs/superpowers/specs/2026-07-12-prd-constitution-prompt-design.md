@@ -1,11 +1,11 @@
-# Design — `/prd-constitution-prompt` (ponte do harness para o Passo 5a)
+# Design — `/zion-prd-constitution-prompt` (ponte do harness para o Passo 5a)
 
 > Data: 2026-07-12 · Status: aprovado para plano
 
 ## Objetivo
 
-Adicionar ao harness-prd uma etapa `/prd-constitution-prompt`, **equivalente e paralela** a
-`/prd-specify-prompt`, que facilita o **Bootstrap do Spec Kit** (Passo 5a do guia): monta um prompt
+Adicionar ao harness-prd uma etapa `/zion-prd-constitution-prompt`, **equivalente e paralela** a
+`/zion-prd-specify-prompt`, que facilita o **Bootstrap do Spec Kit** (Passo 5a do guia): monta um prompt
 para o usuário criar a `constitution`, derivando **princípios decidíveis** dos **NFRs + restrições de
 ADRs** da PRD, entrega o comando pronto (`/speckit.constitution "..."`) e **para** — o ciclo
 `/speckit.*` é do usuário.
@@ -15,8 +15,8 @@ ADRs** da PRD, entrega o comando pronto (`/speckit.constitution "..."`) e **para
 O harness é um conjunto de skills `prd-*` que leva o usuário de descoberta → spikes → PRD →
 decomposição, e então faz a **ponte** para o Spec Kit. Hoje existe **uma** ponte:
 
-- `prd-specify-prompt` → Passo **5b** (por fatia vertical): monta o `/speckit.specify`, guarda a
-  fronteira **sem-stack**, delega a `rewrite-prompt`, referencia âncoras de
+- `zion-prd-specify-prompt` → Passo **5b** (por fatia vertical): monta o `/speckit.specify`, guarda a
+  fronteira **sem-stack**, delega a `zion-rewrite-prompt`, referencia âncoras de
   `.specify/prd/quality-rules.md` (`#anatomia-specify`, critério `specify-prompt`), entrega e **para**.
 
 Falta a ponte para o Passo **5a** (bootstrap, uma vez por projeto): a `constitution`. O guia
@@ -25,11 +25,11 @@ Falta a ponte para o Passo **5a** (bootstrap, uma vez por projeto): a `constitut
 
 ## Diferença-chave em relação ao `specify-prompt`
 
-| Dimensão | `prd-specify-prompt` (5b) | `prd-constitution-prompt` (5a) |
+| Dimensão | `zion-prd-specify-prompt` (5b) | `zion-prd-constitution-prompt` (5a) |
 |---|---|---|
 | Cadência | por fatia vertical | **uma vez por projeto** (bootstrap) |
-| Entrada | fatia do backlog (`/prd-decompose`) | **NFRs + restrições de ADRs** de `docs/PRD.md` |
-| Pré-requisito | backlog de fatias | `docs/PRD.md` (saída de `/prd-write`); **não** depende de decompose |
+| Entrada | fatia do backlog (`/zion-prd-decompose`) | **NFRs + restrições de ADRs** de `docs/PRD.md` |
+| Pré-requisito | backlog de fatias | `docs/PRD.md` (saída de `/zion-prd-write`); **não** depende de decompose |
 | Guarda de fronteira | **sem-stack** (stack só no `plan`) | **decidível-não-genérico ∧ rastreável a NFR/ADR** |
 | Saída | `/speckit.specify "..."` pronto | `/speckit.constitution "..."` pronto |
 
@@ -41,12 +41,12 @@ NFR ou restrição de ADR). Princípios genéricos ("código limpo", "boa cobert
 
 ## Componentes
 
-### 1. `.claude/skills/prd-constitution-prompt/SKILL.md`
+### 1. `.claude/skills/zion-prd-constitution-prompt/SKILL.md`
 
-Espelha a anatomia de fases do `prd-specify-prompt`.
+Espelha a anatomia de fases do `zion-prd-specify-prompt`.
 
 **Frontmatter:**
-- `name: prd-constitution-prompt`
+- `name: zion-prd-constitution-prompt`
 - `description`: ponte para o Spec Kit — monta o prompt do `/speckit.constitution` derivando
   princípios decidíveis dos NFRs/restrições da PRD, e entrega para você disparar.
 - `argument-hint`: opcional — áreas/princípios a enfatizar; senão deriva dos NFRs/ADRs da PRD.
@@ -54,12 +54,12 @@ Espelha a anatomia de fases do `prd-specify-prompt`.
 
 **Fases:**
 - **Fase 0 — Pré-requisito (aconselha):** deve existir `docs/PRD.md` com NFRs/restrições. Se não
-  houver, avisa ("recomendo `/prd-write` antes") e pergunta se segue. Marca que é bootstrap
+  houver, avisa ("recomendo `/zion-prd-write` antes") e pergunta se segue. Marca que é bootstrap
   **1×/projeto**.
 - **Fase 1 — Validar entrada bruta (aconselha):** colhe NFRs mensuráveis + restrições de ADRs. Se um
   princípio proposto é **genérico** ou **não rastreia** a nenhum NFR/ADR, aponta (ref.
   `#anatomia-constitution`). Não bloqueia.
-- **Fase 2/3 — Formatar e auto-delegar:** invoca `rewrite-prompt` no mesmo turno, seguindo
+- **Fase 2/3 — Formatar e auto-delegar:** invoca `zion-rewrite-prompt` no mesmo turno, seguindo
   `quality-rules.md` `#anatomia-constitution`:
   - `<context>` — NFRs (`NFR-xx`) e restrições de ADRs como **fonte/referência**.
   - `<instructions>` — derivar princípios **decidíveis** a partir dessa fonte.
@@ -91,17 +91,17 @@ Espelha a anatomia de fases do `prd-specify-prompt`.
 ### 3. Guias — coerência
 
 - **`docs/como-usar-o-harness-prd.md`:**
-  - +linha na tabela "Mapa rápido dos comandos": `/prd-constitution-prompt` | Ponte p/ 5a (bootstrap)
-    | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | `rewrite-prompt`.
+  - +linha na tabela "Mapa rápido dos comandos": `/zion-prd-constitution-prompt` | Ponte p/ 5a (bootstrap)
+    | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | `zion-rewrite-prompt`.
   - +nó no fluxo mermaid: ponte bootstrap 1× para o território `/speckit.*`.
-  - nova seção "Ponte (bootstrap, 1×) — `/prd-constitution-prompt`" antes da seção do specify, com
+  - nova seção "Ponte (bootstrap, 1×) — `/zion-prd-constitution-prompt`" antes da seção do specify, com
     exemplo de saída.
   - item #5 dos "gates em ação" (handoff) cita as **duas** pontes entregando e parando.
   - +passo no "resumo de bolso" (bootstrap antes do specify).
 - **`docs/guia-prd-para-spec-kit.md`:**
-  - nota no Passo 5a de que o harness oferece `/prd-constitution-prompt` como ponte (monta o prompt e
+  - nota no Passo 5a de que o harness oferece `/zion-prd-constitution-prompt` como ponte (monta o prompt e
     entrega; o `/speckit.constitution` é do usuário).
-  - a linha `rewrite-prompt` na tabela de skills passa a citar **P5a** (constitution) **e** P5b
+  - a linha `zion-rewrite-prompt` na tabela de skills passa a citar **P5a** (constitution) **e** P5b
     (specify).
 
 ## Fora de escopo (YAGNI)
@@ -113,7 +113,7 @@ Espelha a anatomia de fases do `prd-specify-prompt`.
 
 ## Critério de aceite do trabalho
 
-- `.claude/skills/prd-constitution-prompt/SKILL.md` existe, espelha as fases do `specify-prompt` e
+- `.claude/skills/zion-prd-constitution-prompt/SKILL.md` existe, espelha as fases do `specify-prompt` e
   contém "PARE AQUI".
 - `quality-rules.md` tem o critério `constitution-prompt` e a âncora `#anatomia-constitution`.
 - Os dois guias referenciam a nova ponte de forma coerente.

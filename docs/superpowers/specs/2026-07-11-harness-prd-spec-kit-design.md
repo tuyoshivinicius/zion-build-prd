@@ -8,8 +8,8 @@
 
 O `guia-prd-para-spec-kit.md` descreve um processo de seis estágios (Descoberta → Spikes/ADR →
 PRD → Decomposição → Spec Kit por feature → Rastreabilidade), mas é **um manual de leitura**: quem
-executa é o usuário, invocando manualmente `superpowers:brainstorming`, `deep-research`, `adr-new`,
-`rewrite-prompt` e os `/speckit.*` com os argumentos certos e na ordem certa. Isso é propenso a
+executa é o usuário, invocando manualmente `superpowers:brainstorming`, `deep-research`, `zion-adr-new`,
+`zion-rewrite-prompt` e os `/speckit.*` com os argumentos certos e na ordem certa. Isso é propenso a
 erro: pular pré-requisitos, esquecer o "não faz", deixar stack vazar para a PRD, montar um prompt de
 `specify` fraco.
 
@@ -32,11 +32,11 @@ processo a poucos comandos, sem reimplementar o que as skills reais já fazem.
 
 ```
 .claude/skills/
-  prd-discovery/SKILL.md      # Estágio 1 — Descoberta enxuta
-  prd-spike/SKILL.md          # Estágio 2 — Spikes + ADR
-  prd-write/SKILL.md          # Estágio 3 — PRD enxuta (o coração)
-  prd-decompose/SKILL.md      # Estágio 4 — Épicos → story map → fatias verticais
-  prd-specify-prompt/SKILL.md # Ponte p/ 5b — monta o prompt do /speckit.specify
+  zion-prd-discovery/SKILL.md      # Estágio 1 — Descoberta enxuta
+  zion-prd-spike/SKILL.md          # Estágio 2 — Spikes + ADR
+  zion-prd-write/SKILL.md          # Estágio 3 — PRD enxuta (o coração)
+  zion-prd-decompose/SKILL.md      # Estágio 4 — Épicos → story map → fatias verticais
+  zion-prd-specify-prompt/SKILL.md # Ponte p/ 5b — monta o prompt do /speckit.specify
 
 .specify/prd/
   quality-rules.md            # Fonte única: fronteira o-quê/como, critérios de
@@ -49,7 +49,7 @@ processo a poucos comandos, sem reimplementar o que as skills reais já fazem.
 **Justificativa do layout:**
 - Os `SKILL.md` ficam finos e *apontam* para `quality-rules.md` em vez de repetir regras — afinar o
   padrão de qualidade mexe num arquivo só.
-- `.specify/prd/` espelha o `.specify/templates/` que o Spec Kit já usa. `prd-write` copia
+- `.specify/prd/` espelha o `.specify/templates/` que o Spec Kit já usa. `zion-prd-write` copia
   `prd-skeleton.md` → `docs/PRD.md` do mesmo jeito que `speckit-specify` copia `spec-template.md`.
 - **Sem arquivo de estado**: os comandos leem `docs/discovery.md`, `docs/adr/`, `docs/PRD.md`
   diretamente para inferir se o passo anterior "passou".
@@ -77,21 +77,21 @@ Todos os 5 comandos compartilham o mesmo contrato. O `SKILL.md` de cada um só p
 
 ## 5. Especificação por comando
 
-### 5.1 `/prd-discovery` — Estágio 1
+### 5.1 `/zion-prd-discovery` — Estágio 1
 - **Pré-req:** nenhum. Aceita ideia bruta + URLs de referência.
 - **Entrada:** a semente tem problema e persona candidata? Stack colada aqui → avisa que é cedo.
 - **Delega:** `superpowers:brainstorming` com enquadramento fixo (visão-1-frase, persona principal,
   quadro faz/não-faz).
 - **Saída:** `docs/discovery.md` com visão-1-frase + ≥1 persona nomeada + **"não faz" explícito**.
 
-### 5.2 `/prd-spike` — Estágio 2
+### 5.2 `/zion-prd-spike` — Estágio 2
 - **Pré-req:** `docs/discovery.md` existe.
 - **Entrada:** usuário nomeia 2–3 decisões estruturantes (filtro "isso muda a PRD inteira?").
-- **Delega:** `deep-research` (trade-offs) → `adr-new` por decisão (dois sub-passos no comando).
+- **Delega:** `deep-research` (trade-offs) → `zion-adr-new` por decisão (dois sub-passos no comando).
 - **Saída:** cada decisão vira `docs/adr/ADR-00x-*.md` (contexto/decisão/consequências). Avisa se
   algum ADR não referencia um spike real.
 
-### 5.3 `/prd-write` — Estágio 3 (o coração)
+### 5.3 `/zion-prd-write` — Estágio 3 (o coração)
 - **Pré-req:** `docs/discovery.md` + `docs/adr/`. Se `docs/PRD.md` existe → modo revisar.
 - **Entrada:** trabalha sobre os artefatos, não sobre texto novo.
 - **Formata:** copia `prd-skeleton.md` → `docs/PRD.md` (12 seções em branco).
@@ -99,7 +99,7 @@ Todos os 5 comandos compartilham o mesmo contrato. O `SKILL.md` de cada um só p
 - **Saída:** escopo in/out explícito; `RF-xx` por épico (1 frase); NFRs com número; **sem** critério
   de aceite/telas/stack (checagem de fronteira). Desvio → aponta a linha e sugere mover para `plan.md`.
 
-### 5.4 `/prd-decompose` — Estágio 4
+### 5.4 `/zion-prd-decompose` — Estágio 4
 - **Pré-req:** `docs/PRD.md` com seção `RF-xx`.
 - **Delega:** `superpowers:brainstorming`: agrupa RF-xx em épicos → story map → cortes R0..Rn →
   fatias verticais.
@@ -107,10 +107,10 @@ Todos os 5 comandos compartilham o mesmo contrato. O `SKILL.md` de cada um só p
   a fatia zero; copia `traceability-table.md` para a seção 12 da PRD, uma linha por RF-xx in-scope.
   Fatia horizontal → sugere refatiar via SPIDR.
 
-### 5.5 `/prd-specify-prompt` — Ponte para 5b
+### 5.5 `/zion-prd-specify-prompt` — Ponte para 5b
 - **Pré-req:** existe backlog de fatias (saída do decompose). Usuário aponta *qual* fatia.
 - **Entrada:** a fatia tem resultado observável? Biblioteca/framework citada → avisa (é do `plan`).
-- **Delega:** `rewrite-prompt` montando o prompt XML: `<constraints>` blinda "sem stack",
+- **Delega:** `zion-rewrite-prompt` montando o prompt XML: `<constraints>` blinda "sem stack",
   `<context>` põe RF-xx/ADR como referência, `<success_criteria>` declara o observável.
 - **Saída (handoff):** entrega o `/speckit.specify "..."` pronto para o usuário disparar. **O
   auto-delegar para aqui** — o ciclo speckit é do usuário. Encerra o território do harness.
@@ -147,15 +147,15 @@ observar o comportamento. Caso de ponta-a-ponta: o próprio **Zion Mermaid Edito
 
 1. **Caminho feliz encadeado.** discovery → spike → write → decompose → specify-prompt; cada
    artefato existe e cada Fase 4 dá ✓.
-2. **Gate mole dispara e não trava.** `/prd-write` sem `docs/discovery.md` → avisa e pergunta; se
+2. **Gate mole dispara e não trava.** `/zion-prd-write` sem `docs/discovery.md` → avisa e pergunta; se
    sim, prossegue.
 3. **Detecção de fronteira vazada.** RF com "usar React para…" → Fase 4 aponta a linha e sugere
    mover para `plan.md`, citando `#fronteira`.
-4. **Idempotência / revisar.** `/prd-write` com `docs/PRD.md` existente → modo pressionar seção, não
+4. **Idempotência / revisar.** `/zion-prd-write` com `docs/PRD.md` existente → modo pressionar seção, não
    sobrescreve.
 5. **INVEST reprova fatia horizontal.** fatia "só a UI" → aponta falha no "dá demo sozinha?" e
    sugere SPIDR.
-6. **Handoff termina o território.** `/prd-specify-prompt` entrega o texto e não dispara `/speckit.*`.
+6. **Handoff termina o território.** `/zion-prd-specify-prompt` entrega o texto e não dispara `/speckit.*`.
 
 Cada cenário que passar vira evidência observada. Falha → bug no `SKILL.md`, não no processo.
 

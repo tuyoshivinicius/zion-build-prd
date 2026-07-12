@@ -9,13 +9,13 @@ O repositório atual `zion-mermaid-editor` **é**, de fato, o produto **harness-
 harness multi-agente para autoria de PRDs que faz a ponte para o GitHub Spec Kit. O
 fluxo é encenado em estágios:
 
-1. `/prd-discovery` — descoberta enxuta → `docs/discovery.md`
-2. `/prd-spike` — pesquisa de trade-offs + ADRs
-3. `/prd-write` — preenche a PRD a partir do esqueleto
-4. `/prd-decompose` — épicos, story map, fatias verticais, rastreabilidade
-5. `/prd-constitution-prompt` — ponte para `/speckit.constitution`
-6. `/prd-specify-prompt` — ponte para `/speckit.specify`
-+ `/adr-new` — helper para criar ADRs
+1. `/zion-prd-discovery` — descoberta enxuta → `docs/discovery.md`
+2. `/zion-prd-spike` — pesquisa de trade-offs + ADRs
+3. `/zion-prd-write` — preenche a PRD a partir do esqueleto
+4. `/zion-prd-decompose` — épicos, story map, fatias verticais, rastreabilidade
+5. `/zion-prd-constitution-prompt` — ponte para `/speckit.constitution`
+6. `/zion-prd-specify-prompt` — ponte para `/speckit.specify`
++ `/zion-adr-new` — helper para criar ADRs
 
 As skills `/prd-*` referenciam assets compartilhados por caminho:
 `.specify/prd/quality-rules.md` e `.specify/prd/templates/*.md`.
@@ -44,7 +44,7 @@ para **Zion Build PRD** e entregá-lo conforme o padrão comunitário multi-agen
    puro, zero setup.
 3. **Histórico:** repo novo baseado em **clone completo** do repo atual (todos os
    commits preservados), depois reestruturado para o layout skills.sh.
-4. **Nomes das slash-commands preservados** (`/prd-discovery`, etc.). Só o **produto**
+4. **Nomes das slash-commands preservados** (`/zion-prd-discovery`, etc.). Só o **produto**
    é renomeado para "Zion Build PRD".
 5. **Incluir** `.claude-plugin/marketplace.json` (aprovado).
 
@@ -62,13 +62,13 @@ zion-build-prd/
 │   ├── sync-assets.sh                 # copia assets/ → references/ de cada skill
 │   └── check-assets.sh                # falha em caso de drift (guarda CI/pre-commit)
 ├── skills/
-│   ├── prd-discovery/{SKILL.md, references/quality-rules.md}
-│   ├── prd-spike/{SKILL.md, references/quality-rules.md}
-│   ├── prd-write/{SKILL.md, references/{quality-rules.md, prd-skeleton.md}}
-│   ├── prd-decompose/{SKILL.md, references/{quality-rules.md, traceability-table.md}}
-│   ├── prd-constitution-prompt/{SKILL.md, references/quality-rules.md}
-│   ├── prd-specify-prompt/{SKILL.md, references/quality-rules.md}
-│   └── adr-new/SKILL.md               # sem dependência de asset compartilhado
+│   ├── zion-prd-discovery/{SKILL.md, references/quality-rules.md}
+│   ├── zion-prd-spike/{SKILL.md, references/quality-rules.md}
+│   ├── zion-prd-write/{SKILL.md, references/{quality-rules.md, prd-skeleton.md}}
+│   ├── zion-prd-decompose/{SKILL.md, references/{quality-rules.md, traceability-table.md}}
+│   ├── zion-prd-constitution-prompt/{SKILL.md, references/quality-rules.md}
+│   ├── zion-prd-specify-prompt/{SKILL.md, references/quality-rules.md}
+│   └── zion-adr-new/SKILL.md               # sem dependência de asset compartilhado
 └── docs/
     ├── como-usar.md                   # guia do harness, renomeado → Zion Build PRD + instalação npx skills
     ├── guia-prd-para-spec-kit.md      # nomenclatura atualizada
@@ -79,10 +79,10 @@ zion-build-prd/
 
 | Asset (canônico em `assets/`)      | Skills que recebem cópia em `references/`                                          |
 |------------------------------------|------------------------------------------------------------------------------------|
-| `quality-rules.md`                 | prd-discovery, prd-spike, prd-write, prd-decompose, prd-constitution-prompt, prd-specify-prompt |
-| `templates/prd-skeleton.md`        | prd-write                                                                           |
-| `templates/traceability-table.md`  | prd-decompose                                                                       |
-| (nenhum)                           | adr-new                                                                             |
+| `quality-rules.md`                 | zion-prd-discovery, zion-prd-spike, zion-prd-write, zion-prd-decompose, zion-prd-constitution-prompt, zion-prd-specify-prompt |
+| `templates/prd-skeleton.md`        | zion-prd-write                                                                           |
+| `templates/traceability-table.md`  | zion-prd-decompose                                                                       |
+| (nenhum)                           | zion-adr-new                                                                             |
 
 ## Mecânica de autocontenção
 
