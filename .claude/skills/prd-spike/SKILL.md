@@ -1,7 +1,7 @@
 ---
 name: prd-spike
 description: Estágio 2 do harness — pesquisa trade-offs das decisões estruturantes e registra ADRs antes da PRD
-argument-hint: "As 2–3 decisões estruturantes que mudam a PRD inteira"
+argument-hint: "Opcional: as 2–3 decisões estruturantes, se você já as conhece"
 metadata:
   author: zion-mermaid-editor
 user-invocable: true
