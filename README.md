@@ -86,6 +86,11 @@ Após clonar, ative os git hooks versionados uma vez:
 A partir daí, basta editar `assets/` e commitar: o pre-commit hook roda o sync e
 inclui os `references/` regenerados no commit. Nunca edite `references/` à mão.
 
+> O hook sincroniza a partir da **árvore de trabalho**, não do que está staged.
+> Commite as mudanças de `assets/` **por inteiro** (evite stage parcial de um asset
+> com `git add -p`), senão os `references/` regenerados podem divergir do asset
+> parcialmente commitado — o CI pegaria depois.
+
 Mapeamento asset → skills: `scripts/asset-map.sh` (sourced por sync e check).
 
 O CI roda `./scripts/check-assets.sh` como guard de drift (backstop para `--no-verify`
