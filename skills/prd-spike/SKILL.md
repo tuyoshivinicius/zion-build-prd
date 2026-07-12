@@ -44,7 +44,10 @@ pelo usuário é a que vale. Não bloqueie.
 
 ## Fase 2/3 — Formatar e auto-delegar
 Para cada decisão, no mesmo turno:
-1. Invoque `deep-research` para levantar os trade-offs das opções (custo de manutenção, limites).
+1. Levante os trade-offs das opções (custo de manutenção, limites). Se a skill built-in
+   `deep-research` estiver disponível, invoque-a para isso; se **não** estiver (harness antigo ou
+   variante), avise "`deep-research` (built-in) indisponível — seguindo com pesquisa manual" e
+   conduza o levantamento manualmente. Nunca quebre por falta dela.
 2. Invoque `adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
 
 ## Fase 4 — Validar saída (aconselha)
