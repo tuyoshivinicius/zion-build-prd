@@ -280,7 +280,7 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 > começar a escrever critérios de aceite, telas ou stack, parou no lugar errado → isso vive no
 > `spec.md`/`plan.md` da feature.
 
-O esqueleto vive agora em **`.specify/prd/templates/prd-skeleton.md`** (dono único). O comando
+O esqueleto vive agora em **`assets/templates/prd-skeleton.md`** (dono único). O comando
 `/prd-write` o copia para `docs/PRD.md` no Passo 3. Cada cabeçalho traz *o que entra* e *o que NÃO
 entra* (a fronteira o-quê/por-quê vs. como).
 
@@ -291,7 +291,7 @@ Tudo isso é elaboração progressiva e entra no `spec.md`/`plan.md` de cada fea
 
 ## Modelo de tabela de rastreabilidade (`RF-xx ↔ specs/###-nome`)
 
-A tabela vive agora em **`.specify/prd/templates/traceability-table.md`** (dono único). O comando
+A tabela vive agora em **`assets/templates/traceability-table.md`** (dono único). O comando
 `/prd-decompose` a injeta na seção 12 da PRD no Passo 4. Preencha uma linha por requisito funcional
 in-scope quando **você** executar o processo.
 

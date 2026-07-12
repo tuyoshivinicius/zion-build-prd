@@ -1,4 +1,4 @@
-# Como usar o harness PRD → Spec Kit (exemplos do Zion Mermaid Editor)
+# Como usar o Zion Build PRD → Spec Kit (exemplos do Zion Mermaid Editor)
 
 > **O que este documento é:** um **guia prático** dos 6 comandos `/prd-*` — o harness que
 > *executa* o processo do `guia-prd-para-spec-kit.md`. Enquanto aquele guia **descreve** os seis
@@ -7,9 +7,17 @@
 >
 > **Fronteira, sempre:** a PRD e o input do `/speckit.specify` carregam *o-quê / por-quê*; o
 > `plan.md` de cada feature carrega *como / com quê*. Stack só aparece nos **ADRs** (Estágio 2) e
-> no `plan.md` — nunca na PRD. As regras vivem em `.specify/prd/quality-rules.md`.
+> no `plan.md` — nunca na PRD. As regras vivem em `assets/quality-rules.md`.
 
 ---
+
+## Instalação
+
+Instale via [skills.sh](https://skills.sh):
+
+    npx skills add tuyoshivinicius/zion-build-prd
+
+Isso instala as 7 skills em `.claude/skills/` do seu projeto. Instale o **Spec Kit** à parte — as pontes `/prd-constitution-prompt` e `/prd-specify-prompt` apenas montam os prompts do `/speckit.*`.
 
 ## Quando usar o harness (e quando não)
 
@@ -127,7 +135,7 @@ ambígua"*. Cada ADR aceito vira **restrição** na seção 8 da PRD.
 ```
 
 Sem argumento: trabalha sobre `docs/discovery.md` + `docs/adr/`. **Fase 2** copia
-`.specify/prd/templates/prd-skeleton.md` → `docs/PRD.md` (12 seções em branco). **Fase 3** delega a
+`assets/templates/prd-skeleton.md` → `docs/PRD.md` (12 seções em branco). **Fase 3** delega a
 `brainstorming` para preencher **seção a seção**. Trecho da PRD resultante:
 
 ```markdown
@@ -166,7 +174,7 @@ demo ponta-a-ponta?"*). Para o Zion:
 - **R1:** apontar erro de sintaxe (`RF-02`); exportar imagem (`RF-06`).
 - **R2:** editar no canvas — arrastar nó (`RF-03`), adicionar nó (`RF-04`).
 
-E **injeta a tabela** de `.specify/prd/templates/traceability-table.md` na **seção 12** da PRD:
+E **injeta a tabela** de `assets/templates/traceability-table.md` na **seção 12** da PRD:
 
 ```markdown
 | RF | Descrição (1 frase) | Épico | Feature / Spec | Release | Status |
@@ -288,9 +296,11 @@ As duas pontes **entregam** o texto e **param** — nunca disparam um `/speckit.
 Tudo num lugar só — mexa aqui, não nos comandos:
 
 - **Regras de qualidade** (fronteira, critérios de conclusão, INVEST/SPIDR, anatomia do specify):
-  `.specify/prd/quality-rules.md`.
-- **Esqueleto da PRD** (12 seções): `.specify/prd/templates/prd-skeleton.md`.
-- **Tabela de rastreabilidade:** `.specify/prd/templates/traceability-table.md`.
+  `assets/quality-rules.md`.
+- **Esqueleto da PRD** (12 seções): `assets/templates/prd-skeleton.md`.
+- **Tabela de rastreabilidade:** `assets/templates/traceability-table.md`.
+
+> Após editar qualquer arquivo em `assets/`, rode `./scripts/sync-assets.sh` para propagar às skills e `./scripts/check-assets.sh` para garantir que não há drift.
 
 Os comandos `/prd-*` **apontam** para esses arquivos em vez de repetir as regras — afinar o padrão
 de qualidade é editar um arquivo só.
