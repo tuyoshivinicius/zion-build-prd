@@ -73,10 +73,26 @@ param graciosamente em vez de quebrar no meio do fluxo.
 
 ## Desenvolvimento
 
-Os assets canônicos vivem em `assets/`. Após editá-los, rode:
+Os assets canônicos vivem em `assets/` — **fonte única de verdade**. As cópias em
+`skills/*/references/` são **artefatos derivados** (arquivos reais, exigidos pela
+distribuição isolada do `npx skills`) e são geradas automaticamente.
+
+Após clonar, ative os git hooks versionados uma vez:
 
 ```bash
-./scripts/sync-assets.sh   # copia assets/ → references/ de cada skill
+./scripts/setup-hooks.sh   # git config core.hooksPath .githooks
+```
+
+A partir daí, basta editar `assets/` e commitar: o pre-commit hook roda o sync e
+inclui os `references/` regenerados no commit. Nunca edite `references/` à mão.
+
+Mapeamento asset → skills: `scripts/asset-map.sh` (sourced por sync e check).
+
+O CI roda `./scripts/check-assets.sh` como guard de drift (backstop para `--no-verify`
+ou quem não rodou o `setup-hooks.sh`). Para checar/sincronizar à mão:
+
+```bash
+./scripts/sync-assets.sh   # regenera references/ a partir de assets/
 ./scripts/check-assets.sh  # falha se algum references/ divergir
 ```
 
