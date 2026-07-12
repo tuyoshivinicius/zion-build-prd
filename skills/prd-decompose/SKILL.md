@@ -21,6 +21,12 @@ Regras em `references/quality-rules.md`.
 Não há texto novo — trabalha sobre `docs/PRD.md`.
 
 ## Fase 2/3 — Formatar e auto-delegar
+**Preflight (dependência):** esta etapa exige `superpowers:brainstorming`. Se a skill não estiver
+disponível, avise e pare graciosamente: "Instale o superpowers — `/plugin marketplace add
+obra/superpowers-marketplace` e `/plugin install superpowers@superpowers-marketplace` — e rode de
+novo." (No formato plugin ela é declarada como dependência e instala automaticamente quando o
+marketplace está registrado.)
+
 Invoque `superpowers:brainstorming` no mesmo turno para: (1) agrupar os `RF-xx` em épicos;
 (2) montar o story map (backbone da jornada); (3) cortar linhas de release R0..Rn; (4) fatiar cada
 épico em fatias verticais.

@@ -22,6 +22,12 @@ o que estiver faltando. Se o usuário já descreve **stack/framework/biblioteca*
 — stack é do `plan.md`; aqui é só visão e escopo" (veja `quality-rules.md` `#fronteira`). Não bloqueie.
 
 ## Fase 2/3 — Formatar e auto-delegar
+**Preflight (dependência):** esta etapa exige `superpowers:brainstorming`. Se a skill não estiver
+disponível, avise e pare graciosamente: "Instale o superpowers — `/plugin marketplace add
+obra/superpowers-marketplace` e `/plugin install superpowers@superpowers-marketplace` — e rode de
+novo." (No formato plugin ela é declarada como dependência e instala automaticamente quando o
+marketplace está registrado.)
+
 Invoque `superpowers:brainstorming` no mesmo turno, com este enquadramento fixo:
 "Refine a visão do produto: (1) visão em UMA frase; (2) persona principal nomeada; (3) quadro
 faz/não-faz, com os 'não faz' explícitos. Grave o resultado em `docs/discovery.md`."

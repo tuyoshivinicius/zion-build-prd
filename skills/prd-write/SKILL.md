@@ -28,6 +28,12 @@ Se `docs/PRD.md` ainda não existe, copie `references/prd-skeleton.md` → `docs
 (as 12 seções em branco) como ponto de partida.
 
 ## Fase 3 — Auto-delegar
+**Preflight (dependência):** esta etapa exige `superpowers:brainstorming`. Se a skill não estiver
+disponível, avise e pare graciosamente: "Instale o superpowers — `/plugin marketplace add
+obra/superpowers-marketplace` e `/plugin install superpowers@superpowers-marketplace` — e rode de
+novo." (No formato plugin ela é declarada como dependência e instala automaticamente quando o
+marketplace está registrado.)
+
 Invoque `superpowers:brainstorming` no mesmo turno para preencher `docs/PRD.md` **seção a seção**, a
 partir de `docs/discovery.md` + `docs/adr/`. Trabalhe uma seção por vez — visão, objetivos/métricas,
 personas, escopo in/out, `RN-xx`, `RF-xx` por épico, NFRs (com número), restrições (das ADRs),
