@@ -1,6 +1,6 @@
 ---
 name: zion-prd-decompose
-description: Estágio 4 do harness — transforma RF-xx em épicos, story map e fatias verticais validadas por INVEST, e injeta a tabela de rastreabilidade
+description: Estágio 4 do harness Zion Build PRD — transforma os RF-xx da PRD em épicos, story map e fatias verticais validadas por INVEST, e injeta a tabela de rastreabilidade. Use para "decompor a PRD", "fatiar em histórias/épicos" ou "montar o backlog vertical" depois que a PRD estiver escrita.
 argument-hint: "(sem argumento — trabalha sobre docs/PRD.md)"
 metadata:
   author: zion-build-prd

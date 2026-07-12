@@ -1,6 +1,6 @@
 ---
 name: zion-prd-specify-prompt
-description: Ponte para o Spec Kit — monta o prompt do /speckit.specify de uma fatia vertical, blindando a fronteira sem-stack, e entrega para você disparar
+description: Ponte do harness Zion Build PRD para o Spec Kit — monta o prompt do /speckit.specify de UMA fatia vertical, blindando a fronteira sem-stack, entrega pronto e para. Use para levar uma fatia do backlog ao Spec Kit; não dispara o /speckit.* por você.
 argument-hint: "Qual fatia vertical do backlog transformar em prompt de specify"
 metadata:
   author: zion-build-prd

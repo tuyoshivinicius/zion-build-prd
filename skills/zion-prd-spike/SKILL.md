@@ -1,6 +1,6 @@
 ---
 name: zion-prd-spike
-description: Estágio 2 do harness — pesquisa trade-offs das decisões estruturantes e registra ADRs antes da PRD
+description: Estágio 2 do harness Zion Build PRD — pesquisa os trade-offs das 2–3 decisões estruturantes e registra ADRs em docs/adr/ antes de fechar a PRD. Use após a descoberta, sempre que houver decisões que mudam a PRD inteira a provar com spike, ou quando o usuário mencionar "decisões estruturantes", "trade-offs" ou "ADRs".
 argument-hint: "Opcional: as 2–3 decisões estruturantes, se você já as conhece"
 metadata:
   author: zion-build-prd

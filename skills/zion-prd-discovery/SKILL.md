@@ -1,6 +1,6 @@
 ---
 name: zion-prd-discovery
-description: Estágio 1 do harness — conduz a descoberta enxuta (visão, persona, faz/não-faz) e grava docs/discovery.md
+description: Estágio 1 do harness Zion Build PRD — conduz a descoberta enxuta de produto (visão em 1 frase, persona nomeada, quadro faz/não-faz) e grava docs/discovery.md. Use ao iniciar um produto/feature a partir de uma ideia bruta, antes de qualquer PRD ou stack, sempre que o usuário quiser "começar a descoberta", "destrinchar a ideia" ou "definir visão e escopo".
 argument-hint: "Ideia bruta do produto e, se houver, URLs de referência"
 metadata:
   author: zion-build-prd

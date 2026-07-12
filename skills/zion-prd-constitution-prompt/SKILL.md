@@ -1,6 +1,6 @@
 ---
 name: zion-prd-constitution-prompt
-description: Ponte para o Spec Kit — monta o prompt do /speckit.constitution derivando princípios decidíveis dos NFRs/restrições da PRD, e entrega para você disparar
+description: Ponte do harness Zion Build PRD para o Spec Kit (bootstrap, uma vez por projeto) — monta o prompt do /speckit.constitution derivando princípios decidíveis e rastreáveis dos NFRs/restrições da PRD, entrega pronto e para. Use quando for iniciar a constitution do Spec Kit a partir de uma PRD; não dispara o /speckit.* por você.
 argument-hint: "Opcional: áreas/princípios a enfatizar na constitution (senão, deriva dos NFRs/ADRs da PRD)"
 metadata:
   author: zion-build-prd

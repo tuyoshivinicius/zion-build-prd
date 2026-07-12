@@ -1,6 +1,6 @@
 ---
 name: zion-prd-write
-description: Estágio 3 do harness — copia o esqueleto da PRD e conduz o preenchimento seção a seção, guardando a fronteira o-quê/como
+description: Estágio 3 do harness Zion Build PRD — copia o esqueleto da PRD e conduz o preenchimento seção a seção (RF-xx por épico, NFRs com número, restrições das ADRs), guardando a fronteira o-quê/como. Use para "escrever a PRD", "preencher a PRD" ou revisar uma PRD existente, depois da descoberta e dos spikes.
 argument-hint: "(sem argumento — trabalha sobre docs/discovery.md e docs/adr/)"
 metadata:
   author: zion-build-prd
