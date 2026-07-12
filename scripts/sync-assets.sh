@@ -1,23 +1,19 @@
 #!/usr/bin/env bash
 # Copia os assets canônicos de assets/ para o references/ de cada skill que os consome.
-# Fonte única de verdade: assets/. Rode este script após editar qualquer asset.
+# Fonte única de verdade: assets/. Mapeamento em scripts/asset-map.sh.
+# Rodado automaticamente pelo pre-commit hook; pode ser rodado à mão também.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+source "scripts/asset-map.sh"
 
-QR="assets/quality-rules.md"
-SKELETON="assets/templates/prd-skeleton.md"
-TRACE="assets/templates/traceability-table.md"
-
-# quality-rules.md → todas as skills prd-* que a citam
-for s in prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt; do
-  mkdir -p "skills/$s/references"
-  cp "$QR" "skills/$s/references/quality-rules.md"
+for entry in "${ASSET_MAP[@]}"; do
+  read -r src skills <<< "$entry"
+  base="$(basename "$src")"
+  for s in $skills; do
+    mkdir -p "skills/$s/references"
+    cp "$src" "skills/$s/references/$base"
+  done
 done
-
-# templates específicos por skill
-mkdir -p skills/prd-write/references skills/prd-decompose/references
-cp "$SKELETON" "skills/prd-write/references/prd-skeleton.md"
-cp "$TRACE" "skills/prd-decompose/references/traceability-table.md"
 
 echo "sync-assets: ok"
