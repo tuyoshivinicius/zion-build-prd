@@ -86,7 +86,11 @@ prévia, o Zion é um editor visual que atualiza a prévia ao digitar e deixa ed
 
 ### Estágio 2 — `/prd-spike`
 
-Filtre pelas **2–3 decisões que mudam a PRD inteira** (não dúvidas pequenas). Para o Zion:
+As **2–3 decisões estruturantes** são as que mudam a PRD inteira (não dúvidas pequenas). O argumento
+é **opcional** — a Fase 1 é de mão dupla.
+
+**Se você já as conhece,** passe-as e o comando **só valida** cada uma pelo filtro *"isso muda a PRD
+inteira?"*. Para o Zion:
 
 ```text
 /prd-spike Três decisões estruturantes:
@@ -94,6 +98,12 @@ Filtre pelas **2–3 decisões que mudam a PRD inteira** (não dúvidas pequenas
 2. Sincronização bidirecional texto ↔ canvas (round-trip do diagrama).
 3. Onde o diagrama persiste entre sessões.
 ```
+
+**Se ainda não as enxerga,** rode **sem argumento** (ou com só 1–2) e o comando **lê o
+`docs/discovery.md` e propõe** as que faltam — cada uma ancorada num trecho do discovery — e pede
+para você **confirmar / editar / substituir**. Discovery magro (ex.: sem o quadro Faz/Não faz)? Ele
+**aponta a lacuna** e sugere enriquecer via `/prd-discovery` em vez de inventar eixos fracos — sem
+travar.
 
 O comando roda, por decisão: **`deep-research`** (trade-offs) → **`adr-new`** (registra o ADR).
 Aqui **stack pode e deve aparecer** — o ADR é o lar do "como". Saída:
@@ -253,7 +263,7 @@ de qualidade é editar um arquivo só.
 ## Resumo de bolso
 
 1. `/prd-discovery <ideia>` → `docs/discovery.md` (visão, persona, faz/não-faz).
-2. `/prd-spike <2–3 decisões>` → `docs/adr/` (aqui stack pode aparecer).
+2. `/prd-spike [2–3 decisões]` → `docs/adr/` — traga-as ou deixe a IA propor do discovery; aqui stack pode aparecer.
 3. `/prd-write` → `docs/PRD.md` (RF-xx por épico, **sem stack**).
 4. `/prd-decompose` → fatias verticais + tabela na PRD; R0 = walking skeleton.
 5. `/prd-specify-prompt <fatia>` → `/speckit.specify "..."` pronto → **você** dispara o Spec Kit.
