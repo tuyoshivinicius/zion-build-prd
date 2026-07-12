@@ -10,7 +10,8 @@ disable-model-invocation: false
 
 # prd-spike — Estágio 2 do harness (Spikes técnicos + ADRs)
 
-Orquestra o Passo 2 do guia `docs/guia-prd-para-spec-kit.md`. Contrato de 5 fases; gates aconselham.
+Orquestra o Estágio 2 do harness (Spikes técnicos + ADRs). Sequência dos estágios e fronteira
+o-quê/como em `references/process-context.md`. Contrato de 5 fases; gates aconselham.
 Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)

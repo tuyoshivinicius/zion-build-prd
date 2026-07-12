@@ -10,8 +10,9 @@ disable-model-invocation: false
 
 # prd-write — Estágio 3 do harness (PRD enxuta)
 
-Orquestra o Passo 3 do guia `docs/guia-prd-para-spec-kit.md`. Contrato de 5 fases; gates aconselham.
-Regras em `references/quality-rules.md`. Este é o coração do harness: a Fase 4 guarda a fronteira
+Orquestra o Estágio 3 do harness (PRD enxuta). Sequência dos estágios e fronteira o-quê/como em
+`references/process-context.md`. Contrato de 5 fases; gates aconselham. Regras em
+`references/quality-rules.md`. Este é o coração do harness: a Fase 4 guarda a fronteira
 **o-quê/por-quê vs. como**.
 
 ## Fase 0 — Pré-requisito (aconselha)
