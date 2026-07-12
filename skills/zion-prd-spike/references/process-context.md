@@ -7,17 +7,17 @@
 
 O harness conduz a autoria da PRD em estágios encadeados, cada um alimentando o próximo:
 
-1. **Descoberta** (`/prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
-2. **Spikes + ADRs** (`/prd-spike`, `/adr-new`) — provar as 2–3 decisões estruturantes com
+1. **Descoberta** (`/zion-prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
+2. **Spikes + ADRs** (`/zion-prd-spike`, `/zion-adr-new`) — provar as 2–3 decisões estruturantes com
    código descartável e registrá-las como ADRs em `docs/adr/` **antes** de fechar a PRD.
-3. **PRD enxuta** (`/prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
+3. **PRD enxuta** (`/zion-prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
    números, restrições (das ADRs) → `docs/PRD.md`. Sem comportamento detalhado nem stack.
-4. **Decomposição** (`/prd-decompose`) — PRD → épicos → story map → fatias verticais validadas
+4. **Decomposição** (`/zion-prd-decompose`) — PRD → épicos → story map → fatias verticais validadas
    por INVEST; walking skeleton como fatia zero; tabela de rastreabilidade injetada na PRD.
    **Handoff:** cada fatia priorizada entra no Spec Kit via `/speckit.specify`.
 5. **Spec Kit por feature** — `constitution` e o ciclo
    `specify → clarify → plan → checklist → tasks → analyze → implement → converge` (fora do
-   harness; pontes montadas por `/prd-constitution-prompt` e `/prd-specify-prompt`).
+   harness; pontes montadas por `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt`).
 
 ## A fronteira o-quê/por-quê × como/com-quê
 

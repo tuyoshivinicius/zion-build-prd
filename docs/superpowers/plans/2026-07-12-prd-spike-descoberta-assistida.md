@@ -1,10 +1,10 @@
-# prd-spike com descoberta assistida — Plano de Implementação
+# zion-prd-spike com descoberta assistida — Plano de Implementação
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Tornar a Fase 1 do `/prd-spike` bidirecional — a IA propõe as 2–3 decisões estruturantes lendo `docs/discovery.md` quando o usuário não as traz, e aceita a lista pronta quando ele já as conhece — sem quebrar nenhum invariante do harness.
+**Goal:** Tornar a Fase 1 do `/zion-prd-spike` bidirecional — a IA propõe as 2–3 decisões estruturantes lendo `docs/discovery.md` quando o usuário não as traz, e aceita a lista pronta quando ele já as conhece — sem quebrar nenhum invariante do harness.
 
-**Architecture:** Mudança confinada a **um único arquivo de prompt**, `.claude/skills/prd-spike/SKILL.md`. Ajusta o `argument-hint` (obrigatório → opcional) e reescreve a seção "Fase 1" em quatro blocos (detecção de origem A/C/B · guarda de suficiência do discovery · apresentação enxuta · convergência). Fases 0, 2/3, 4 e a Saída ficam intactas, e a saída da Fase 1 mantém o formato — então nada a jusante muda.
+**Architecture:** Mudança confinada a **um único arquivo de prompt**, `.claude/skills/zion-prd-spike/SKILL.md`. Ajusta o `argument-hint` (obrigatório → opcional) e reescreve a seção "Fase 1" em quatro blocos (detecção de origem A/C/B · guarda de suficiência do discovery · apresentação enxuta · convergência). Fases 0, 2/3, 4 e a Saída ficam intactas, e a saída da Fase 1 mantém o formato — então nada a jusante muda.
 
 **Tech Stack:** Markdown com front-matter YAML (formato de skill do Claude Code / superpowers). Não há framework de teste: comandos-skill são verificados **exercitando o comando** num cenário real e observando o comportamento (spec §7). O caso ponta-a-ponta é o próprio Zion Mermaid Editor (`docs/index.md`).
 
@@ -14,7 +14,7 @@
 
 ## File Structure
 
-- **Modify:** `.claude/skills/prd-spike/SKILL.md`
+- **Modify:** `.claude/skills/zion-prd-spike/SKILL.md`
   - linha 4 — `argument-hint`;
   - linhas 20–23 — seção `## Fase 1 — Validar entrada bruta (aconselha)` → reescrita.
 - Nenhum arquivo criado. Nenhum arquivo de estado. `.specify/prd/quality-rules.md` **não** é tocado (a Fase 4 e o `#criterios-de-conclusao` do spike não mudam).
@@ -26,7 +26,7 @@
 ## Task 1: Tornar o `argument-hint` opcional
 
 **Files:**
-- Modify: `.claude/skills/prd-spike/SKILL.md:4`
+- Modify: `.claude/skills/zion-prd-spike/SKILL.md:4`
 
 - [ ] **Step 1: Editar a linha do front-matter**
 
@@ -44,14 +44,14 @@ argument-hint: "Opcional: as 2–3 decisões estruturantes, se você já as conh
 
 - [ ] **Step 2: Verificar o front-matter**
 
-Run: `sed -n '1,9p' .claude/skills/prd-spike/SKILL.md`
+Run: `sed -n '1,9p' .claude/skills/zion-prd-spike/SKILL.md`
 Expected: bloco YAML válido (abre e fecha com `---`), `argument-hint` agora começa com `"Opcional:`, demais chaves (`name`, `description`, `metadata`, `user-invocable`, `disable-model-invocation`) inalteradas.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add .claude/skills/prd-spike/SKILL.md
-git commit -m "feat(prd-spike): argument-hint opcional para a Fase 1 bidirecional"
+git add .claude/skills/zion-prd-spike/SKILL.md
+git commit -m "feat(zion-prd-spike): argument-hint opcional para a Fase 1 bidirecional"
 ```
 
 ---
@@ -59,7 +59,7 @@ git commit -m "feat(prd-spike): argument-hint opcional para a Fase 1 bidireciona
 ## Task 2: Reescrever a Fase 1 em quatro blocos
 
 **Files:**
-- Modify: `.claude/skills/prd-spike/SKILL.md:20-23`
+- Modify: `.claude/skills/zion-prd-spike/SKILL.md:20-23`
 
 - [ ] **Step 1: Substituir a seção da Fase 1**
 
@@ -81,7 +81,7 @@ filtro "isso muda a PRD inteira?"; candidata que não passa, descarte ou consoli
 frase, persona nomeada, quadro Faz/Não faz. Se uma peça necessária faltar ou for vaga (ex.: sem o
 quadro Faz/Não faz não há como isolar uma fronteira de integração), **não fabrique** candidatas para
 preencher a cota: aponte qual peça falta e por quê ela trava a inferência, proponha só o que o texto
-sustenta, e peça a peça faltante ou sugira rodar `/prd-discovery`. Não bloqueie.
+sustenta, e peça a peça faltante ou sugira rodar `/zion-prd-discovery`. Não bloqueie.
 
 **Apresentação (B/C).** Entregue as 2–3 (ou só o complemento faltante) como recomendação direta e
 enxuta, cada uma com uma linha de justificativa ancorada no discovery. Sem shortlist longa.
@@ -94,7 +94,7 @@ que vale. Não bloqueie.
 
 - [ ] **Step 2: Verificar a estrutura do arquivo**
 
-Run: `grep -n '^## Fase' .claude/skills/prd-spike/SKILL.md`
+Run: `grep -n '^## Fase' .claude/skills/zion-prd-spike/SKILL.md`
 Expected: quatro cabeçalhos de fase, na ordem:
 ```
 Fase 0 — Pré-requisito (aconselha)
@@ -106,47 +106,47 @@ Fase 4 — Validar saída (aconselha)
 
 - [ ] **Step 3: Verificar que a Saída e as demais fases não foram tocadas**
 
-Run: `sed -n '/^## Fase 2\/3/,$p' .claude/skills/prd-spike/SKILL.md`
-Expected: as seções `Fase 2/3`, `Fase 4` e `Saída` idênticas ao original (delegação `deep-research` → `adr-new`; critério `#criterios-de-conclusao`; ADRs viram restrição na §8).
+Run: `sed -n '/^## Fase 2\/3/,$p' .claude/skills/zion-prd-spike/SKILL.md`
+Expected: as seções `Fase 2/3`, `Fase 4` e `Saída` idênticas ao original (delegação `deep-research` → `zion-adr-new`; critério `#criterios-de-conclusao`; ADRs viram restrição na §8).
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add .claude/skills/prd-spike/SKILL.md
-git commit -m "feat(prd-spike): Fase 1 bidirecional (caminhos A/C/B + guarda + convergência)"
+git add .claude/skills/zion-prd-spike/SKILL.md
+git commit -m "feat(zion-prd-spike): Fase 1 bidirecional (caminhos A/C/B + guarda + convergência)"
 ```
 
 ---
 
 ## Task 3: Verificação por cenários (exercitar o comando)
 
-Sem teste unitário — exercite o `/prd-spike` em cenários reais e observe. Use o Zion como caso
+Sem teste unitário — exercite o `/zion-prd-spike` em cenários reais e observe. Use o Zion como caso
 ponta-a-ponta. Para os cenários que dependem de `docs/discovery.md`, use o exemplo do guia prático
 (`docs/como-usar-o-harness-prd.md`) como discovery de referência.
 
 - [ ] **Step 1: Caminho A (usuário informa)**
 
-Invoque `/prd-spike` passando 3 decisões no argumento.
+Invoque `/zion-prd-spike` passando 3 decisões no argumento.
 Expected: a IA **não propõe**; valida cada uma pelo filtro "isso muda a PRD inteira?" e segue para a
 convergência. Nenhuma leitura de proposta.
 
 - [ ] **Step 2: Caminho B (IA descobre)**
 
-Invoque `/prd-spike` **sem argumento**, com um `docs/discovery.md` rico (visão + persona + Faz/Não
+Invoque `/zion-prd-spike` **sem argumento**, com um `docs/discovery.md` rico (visão + persona + Faz/Não
 faz).
 Expected: a IA propõe 3 decisões, cada uma com uma linha de justificativa ancorada num trecho do
 discovery, e abre a convergência (confirma/edita/substitui).
 
 - [ ] **Step 3: Caminho C (híbrido)**
 
-Invoque `/prd-spike` passando **1 decisão**.
+Invoque `/zion-prd-spike` passando **1 decisão**.
 Expected: a IA mantém a decisão dada como fixa e propõe **só 1–2 faltantes**, fechando em 2–3.
 
 - [ ] **Step 4: Guarda de suficiência (discovery magro)**
 
-Invoque `/prd-spike` sem argumento, com um `docs/discovery.md` **sem** o quadro Faz/Não faz.
+Invoque `/zion-prd-spike` sem argumento, com um `docs/discovery.md` **sem** o quadro Faz/Não faz.
 Expected: a IA **aponta a lacuna** ("sem Faz/Não faz não isolo a fronteira de X"), propõe só o que o
-texto sustenta, e pede a peça faltante ou sugere `/prd-discovery`. **Não bloqueia** — se o usuário
+texto sustenta, e pede a peça faltante ou sugere `/zion-prd-discovery`. **Não bloqueia** — se o usuário
 mandar seguir, prossegue.
 
 - [ ] **Step 5: Convergência com lista fraca**
@@ -159,7 +159,7 @@ pelo usuário.
 
 Em qualquer caminho, siga da Fase 1 para as Fases 2/3.
 Expected: as decisões descrevem **eixos** (o-quê estrutural); o stack concreto só aparece no ADR
-gerado por `adr-new` (Fase 2/3), não no discovery nem em texto de PRD. As Fases 2/3 e 4 rodam sem
+gerado por `zion-adr-new` (Fase 2/3), não no discovery nem em texto de PRD. As Fases 2/3 e 4 rodam sem
 mudança — a saída da Fase 1 tem o mesmo formato de antes.
 
 - [ ] **Step 7: Registrar evidência**

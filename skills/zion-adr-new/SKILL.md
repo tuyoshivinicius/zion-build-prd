@@ -1,6 +1,6 @@
 ---
-name: adr-new
-description: Cria um Architecture Decision Record em docs/adr/ a partir de um título
+name: zion-adr-new
+description: Cria um Architecture Decision Record em docs/adr/ (Contexto/Decisão/Consequências/Status) a partir de um título. Use no Estágio 2 do harness Zion Build PRD para registrar cada decisão estruturante sustentada por spike, ou sempre que o usuário pedir para "criar/registrar um ADR" ou "documentar uma decisão de arquitetura".
 argument-hint: "Título da decisão estruturante (ex.: \"Escolha de biblioteca de estado\")"
 metadata:
   author: zion-build-prd
@@ -8,7 +8,7 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
-# adr-new — criar um Architecture Decision Record
+# zion-adr-new — criar um Architecture Decision Record
 
 Registra uma decisão estruturante como um ADR em `docs/adr/`, com as seções
 **Contexto / Decisão / Consequências / Status**. Use no Estágio 2 do harness (Spikes + ADRs) —
@@ -20,8 +20,8 @@ sustentadas por um spike que você de fato rodou.
 Um título curto para a decisão, entre aspas. Exemplos:
 
 ```text
-/adr-new  "Escolha de biblioteca de renderização de diagramas"
-/adr-new  "Estratégia de gerenciamento de estado do editor"
+/zion-adr-new  "Escolha de biblioteca de renderização de diagramas"
+/zion-adr-new  "Estratégia de gerenciamento de estado do editor"
 ```
 
 ## Procedimento

@@ -46,9 +46,9 @@ Create `scripts/asset-map.sh`:
 # Cada entrada: "CAMINHO_CANONICO_RELATIVO_A_ROOT  skill1 skill2 ..."
 # O destino da cópia é: skills/<skill>/references/<basename do canônico>.
 ASSET_MAP=(
-  "assets/quality-rules.md                prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt"
-  "assets/templates/prd-skeleton.md       prd-write"
-  "assets/templates/traceability-table.md prd-decompose"
+  "assets/quality-rules.md                zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-prd-constitution-prompt zion-prd-specify-prompt"
+  "assets/templates/prd-skeleton.md       zion-prd-write"
+  "assets/templates/traceability-table.md zion-prd-decompose"
 )
 ```
 
@@ -64,14 +64,14 @@ done'
 ```
 Expected (7 linhas, exatamente os paths já existentes hoje):
 ```
-skills/prd-discovery/references/quality-rules.md
-skills/prd-spike/references/quality-rules.md
-skills/prd-write/references/quality-rules.md
-skills/prd-decompose/references/quality-rules.md
-skills/prd-constitution-prompt/references/quality-rules.md
-skills/prd-specify-prompt/references/quality-rules.md
-skills/prd-write/references/prd-skeleton.md
-skills/prd-decompose/references/traceability-table.md
+skills/zion-prd-discovery/references/quality-rules.md
+skills/zion-prd-spike/references/quality-rules.md
+skills/zion-prd-write/references/quality-rules.md
+skills/zion-prd-decompose/references/quality-rules.md
+skills/zion-prd-constitution-prompt/references/quality-rules.md
+skills/zion-prd-specify-prompt/references/quality-rules.md
+skills/zion-prd-write/references/prd-skeleton.md
+skills/zion-prd-decompose/references/traceability-table.md
 ```
 (São 8 linhas — 6 de quality-rules + 2 templates. Confirme que batem com `find skills -name '*.md' -path '*/references/*'`.)
 
@@ -127,7 +127,7 @@ Expected: imprime `sync-assets: ok` e a saída de `git status --porcelain skills
 
 Run:
 ```bash
-rm skills/prd-spike/references/quality-rules.md
+rm skills/zion-prd-spike/references/quality-rules.md
 ./scripts/sync-assets.sh
 git status --porcelain skills
 ```
@@ -193,11 +193,11 @@ Expected: `check-assets: sem drift` e exit code 0 (`echo $?` → 0).
 
 Run:
 ```bash
-printf '\ndrift\n' >> skills/prd-spike/references/quality-rules.md
+printf '\ndrift\n' >> skills/zion-prd-spike/references/quality-rules.md
 ./scripts/check-assets.sh; echo "exit=$?"
-git checkout -- skills/prd-spike/references/quality-rules.md
+git checkout -- skills/zion-prd-spike/references/quality-rules.md
 ```
-Expected: imprime `DRIFT: skills/prd-spike/references/quality-rules.md difere de assets/quality-rules.md`, `check-assets: FALHOU …` e `exit=1`. O `git checkout` restaura o arquivo.
+Expected: imprime `DRIFT: skills/zion-prd-spike/references/quality-rules.md difere de assets/quality-rules.md`, `check-assets: FALHOU …` e `exit=1`. O `git checkout` restaura o arquivo.
 
 - [ ] **Step 4: Confirmar restauração**
 

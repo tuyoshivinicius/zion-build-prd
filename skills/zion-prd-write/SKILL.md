@@ -1,6 +1,6 @@
 ---
-name: prd-write
-description: Estágio 3 do harness — copia o esqueleto da PRD e conduz o preenchimento seção a seção, guardando a fronteira o-quê/como
+name: zion-prd-write
+description: Estágio 3 do harness Zion Build PRD — copia o esqueleto da PRD e conduz o preenchimento seção a seção (RF-xx por épico, NFRs com número, restrições das ADRs), guardando a fronteira o-quê/como. Use para "escrever a PRD", "preencher a PRD" ou revisar uma PRD existente, depois da descoberta e dos spikes.
 argument-hint: "(sem argumento — trabalha sobre docs/discovery.md e docs/adr/)"
 metadata:
   author: zion-build-prd
@@ -8,7 +8,7 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
-# prd-write — Estágio 3 do harness (PRD enxuta)
+# zion-prd-write — Estágio 3 do harness (PRD enxuta)
 
 Orquestra o Estágio 3 do harness (PRD enxuta). Sequência dos estágios e fronteira o-quê/como em
 `references/process-context.md`. Contrato de 5 fases; gates aconselham. Regras em
@@ -16,8 +16,8 @@ Orquestra o Estágio 3 do harness (PRD enxuta). Sequência dos estágios e front
 **o-quê/por-quê vs. como**.
 
 ## Fase 0 — Pré-requisito (aconselha)
-Confira `docs/discovery.md` e `docs/adr/`. Faltando → avise ("recomendo `/prd-discovery` e
-`/prd-spike` antes") e pergunte se segue. **Idempotência:** se `docs/PRD.md` já existe, NÃO
+Confira `docs/discovery.md` e `docs/adr/`. Faltando → avise ("recomendo `/zion-prd-discovery` e
+`/zion-prd-spike` antes") e pergunte se segue. **Idempotência:** se `docs/PRD.md` já existe, NÃO
 sobrescreva — entre em **modo revisar**: leia a PRD atual e pressione seção a seção o que estiver
 fraco. Não bloqueie.
 
@@ -49,4 +49,4 @@ linguagem/framework/biblioteca/tela/contrato de API, **aponte a linha exata** e 
 
 ## Saída
 `docs/PRD.md` preenchido sobre o template, com `RF-xx` por épico e sem detalhe técnico. Insumo do
-`/prd-decompose` (Estágio 4) e da `constitution`.
+`/zion-prd-decompose` (Estágio 4) e da `constitution`.

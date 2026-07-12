@@ -16,7 +16,7 @@ npx skills add tuyoshivinicius/zion-build-prd
 Isso instala as skills em `.claude/skills/` do seu projeto. Elas são **autocontidas**:
 cada uma carrega em `references/` os assets (regras de qualidade, templates) de que precisa.
 
-> As pontes `/prd-constitution-prompt` e `/prd-specify-prompt` **montam prompts** para o
+> As pontes `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt` **montam prompts** para o
 > `/speckit.constitution` e `/speckit.specify`. Instale o **Spec Kit** separadamente para
 > rodar o ciclo `/speckit.*`.
 
@@ -31,22 +31,22 @@ Alternativa (Claude Code plugin marketplace):
 
 | Skill | Estágio |
 |-------|---------|
-| `/prd-discovery` | Descoberta enxuta → `docs/discovery.md` |
-| `/prd-spike` | Pesquisa de trade-offs + ADRs |
-| `/prd-write` | Preenche a PRD a partir do esqueleto |
-| `/prd-decompose` | Épicos, story map, fatias verticais, rastreabilidade |
-| `/prd-constitution-prompt` | Ponte → `/speckit.constitution` |
-| `/prd-specify-prompt` | Ponte → `/speckit.specify` |
-| `/adr-new` | Cria um ADR em `docs/adr/` |
+| `/zion-prd-discovery` | Descoberta enxuta → `docs/discovery.md` |
+| `/zion-prd-spike` | Pesquisa de trade-offs + ADRs |
+| `/zion-prd-write` | Preenche a PRD a partir do esqueleto |
+| `/zion-prd-decompose` | Épicos, story map, fatias verticais, rastreabilidade |
+| `/zion-prd-constitution-prompt` | Ponte → `/speckit.constitution` |
+| `/zion-prd-specify-prompt` | Ponte → `/speckit.specify` |
+| `/zion-adr-new` | Cria um ADR em `docs/adr/` |
 
 ## Dependências
 
 | Dependência | Usada por | De onde vem |
 |-------------|-----------|-------------|
-| `superpowers` (skill `superpowers:brainstorming`) | `/prd-discovery`, `/prd-decompose`, `/prd-write` | Externa — plugin `obra/superpowers-marketplace` |
-| `rewrite-prompt` | `/prd-constitution-prompt`, `/prd-specify-prompt` | Incluída (skill first-party deste repo) |
-| `deep-research` | `/prd-spike` | Built-in do Claude Code (degrada para pesquisa manual se ausente) |
-| `adr-new` | `/prd-spike` | Incluída (skill deste repo) |
+| `superpowers` (skill `superpowers:brainstorming`) | `/zion-prd-discovery`, `/zion-prd-decompose`, `/zion-prd-write` | Externa — plugin `obra/superpowers-marketplace` |
+| `zion-rewrite-prompt` | `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` | Incluída (skill first-party deste repo) |
+| `deep-research` | `/zion-prd-spike` | Built-in do Claude Code (degrada para pesquisa manual se ausente) |
+| `zion-adr-new` | `/zion-prd-spike` | Incluída (skill deste repo) |
 
 A **única dependência externa** é o `superpowers`.
 

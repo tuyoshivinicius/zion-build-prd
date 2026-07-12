@@ -1,6 +1,6 @@
 ---
-name: prd-constitution-prompt
-description: Ponte para o Spec Kit — monta o prompt do /speckit.constitution derivando princípios decidíveis dos NFRs/restrições da PRD, e entrega para você disparar
+name: zion-prd-constitution-prompt
+description: Ponte do harness Zion Build PRD para o Spec Kit (bootstrap, uma vez por projeto) — monta o prompt do /speckit.constitution derivando princípios decidíveis e rastreáveis dos NFRs/restrições da PRD, entrega pronto e para. Use quando for iniciar a constitution do Spec Kit a partir de uma PRD; não dispara o /speckit.* por você.
 argument-hint: "Opcional: áreas/princípios a enfatizar na constitution (senão, deriva dos NFRs/ADRs da PRD)"
 metadata:
   author: zion-build-prd
@@ -8,15 +8,15 @@ user-invocable: true
 disable-model-invocation: false
 ---
 
-# prd-constitution-prompt — Ponte do harness para o Spec Kit (Passo 5a)
+# zion-prd-constitution-prompt — Ponte do harness para o Spec Kit (Passo 5a)
 
 Prepara o input do `/speckit.constitution` — o **bootstrap, uma vez por projeto**. Monta o prompt
 que deriva princípios **decidíveis** dos NFRs e restrições (ADRs) da PRD, entrega pronto e para — o
 ciclo `/speckit.*` é seu. Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
-Deve existir `docs/PRD.md` (saída de `/prd-write`) com NFRs e restrições vindas de ADRs. Não depende
-de `/prd-decompose`. Se não houver PRD, avise ("recomendo `/prd-write` antes") e pergunte se segue.
+Deve existir `docs/PRD.md` (saída de `/zion-prd-write`) com NFRs e restrições vindas de ADRs. Não depende
+de `/zion-prd-decompose`. Se não houver PRD, avise ("recomendo `/zion-prd-write` antes") e pergunte se segue.
 Lembre que isto é bootstrap: roda **uma vez por projeto**.
 
 ## Fase 1 — Validar entrada bruta (aconselha)
@@ -27,7 +27,7 @@ a nenhum NFR/ADR, avise: "princípio não decidível/rastreável" (veja `quality
 técnicos transversais de propósito; a guarda é **decidibilidade + rastreabilidade**. Não bloqueie.
 
 ## Fase 2/3 — Formatar e auto-delegar
-Invoque `rewrite-prompt` no mesmo turno para montar o prompt do `constitution`, seguindo
+Invoque `zion-rewrite-prompt` no mesmo turno para montar o prompt do `constitution`, seguindo
 `quality-rules.md` `#anatomia-constitution`:
 - `<context>` — os NFRs (`NFR-xx`) e restrições de ADRs como **fonte** (material de origem), não
   como princípio já pronto.

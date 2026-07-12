@@ -87,7 +87,7 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 - **Skill(s):**
   - `deep-research` (real) — levantar trade-offs das opções (ex.: bibliotecas concorrentes).
   - `superpowers:brainstorming` (real) — decidir critérios de escolha.
-  - `adr-new` (real) — registra a decisão como ADR em `docs/adr/`.
+  - `zion-adr-new` (real) — registra a decisão como ADR em `docs/adr/`.
 - **Invocação (exemplo)** — *você executaria assim:*
   ```text
   # Avaliar opções antes de comprometer a arquitetura:
@@ -95,7 +95,7 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   considerando custo de manutenção e limites conhecidos.
 
   # Registrar a decisão:
-  /adr-new  "Escolha de <decisão estruturante>"   # gera docs/adr/ADR-001-*.md
+  /zion-adr-new  "Escolha de <decisão estruturante>"   # gera docs/adr/ADR-001-*.md
   ```
 - **Entradas:** dúvidas técnicas estruturantes levantadas no Passo 1; repositórios de spike descartáveis.
 - **Saídas / artefatos:** `docs/adr/ADR-001-*.md`, `docs/adr/ADR-002-*.md` — cada uma com contexto,
@@ -176,7 +176,7 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   "artefato X sempre passa no validador oficial"; "componente crítico é função pura com testes de
   snapshot") — não genéricos ("código limpo, testes").
 - **Critério de conclusão:** `constitution` escrita e rastreável aos NFRs da PRD.
-- **Ponte do harness:** `/prd-constitution-prompt` monta esse prompt para você — deriva princípios
+- **Ponte do harness:** `/zion-prd-constitution-prompt` monta esse prompt para você — deriva princípios
   decidíveis dos NFRs/ADRs, entrega o `/speckit.constitution "..."` pronto e **para** (o comando do
   Spec Kit é seu).
 
@@ -190,8 +190,8 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 - **Objetivo:** levar **uma** fatia vertical de "o-quê/por-quê" até implementação, com os gates de
   qualidade no caminho.
 - **Skill(s):**
-  - `rewrite-prompt` (real) — **peça central deste passo**: o input do `/speckit.specify` é
-    *literalmente um prompt*, e é aqui que o `rewrite-prompt` paga o próprio custo:
+  - `zion-rewrite-prompt` (real) — **peça central deste passo**: o input do `/speckit.specify` é
+    *literalmente um prompt*, e é aqui que o `zion-rewrite-prompt` paga o próprio custo:
     - `<constraints>` vira o **guardião da fronteira** — é onde você escreve, explícito, "não citar
       linguagem/framework/bibliotecas; stack só no `plan`", impedindo que o "como" vaze para o `specify`;
     - `<context>` **separa referência de instrução** — `RF-xx` e ADRs entram como contexto, não viram
@@ -266,8 +266,8 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 |-------|---------|-------------------|
 | `superpowers:brainstorming` | Skill tool / pedido "vamos explorar / desenhar X" | Descoberta (P1), **redação da PRD sobre o template, seção a seção (P3)** e decomposição em épicos/fatias (P4). |
 | `deep-research` | `/deep-research <pergunta>` | Trade-offs de spikes (P2). |
-| `adr-new` | `/adr-new "<título>"` | Registrar decisões estruturantes como ADR em `docs/adr/` (P2). |
-| `rewrite-prompt` | `/rewrite-prompt` ou "reescrever/estruturar prompt" | **Montar o prompt do `/speckit.constitution` (P5a)** — `<constraints>` blinda a decidibilidade dos princípios — **e do `/speckit.specify` (P5b)** — `<constraints>` blinda a fronteira "sem stack" e `<success_criteria>` antecipa o gate `clarify`. |
+| `zion-adr-new` | `/zion-adr-new "<título>"` | Registrar decisões estruturantes como ADR em `docs/adr/` (P2). |
+| `zion-rewrite-prompt` | `/zion-rewrite-prompt` ou "reescrever/estruturar prompt" | **Montar o prompt do `/speckit.constitution` (P5a)** — `<constraints>` blinda a decidibilidade dos princípios — **e do `/speckit.specify` (P5b)** — `<constraints>` blinda a fronteira "sem stack" e `<success_criteria>` antecipa o gate `clarify`. |
 | `git-commit` | `/git-commit` ou "commit" | Versionar PRD, ADRs e specs (P6). |
 
 ---
@@ -281,7 +281,7 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 > `spec.md`/`plan.md` da feature.
 
 O esqueleto vive agora em **`assets/templates/prd-skeleton.md`** (dono único). O comando
-`/prd-write` o copia para `docs/PRD.md` no Passo 3. Cada cabeçalho traz *o que entra* e *o que NÃO
+`/zion-prd-write` o copia para `docs/PRD.md` no Passo 3. Cada cabeçalho traz *o que entra* e *o que NÃO
 entra* (a fronteira o-quê/por-quê vs. como).
 
 **Fora do esqueleto (de propósito):** critérios de aceite, wireframes/telas, stack, contratos de API.
@@ -292,7 +292,7 @@ Tudo isso é elaboração progressiva e entra no `spec.md`/`plan.md` de cada fea
 ## Modelo de tabela de rastreabilidade (`RF-xx ↔ specs/###-nome`)
 
 A tabela vive agora em **`assets/templates/traceability-table.md`** (dono único). O comando
-`/prd-decompose` a injeta na seção 12 da PRD no Passo 4. Preencha uma linha por requisito funcional
+`/zion-prd-decompose` a injeta na seção 12 da PRD no Passo 4. Preencha uma linha por requisito funcional
 in-scope quando **você** executar o processo.
 
 ---

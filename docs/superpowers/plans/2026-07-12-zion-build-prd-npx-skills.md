@@ -92,7 +92,7 @@ git add -A && git commit -m "refactor(assets): promover quality-rules e template
 ### Task 3: Mover as 7 skills do harness para `skills/` e remover o que sai de escopo
 
 **Files:**
-- Create: `skills/{prd-discovery,prd-spike,prd-write,prd-decompose,prd-constitution-prompt,prd-specify-prompt,adr-new}/`
+- Create: `skills/{zion-prd-discovery,zion-prd-spike,zion-prd-write,zion-prd-decompose,zion-prd-constitution-prompt,zion-prd-specify-prompt,zion-adr-new}/`
 - Delete: `.claude/skills/speckit-*` (fora de escopo — Spec Kit é instalado à parte)
 - Delete: `.specify/` (scaffolding do Spec Kit; assets já promovidos na Task 2)
 - Delete: `docs/index.md` (artefato de dogfood "Zion Mermaid Editor"; permanece no histórico)
@@ -103,7 +103,7 @@ Run:
 ```bash
 cd ~/projects/personal/zion-build-prd
 mkdir -p skills
-for s in prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt adr-new; do
+for s in zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-prd-constitution-prompt zion-prd-specify-prompt zion-adr-new; do
   git mv ".claude/skills/$s" "skills/$s"
 done
 ```
@@ -159,15 +159,15 @@ SKELETON="assets/templates/prd-skeleton.md"
 TRACE="assets/templates/traceability-table.md"
 
 # quality-rules.md → todas as skills prd-* que a citam
-for s in prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt; do
+for s in zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-prd-constitution-prompt zion-prd-specify-prompt; do
   mkdir -p "skills/$s/references"
   cp "$QR" "skills/$s/references/quality-rules.md"
 done
 
 # templates específicos por skill
-mkdir -p skills/prd-write/references skills/prd-decompose/references
-cp "$SKELETON" "skills/prd-write/references/prd-skeleton.md"
-cp "$TRACE" "skills/prd-decompose/references/traceability-table.md"
+mkdir -p skills/zion-prd-write/references skills/zion-prd-decompose/references
+cp "$SKELETON" "skills/zion-prd-write/references/prd-skeleton.md"
+cp "$TRACE" "skills/zion-prd-decompose/references/traceability-table.md"
 
 echo "sync-assets: ok"
 ```
@@ -191,11 +191,11 @@ check() { # $1=canônico  $2=cópia na skill
   fi
 }
 
-for s in prd-discovery prd-spike prd-write prd-decompose prd-constitution-prompt prd-specify-prompt; do
+for s in zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-prd-constitution-prompt zion-prd-specify-prompt; do
   check "assets/quality-rules.md" "skills/$s/references/quality-rules.md"
 done
-check "assets/templates/prd-skeleton.md" "skills/prd-write/references/prd-skeleton.md"
-check "assets/templates/traceability-table.md" "skills/prd-decompose/references/traceability-table.md"
+check "assets/templates/prd-skeleton.md" "skills/zion-prd-write/references/prd-skeleton.md"
+check "assets/templates/traceability-table.md" "skills/zion-prd-decompose/references/traceability-table.md"
 
 if [ "$fail" -eq 0 ]; then
   echo "check-assets: sem drift"
@@ -239,14 +239,14 @@ Expected: `sync-assets: ok`
 Run: `find skills -path '*/references/*' -name '*.md' | sort`
 Expected exatamente 8 linhas:
 ```
-skills/prd-constitution-prompt/references/quality-rules.md
-skills/prd-decompose/references/quality-rules.md
-skills/prd-decompose/references/traceability-table.md
-skills/prd-discovery/references/quality-rules.md
-skills/prd-specify-prompt/references/quality-rules.md
-skills/prd-spike/references/quality-rules.md
-skills/prd-write/references/prd-skeleton.md
-skills/prd-write/references/quality-rules.md
+skills/zion-prd-constitution-prompt/references/quality-rules.md
+skills/zion-prd-decompose/references/quality-rules.md
+skills/zion-prd-decompose/references/traceability-table.md
+skills/zion-prd-discovery/references/quality-rules.md
+skills/zion-prd-specify-prompt/references/quality-rules.md
+skills/zion-prd-spike/references/quality-rules.md
+skills/zion-prd-write/references/prd-skeleton.md
+skills/zion-prd-write/references/quality-rules.md
 ```
 
 - [ ] **Step 3: Provar que o check passa sem drift**
@@ -258,10 +258,10 @@ Expected: `check-assets: sem drift`
 
 Run:
 ```bash
-printf '\n<!-- drift proposital -->\n' >> skills/prd-discovery/references/quality-rules.md
+printf '\n<!-- drift proposital -->\n' >> skills/zion-prd-discovery/references/quality-rules.md
 ./scripts/check-assets.sh; echo "exit=$?"
 ```
-Expected: linha `DRIFT: skills/prd-discovery/references/quality-rules.md difere de assets/quality-rules.md`, depois `check-assets: FALHOU ...` e `exit=1`.
+Expected: linha `DRIFT: skills/zion-prd-discovery/references/quality-rules.md difere de assets/quality-rules.md`, depois `check-assets: FALHOU ...` e `exit=1`.
 
 - [ ] **Step 5: Restaurar via sync e reconfirmar**
 
@@ -280,12 +280,12 @@ git commit -m "feat(skills): popular references/ com assets canônicos (autocont
 ### Task 6: Reescrever os caminhos `.specify/prd/…` nos SKILL.md
 
 **Files:**
-- Modify: `skills/prd-discovery/SKILL.md:14`
-- Modify: `skills/prd-spike/SKILL.md:14`
-- Modify: `skills/prd-write/SKILL.md:14,27`
-- Modify: `skills/prd-decompose/SKILL.md:14,34`
-- Modify: `skills/prd-constitution-prompt/SKILL.md:15`
-- Modify: `skills/prd-specify-prompt/SKILL.md:14`
+- Modify: `skills/zion-prd-discovery/SKILL.md:14`
+- Modify: `skills/zion-prd-spike/SKILL.md:14`
+- Modify: `skills/zion-prd-write/SKILL.md:14,27`
+- Modify: `skills/zion-prd-decompose/SKILL.md:14,34`
+- Modify: `skills/zion-prd-constitution-prompt/SKILL.md:15`
+- Modify: `skills/zion-prd-specify-prompt/SKILL.md:14`
 
 - [ ] **Step 1: Substituir os caminhos em todos os SKILL.md que os citam**
 
@@ -310,7 +310,7 @@ Expected: `GUARD OK: zero referencias .specify/prd`
 - [ ] **Step 3: Conferir que as novas referências relativas apareceram**
 
 Run: `grep -rn 'references/' skills/*/SKILL.md`
-Expected: linhas em prd-discovery, prd-spike, prd-write (2x: quality-rules e prd-skeleton), prd-decompose (2x: quality-rules e traceability-table), prd-constitution-prompt, prd-specify-prompt — todas apontando para `references/…`.
+Expected: linhas em zion-prd-discovery, zion-prd-spike, zion-prd-write (2x: quality-rules e prd-skeleton), zion-prd-decompose (2x: quality-rules e traceability-table), zion-prd-constitution-prompt, zion-prd-specify-prompt — todas apontando para `references/…`.
 
 - [ ] **Step 4: Commit**
 
@@ -324,7 +324,7 @@ git commit -m "fix(skills): apontar referencias para references/ local (pós-ins
 ### Task 7: Renomear o produto para "Zion Build PRD"
 
 **Files:**
-- Modify: `skills/{prd-discovery,prd-spike,prd-write,prd-decompose,prd-constitution-prompt,prd-specify-prompt,adr-new}/SKILL.md:6` (linha `author:`)
+- Modify: `skills/{zion-prd-discovery,zion-prd-spike,zion-prd-write,zion-prd-decompose,zion-prd-constitution-prompt,zion-prd-specify-prompt,zion-adr-new}/SKILL.md:6` (linha `author:`)
 
 - [ ] **Step 1: Renomear `metadata.author` nas 7 skills**
 
@@ -384,7 +384,7 @@ npx skills add tuyoshivinicius/zion-build-prd
 Isso instala as skills em `.claude/skills/` do seu projeto. Elas são **autocontidas**:
 cada uma carrega em `references/` os assets (regras de qualidade, templates) de que precisa.
 
-> As pontes `/prd-constitution-prompt` e `/prd-specify-prompt` **montam prompts** para o
+> As pontes `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt` **montam prompts** para o
 > `/speckit.constitution` e `/speckit.specify`. Instale o **Spec Kit** separadamente para
 > rodar o ciclo `/speckit.*`.
 
@@ -399,13 +399,13 @@ Alternativa (Claude Code plugin marketplace):
 
 | Skill | Estágio |
 |-------|---------|
-| `/prd-discovery` | Descoberta enxuta → `docs/discovery.md` |
-| `/prd-spike` | Pesquisa de trade-offs + ADRs |
-| `/prd-write` | Preenche a PRD a partir do esqueleto |
-| `/prd-decompose` | Épicos, story map, fatias verticais, rastreabilidade |
-| `/prd-constitution-prompt` | Ponte → `/speckit.constitution` |
-| `/prd-specify-prompt` | Ponte → `/speckit.specify` |
-| `/adr-new` | Cria um ADR em `docs/adr/` |
+| `/zion-prd-discovery` | Descoberta enxuta → `docs/discovery.md` |
+| `/zion-prd-spike` | Pesquisa de trade-offs + ADRs |
+| `/zion-prd-write` | Preenche a PRD a partir do esqueleto |
+| `/zion-prd-decompose` | Épicos, story map, fatias verticais, rastreabilidade |
+| `/zion-prd-constitution-prompt` | Ponte → `/speckit.constitution` |
+| `/zion-prd-specify-prompt` | Ponte → `/speckit.specify` |
+| `/zion-adr-new` | Cria um ADR em `docs/adr/` |
 
 ## Desenvolvimento
 
@@ -629,6 +629,6 @@ Expected: o CLI resolve o repo e lista as skills sob `skills/`. (Se o subcomando
 ## Notas de execução
 
 - **DRY/fonte única:** `assets/` é a verdade; `references/` são cópias geradas. Nunca editar `references/` à mão — editar `assets/` e rodar `sync-assets.sh`.
-- **Nomes das slash-commands preservados** (`/prd-*`, `/adr-new`) — só o produto foi renomeado.
+- **Nomes das slash-commands preservados** (`/prd-*`, `/zion-adr-new`) — só o produto foi renomeado.
 - **Spec Kit fora de escopo:** consumidores instalam o Spec Kit separadamente; as pontes só emitem prompts.
 - **Histórico:** preservado via `git mv` (arquivos) e clone completo (commits). As specs/planos em `docs/superpowers/` viajam no clone.
