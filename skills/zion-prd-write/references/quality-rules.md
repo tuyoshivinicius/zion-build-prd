@@ -30,6 +30,10 @@ cada feature carrega **como / com quê** (stack e detalhe técnico).
 
 Ao detectar vazamento, o comando aponta a linha ofensora e sugere movê-la para o `plan.md` da feature.
 
+> A ponte `plan-prompt` é a única que **cruza** esta fronteira de propósito: monta o prompt do
+> `/speckit.plan`, onde o "como" é decidido. Mesmo lá a guarda persiste, invertida — o plano fica
+> **preso aos ADRs** já provados (veja `#anatomia-plan`), sem reabrir decisões.
+
 ## Critérios de conclusão por estágio {#criterios-de-conclusao}
 
 Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
@@ -48,6 +52,9 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
 - **constitution-prompt**: o prompt gerado deriva princípios **decidíveis** (cada um com validador/
   limiar/teste) ∧ cada princípio rastreia a um NFR ou restrição de ADR ∧ **zero** princípio genérico
   ("código limpo", "boa cobertura").
+- **plan-prompt**: o prompt gerado referencia o `spec.md` da feature ∧ injeta os ADRs confirmados
+  como restrição (honrar, não re-decidir) ∧ deixa claro que o plano deve honrar cada ADR e cobrir
+  o resultado observável do `spec.md`.
 
 ## INVEST e SPIDR {#invest}
 
@@ -64,26 +71,43 @@ UI" ou "só o back", a fatia é **horizontal** → refatie.
 
 ## Anatomia do prompt do specify {#anatomia-specify}
 
-O input do `/speckit.specify` é literalmente um prompt. As três tags que pagam o custo:
+O input do `/speckit.specify` é um prompt em **linguagem natural (prosa)**. O comando já tem o
+próprio template e só preenche placeholders — então o prompt é **conteúdo, não formato**: nada de
+tags XML, nada de ditar cabeçalhos/seções do `spec.md`. Em prosa, o prompt deve cobrir:
 
-- `<constraints>` — o **guardião da fronteira**: escreva explícito "não citar linguagem/framework/
-  bibliotecas; stack só no `plan`". Impede o "como" de vazar para o `specify`.
-- `<context>` — **separa referência de instrução**: `RF-xx` e ADRs entram como contexto, não viram
-  requisitos acidentais.
-- `<success_criteria>` — declara o **resultado observável** antes de rodar; é o que o gate
-  `/speckit.clarify` vai cobrar em seguida, então já antecipa o gate.
+- **O resultado observável** — o que o usuário consegue fazer/ver ao final da fatia (o o-quê/por-quê).
+  É o que o gate `/speckit.clarify` vai cobrar em seguida, então já o declara.
+- **A guarda da fronteira, em prosa** — escreva explícito "não citar linguagem, framework ou
+  bibliotecas; a stack fica no `plan`". Impede o "como" de vazar para o `specify`.
+- **`RF-xx` e ADRs como contexto** — cite-os como referência ("Contexto: RF-01…"), não como
+  requisitos a copiar.
 
 ## Anatomia do prompt do constitution {#anatomia-constitution}
 
-O input do `/speckit.constitution` também é um prompt, montado a partir da PRD. As tags que pagam o
-custo:
+O input do `/speckit.constitution` é um prompt em **linguagem natural (prosa)**, montado a partir da
+PRD. O comando já preenche o próprio template — então é **conteúdo, não formato**: nada de tags XML,
+nada de ditar as seções ou o versionamento do artefato. Em prosa, o prompt deve cobrir:
 
-- `<context>` — **a fonte, não o princípio pronto**: os NFRs (`NFR-xx`) e as restrições de ADRs
-  entram como material de origem para derivar os princípios; não são princípios já formatados.
-- `<instructions>` — pede para **derivar** princípios decidíveis dessa fonte (um por
+- **A fonte, não o princípio pronto** — os NFRs (`NFR-xx`) e as restrições de ADRs como material de
+  origem para derivar os princípios.
+- **O pedido de derivação** — peça para **derivar** princípios decidíveis dessa fonte (um por
   NFR/restrição relevante).
-- `<constraints>` — o **guardião da decidibilidade**: escreva explícito "cada princípio tem um
-  critério objetivo (validador / limiar numérico / teste) e rastreia a um NFR ou ADR; proibido
-  genérico ('código limpo', 'boa cobertura')". Impede platitude de virar princípio.
-- `<success_criteria>` — todo princípio é **decidível** ∧ **rastreável** a um NFR/ADR; nenhum
-  genérico. É o que torna a `constitution` cobrável depois.
+- **A guarda da decidibilidade, em prosa** — escreva explícito "cada princípio tem um critério
+  objetivo (validador / limiar numérico / teste) e rastreia a um NFR ou ADR; nada de genérico
+  ('código limpo', 'boa cobertura')". Impede platitude de virar princípio.
+
+## Anatomia do prompt do plan {#anatomia-plan}
+
+O input do `/speckit.plan` é um prompt em **linguagem natural (prosa)** — montado a partir do
+`spec.md` da feature (que o comando já carrega como fonte da verdade) e dos ADRs que o spike já
+provou. É a única ponte que **entra** no "como", presa ao que foi decidido. O comando já tem o
+próprio template — então é **conteúdo, não formato**: nada de tags XML, nada de ditar as seções do
+`plan.md`, e **não repita os requisitos** (o `spec.md` já é carregado). Em prosa, o prompt deve
+cobrir:
+
+- **As decisões fechadas a honrar** — os **ADRs confirmados** (`ADR-00x: <decisão>`) como restrições:
+  "honre cada ADR listado; não re-decida o que um ADR já fixou".
+- **O pedido do plano técnico** — peça para descrever a stack, a arquitetura e as restrições técnicas
+  que realizam o resultado observável do `spec.md` **dentro** dessas decisões.
+- **A guarda secundária, em prosa** — "não expanda além do escopo do `spec.md`". É o que impede o
+  spike de virar esforço órfão; o gate `/speckit.analyze` cobra isso depois.

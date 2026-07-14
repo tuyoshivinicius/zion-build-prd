@@ -26,15 +26,16 @@ a nenhum NFR/ADR, avise: "princípio não decidível/rastreável" (veja `quality
 `#anatomia-constitution`). A guarda aqui **não** é "sem-stack" — a constitution carrega padrões
 técnicos transversais de propósito; a guarda é **decidibilidade + rastreabilidade**. Não bloqueie.
 
-## Fase 2/3 — Formatar e auto-delegar
-Invoque `zion-rewrite-prompt` no mesmo turno para montar o prompt do `constitution`, seguindo
-`quality-rules.md` `#anatomia-constitution`:
-- `<context>` — os NFRs (`NFR-xx`) e restrições de ADRs como **fonte** (material de origem), não
-  como princípio já pronto.
-- `<instructions>` — **derivar** princípios decidíveis dessa fonte.
-- `<constraints>` — blinda a decidibilidade: cada princípio tem validador/limiar/teste e rastreia a
-  um NFR/ADR; proíbe genérico.
-- `<success_criteria>` — todo princípio é decidível ∧ rastreável; nenhum genérico.
+## Fase 2/3 — Montar o prompt (você mesmo)
+Monte, no mesmo turno, o prompt do `constitution` em **linguagem natural (prosa)**, seguindo
+`references/quality-rules.md` `#anatomia-constitution`. É **conteúdo, não formato**: não use tags XML
+nem dite as seções do artefato — o `/speckit.constitution` já tem o próprio template. Em prosa, o
+prompt deve:
+- Trazer os NFRs (`NFR-xx`) e restrições de ADRs como **fonte** (material de origem), não como
+  princípio já pronto.
+- Pedir para **derivar** princípios decidíveis dessa fonte (um por NFR/restrição relevante).
+- Blindar a decidibilidade em prosa: cada princípio tem um critério objetivo (validador / limiar
+  numérico / teste) e rastreia a um NFR/ADR; nada de genérico ('código limpo', 'boa cobertura').
 
 ## Fase 4 — Validar saída e handoff (aconselha)
 Confira contra o critério **constitution-prompt** de `#criterios-de-conclusao`: princípios decidíveis

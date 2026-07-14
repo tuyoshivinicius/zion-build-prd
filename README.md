@@ -16,9 +16,9 @@ npx skills add tuyoshivinicius/zion-build-prd
 Isso instala as skills em `.claude/skills/` do seu projeto. Elas são **autocontidas**:
 cada uma carrega em `references/` os assets (regras de qualidade, templates) de que precisa.
 
-> As pontes `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt` **montam prompts** para o
-> `/speckit.constitution` e `/speckit.specify`. Instale o **Spec Kit** separadamente para
-> rodar o ciclo `/speckit.*`.
+> As pontes `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` e `/zion-prd-plan-prompt`
+> **montam prompts** para o `/speckit.constitution`, `/speckit.specify` e `/speckit.plan`. Instale o
+> **Spec Kit** separadamente para rodar o ciclo `/speckit.*`.
 
 Alternativa (Claude Code plugin marketplace):
 
@@ -37,6 +37,7 @@ Alternativa (Claude Code plugin marketplace):
 | `/zion-prd-decompose` | Épicos, story map, fatias verticais, rastreabilidade |
 | `/zion-prd-constitution-prompt` | Ponte → `/speckit.constitution` |
 | `/zion-prd-specify-prompt` | Ponte → `/speckit.specify` |
+| `/zion-prd-plan-prompt` | Ponte → `/speckit.plan` |
 | `/zion-adr-new` | Cria um ADR em `docs/adr/` |
 
 ## Dependências
@@ -44,7 +45,6 @@ Alternativa (Claude Code plugin marketplace):
 | Dependência | Usada por | De onde vem |
 |-------------|-----------|-------------|
 | `superpowers` (skill `superpowers:brainstorming`) | `/zion-prd-discovery`, `/zion-prd-decompose`, `/zion-prd-write` | Externa — plugin `obra/superpowers-marketplace` |
-| `zion-rewrite-prompt` | `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` | Incluída (skill first-party deste repo) |
 | `deep-research` | `/zion-prd-spike` | Built-in do Claude Code (degrada para pesquisa manual se ausente) |
 | `zion-adr-new` | `/zion-prd-spike` | Incluída (skill deste repo) |
 
