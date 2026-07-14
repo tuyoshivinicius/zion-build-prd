@@ -210,6 +210,8 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   /speckit.clarify
 
   # 3) PLAN — AQUI SIM a stack e o "como".
+  # Ponte do harness: `/zion-prd-plan-prompt <feature>` monta esse prompt injetando os ADRs
+  # confirmados como restrição (honrar, não re-decidir) e entrega o `/speckit.plan` pronto.
   /speckit.plan  "<linguagem/framework>; <bibliotecas>; <estratégia de estado>;
   <componente crítico> como função pura testável; <parâmetros de performance>."
 

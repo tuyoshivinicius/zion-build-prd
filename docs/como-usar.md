@@ -17,7 +17,7 @@ Instale via [skills.sh](https://skills.sh):
 
     npx skills add tuyoshivinicius/zion-build-prd
 
-Isso instala as 7 skills em `.claude/skills/` do seu projeto. Instale o **Spec Kit** à parte — as pontes `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt` apenas montam os prompts do `/speckit.*`.
+Isso instala as 8 skills em `.claude/skills/` do seu projeto. Instale o **Spec Kit** à parte — as pontes `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` e `/zion-prd-plan-prompt` apenas montam os prompts do `/speckit.*`.
 
 ## Quando usar o harness (e quando não)
 
@@ -40,6 +40,7 @@ Isso instala as 7 skills em `.claude/skills/` do seu projeto. Instale o **Spec K
 | `/zion-prd-decompose` | 4 · Decomposição | `docs/PRD.md` (com `RF-xx`) | fatias + tabela na PRD | `superpowers:brainstorming` |
 | `/zion-prd-constitution-prompt` | Ponte p/ 5a (bootstrap, 1×) | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | `zion-rewrite-prompt` |
 | `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | `zion-rewrite-prompt` |
+| `/zion-prd-plan-prompt` | Ponte p/ 5c | `spec.md` da feature + `docs/adr/` | prompt do `/speckit.plan` | `zion-rewrite-prompt` |
 
 O harness termina na ponte: o ciclo `/speckit.*` (specify → clarify → plan → … → implement) é **seu**.
 
@@ -50,8 +51,10 @@ flowchart LR
     C --> D["/zion-prd-decompose"]
     C --> G["/zion-prd-constitution-prompt"]
     D --> E["/zion-prd-specify-prompt"]
+    E --> P["/zion-prd-plan-prompt"]
     G -.->|handoff 1×| H["/speckit.constitution (você)"]
     E -.->|handoff| F["/speckit.* (você)"]
+    P -.->|handoff| F
 ```
 
 ---
@@ -247,6 +250,38 @@ detalhados nem telas.
 
 **PARE.** A partir daqui o ciclo `/speckit.*` é seu.
 
+### Ponte — `/zion-prd-plan-prompt`
+
+Depois do `specify`+`clarify` da fatia, leve a feature ao `plan` honrando o que o spike provou:
+
+```text
+/zion-prd-plan-prompt A feature R0 (prévia ao digitar + persistência): honre os ADRs de render e de persistência local.
+```
+
+Lê o `spec.md` da fatia, cruza com `docs/adr/`, propõe os ADRs relevantes para você confirmar, e
+delega a `zion-rewrite-prompt` montando o XML de `#anatomia-plan`. **Entrega o comando pronto** (não
+dispara nada):
+
+```text
+/speckit.plan "
+<context>
+spec.md da fatia R0 (prévia ao digitar; persistência entre sessões).
+ADR-001: motor de render escolhido. ADR-003: persistência local escolhida.
+</context>
+<instructions>
+Derive o plano técnico que realiza o spec.md dentro das decisões dos ADRs acima.
+</instructions>
+<constraints>
+Honre cada ADR listado; não re-decida o que um ADR já fixou. Não expanda além do escopo do spec.md.
+</constraints>
+<success_criteria>
+O plano honra ADR-001 e ADR-003 e cobre o resultado observável do spec.md.
+</success_criteria>
+"
+```
+
+**PARE.** A partir daqui o ciclo `/speckit.*` é seu.
+
 ---
 
 ## Os gates em ação (o que você vê)
@@ -285,9 +320,10 @@ Dar ao `/zion-prd-decompose` uma fatia "só o canvas visual, sem ligar ao texto"
 > eixos do **SPIDR** (ex.: começar pela **I**nterface mínima que já lê e escreve o texto).
 
 ### 5. Handoff termina o território
-As duas pontes **entregam** o texto e **param** — nunca disparam um `/speckit.*`.
-`/zion-prd-constitution-prompt` entrega o `/speckit.constitution` (bootstrap, 1×) e
-`/zion-prd-specify-prompt` entrega o `/speckit.specify` (por fatia). O ciclo do Spec Kit é seu.
+As pontes **entregam** o texto e **param** — nunca disparam um `/speckit.*`.
+`/zion-prd-constitution-prompt` entrega o `/speckit.constitution` (bootstrap, 1×),
+`/zion-prd-specify-prompt` entrega o `/speckit.specify` (por fatia) e `/zion-prd-plan-prompt`
+entrega o `/speckit.plan` (por feature, honrando os ADRs). O ciclo do Spec Kit é seu.
 
 ---
 
@@ -315,3 +351,4 @@ de qualidade é editar um arquivo só.
 4. `/zion-prd-decompose` → fatias verticais + tabela na PRD; R0 = walking skeleton.
 5. `/zion-prd-constitution-prompt` (1×) → `/speckit.constitution "..."` pronto → **você** dispara o bootstrap.
 6. `/zion-prd-specify-prompt <fatia>` → `/speckit.specify "..."` pronto → **você** dispara o Spec Kit.
+7. `/zion-prd-plan-prompt <feature>` → `/speckit.plan "..."` pronto (honra os ADRs) → **você** dispara o plan.
