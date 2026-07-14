@@ -190,14 +190,14 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 - **Objetivo:** levar **uma** fatia vertical de "o-quê/por-quê" até implementação, com os gates de
   qualidade no caminho.
 - **Skill(s):**
-  - `zion-rewrite-prompt` (real) — **peça central deste passo**: o input do `/speckit.specify` é
-    *literalmente um prompt*, e é aqui que o `zion-rewrite-prompt` paga o próprio custo:
-    - `<constraints>` vira o **guardião da fronteira** — é onde você escreve, explícito, "não citar
-      linguagem/framework/bibliotecas; stack só no `plan`", impedindo que o "como" vaze para o `specify`;
-    - `<context>` **separa referência de instrução** — `RF-xx` e ADRs entram como contexto, não viram
-      requisitos acidentais;
-    - `<success_criteria>` te obriga a declarar o **resultado observável** antes de rodar — justamente o
-      que o gate `/speckit.clarify` vai cobrar em seguida, então você já antecipa o gate.
+  - `/zion-prd-specify-prompt` (real) — **ponte deste passo**: o input do `/speckit.specify` é
+    *literalmente um prompt em linguagem natural*, e a ponte o monta para você, em prosa:
+    - **guarda a fronteira** — escreve explícito "não citar linguagem/framework/bibliotecas; stack só
+      no `plan`", impedindo que o "como" vaze para o `specify`;
+    - **separa referência de instrução** — `RF-xx` e ADRs entram como contexto, não viram requisitos
+      acidentais;
+    - **declara o resultado observável** antes de rodar — justamente o que o gate `/speckit.clarify`
+      vai cobrar em seguida, então você já antecipa o gate.
   - Spec Kit (real) — os comandos `/speckit.*`.
 - **Invocação (exemplo)** — *você executaria assim, na ordem:*
   ```text
@@ -269,7 +269,7 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 | `superpowers:brainstorming` | Skill tool / pedido "vamos explorar / desenhar X" | Descoberta (P1), **redação da PRD sobre o template, seção a seção (P3)** e decomposição em épicos/fatias (P4). |
 | `deep-research` | `/deep-research <pergunta>` | Trade-offs de spikes (P2). |
 | `zion-adr-new` | `/zion-adr-new "<título>"` | Registrar decisões estruturantes como ADR em `docs/adr/` (P2). |
-| `zion-rewrite-prompt` | `/zion-rewrite-prompt` ou "reescrever/estruturar prompt" | **Montar o prompt do `/speckit.constitution` (P5a)** — `<constraints>` blinda a decidibilidade dos princípios — **e do `/speckit.specify` (P5b)** — `<constraints>` blinda a fronteira "sem stack" e `<success_criteria>` antecipa o gate `clarify`. |
+| `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt`, `/zion-prd-plan-prompt` | Skill tool ou o comando homônimo | **Pontes para o Spec Kit (P5)** — cada uma monta, em prosa, o prompt do seu `/speckit.*`: guarda a decidibilidade+rastreabilidade dos princípios (constitution), a fronteira "sem stack" (specify) e o honrar-ADRs (plan); entrega o comando pronto e para. |
 | `git-commit` | `/git-commit` ou "commit" | Versionar PRD, ADRs e specs (P6). |
 
 ---
