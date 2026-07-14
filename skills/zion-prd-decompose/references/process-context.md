@@ -17,7 +17,9 @@ O harness conduz a autoria da PRD em estágios encadeados, cada um alimentando o
    **Handoff:** cada fatia priorizada entra no Spec Kit via `/speckit.specify`.
 5. **Spec Kit por feature** — `constitution` e o ciclo
    `specify → clarify → plan → checklist → tasks → analyze → implement → converge` (fora do
-   harness; pontes montadas por `/zion-prd-constitution-prompt` e `/zion-prd-specify-prompt`).
+   harness; pontes montadas por `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` e
+   `/zion-prd-plan-prompt`). A ponte `plan-prompt` é a única que **encosta** no "como": monta o
+   prompt do `plan` limitado a honrar os ADRs já provados.
 
 ## A fronteira o-quê/por-quê × como/com-quê
 
