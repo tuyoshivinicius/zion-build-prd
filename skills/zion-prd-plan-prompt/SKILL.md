@@ -46,7 +46,8 @@ Não invoque `deep-research` — a pesquisa já aconteceu no spike; o ADR é a d
 
 ## Fase 4 — Validar saída e handoff (aconselha)
 Confira contra o critério **plan-prompt** de `#criterios-de-conclusao`: referencia o `spec.md` ∧
-injeta os ADRs confirmados como restrição a honrar ∧ `success_criteria` amarra plano→ADRs. Então
+injeta os ADRs confirmados como restrição a honrar ∧ deixa claro que o plano honra cada ADR e cobre
+o resultado observável do `spec.md`. Então
 **entregue o comando pronto** para o usuário disparar, por exemplo:
 
     /speckit.plan "<prompt montado>"
