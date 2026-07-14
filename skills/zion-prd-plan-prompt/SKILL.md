@@ -31,14 +31,16 @@ antes". Não bloqueie; pergunte se segue mesmo assim.
 qual peça falta e por quê ela trava a inferência — **não fabrique** vínculo para preencher cota.
 Proponha só o que o texto sustenta e peça a peça faltante. Não bloqueie.
 
-## Fase 2/3 — Formatar e auto-delegar
-Invoque `zion-rewrite-prompt` no mesmo turno para montar o prompt XML do `plan`, seguindo
-`references/quality-rules.md` `#anatomia-plan`:
-- `<context>` — o `spec.md` da fatia e os **ADRs confirmados** (`ADR-00x: <decisão>`) como fonte.
-- `<instructions>` — **derivar** o plano técnico que realiza o `spec.md` dentro das decisões dos ADRs.
-- `<constraints>` — o guardião **invertido**: "honre cada ADR listado; não re-decida o que um ADR já
-  fixou". Secundário: "não expanda além do escopo do `spec.md`".
-- `<success_criteria>` — o plano honra cada ADR confirmado ∧ cobre o resultado observável do `spec.md`.
+## Fase 2/3 — Montar o prompt (você mesmo)
+Monte, no mesmo turno, o prompt do `plan` em **linguagem natural (prosa)**, seguindo
+`references/quality-rules.md` `#anatomia-plan`. É **conteúdo, não formato**: não use tags XML nem
+dite as seções do artefato — o `/speckit.plan` já tem o próprio template e já carrega o `spec.md`
+como fonte (não repita os requisitos). Em prosa, o prompt deve:
+- Listar os **ADRs confirmados** (`ADR-00x: <decisão>`) como decisões fechadas a honrar: "honre cada
+  ADR listado; não re-decida o que um ADR já fixou".
+- Pedir o plano técnico (stack, arquitetura, restrições) que realiza o resultado observável do
+  `spec.md` **dentro** dessas decisões.
+- Blindar o escopo em prosa: "não expanda além do escopo do `spec.md`".
 
 Não invoque `deep-research` — a pesquisa já aconteceu no spike; o ADR é a decisão fechada.
 
