@@ -38,9 +38,9 @@ Isso instala as 8 skills em `.claude/skills/` do seu projeto. Instale o **Spec K
 | `/zion-prd-spike` | 2 · Spikes + ADRs | `docs/discovery.md` | `docs/adr/ADR-00x-*.md` | `deep-research` → `zion-adr-new` |
 | `/zion-prd-write` | 3 · PRD enxuta | `docs/discovery.md` + `docs/adr/` | `docs/PRD.md` | `superpowers:brainstorming` |
 | `/zion-prd-decompose` | 4 · Decomposição | `docs/PRD.md` (com `RF-xx`) | fatias + tabela na PRD | `superpowers:brainstorming` |
-| `/zion-prd-constitution-prompt` | Ponte p/ 5a (bootstrap, 1×) | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | `zion-rewrite-prompt` |
-| `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | `zion-rewrite-prompt` |
-| `/zion-prd-plan-prompt` | Ponte p/ 5c | `spec.md` da feature + `docs/adr/` | prompt do `/speckit.plan` | `zion-rewrite-prompt` |
+| `/zion-prd-constitution-prompt` | Ponte p/ 5a (bootstrap, 1×) | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | *(monta em prosa; sem delegação)* |
+| `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | *(monta em prosa; sem delegação)* |
+| `/zion-prd-plan-prompt` | Ponte p/ 5c | `spec.md` da feature + `docs/adr/` | prompt do `/speckit.plan` | *(monta em prosa; sem delegação)* |
 
 O harness termina na ponte: o ciclo `/speckit.*` (specify → clarify → plan → … → implement) é **seu**.
 
@@ -196,26 +196,15 @@ Roda **uma vez por projeto**, depois que a PRD tem NFRs e restrições de ADRs. 
 /zion-prd-constitution-prompt Enfatize render e persistência; derive o resto dos NFRs.
 ```
 
-Delega a `zion-rewrite-prompt` montando as tags de `#anatomia-constitution` e **entrega o comando pronto**
-(não dispara nada):
+Monta o prompt em **prosa** seguindo `#anatomia-constitution` e **entrega o comando pronto** (não
+dispara nada):
 
 ```text
-/speckit.constitution "
-<context>
-Fonte (NFRs e restrições, não princípios prontos): NFR-01 (render < 100ms ao digitar),
-NFR-02 (persistência sobrevive a reload). ADR-001 (motor de render), ADR-003 (persistência local).
-</context>
-<instructions>
-Derive um princípio decidível por NFR/restrição relevante.
-</instructions>
-<constraints>
-Cada princípio tem critério objetivo (validador / limiar numérico / teste) e rastreia a um NFR/ADR.
-Proibido genérico ('código limpo', 'boa cobertura').
-</constraints>
-<success_criteria>
-Todo princípio é decidível e rastreável a um NFR/ADR; nenhum genérico.
-</success_criteria>
-"
+/speckit.constitution "Crie princípios derivados destes NFRs e restrições da PRD: NFR-01
+(render < 100ms ao digitar), NFR-02 (persistência sobrevive a reload); ADR-001 (motor de render),
+ADR-003 (persistência local). Cada princípio deve ser decidível — com um critério objetivo
+(validador, limiar numérico ou teste) — e rastreável ao NFR ou ADR de origem. Evite princípios
+genéricos como 'código limpo' ou 'boa cobertura'."
 ```
 
 **PARE.** A partir daqui o ciclo `/speckit.*` é seu.
@@ -228,24 +217,14 @@ Aponte **qual** fatia da fila. Para o walking skeleton:
 /zion-prd-specify-prompt A fatia R0: digitar mermaid, ver a prévia, recarregar e o diagrama continuar.
 ```
 
-Delega a `zion-rewrite-prompt` montando o XML com as 3 tags de `#anatomia-specify` e **entrega o comando
-pronto** (não dispara nada):
+Monta o prompt em **prosa** seguindo `#anatomia-specify` e **entrega o comando pronto** (não dispara
+nada):
 
 ```text
-/speckit.specify "
-<context>
-Referência (não requisito): RF-01 (prévia ao digitar), RF-05 (persistência entre sessões).
-ADR-001 (motor de render), ADR-003 (persistência local).
-</context>
-<success_criteria>
-A pessoa abre o editor, digita um diagrama mermaid e vê a prévia renderizar; ao recarregar a
-página, o diagrama e a prévia continuam lá.
-</success_criteria>
-<constraints>
-Não citar linguagem, framework ou biblioteca — stack fica no plan. Sem critérios de aceite
-detalhados nem telas.
-</constraints>
-"
+/speckit.specify "O usuário abre o editor, digita um diagrama mermaid e vê a prévia renderizar ao
+digitar; ao recarregar a página, o diagrama e a prévia continuam lá. Contexto: RF-01 (prévia ao
+digitar), RF-05 (persistência entre sessões); vale a restrição da ADR-003. Não inclua linguagem,
+framework ou bibliotecas — a stack fica no plan."
 ```
 
 **PARE.** A partir daqui o ciclo `/speckit.*` é seu.
@@ -259,25 +238,14 @@ Depois do `specify`+`clarify` da fatia, leve a feature ao `plan` honrando o que 
 ```
 
 Lê o `spec.md` da fatia, cruza com `docs/adr/`, propõe os ADRs relevantes para você confirmar, e
-delega a `zion-rewrite-prompt` montando o XML de `#anatomia-plan`. **Entrega o comando pronto** (não
+monta o prompt em **prosa** seguindo `#anatomia-plan`. **Entrega o comando pronto** (não
 dispara nada):
 
 ```text
-/speckit.plan "
-<context>
-spec.md da fatia R0 (prévia ao digitar; persistência entre sessões).
-ADR-001: motor de render escolhido. ADR-003: persistência local escolhida.
-</context>
-<instructions>
-Derive o plano técnico que realiza o spec.md dentro das decisões dos ADRs acima.
-</instructions>
-<constraints>
-Honre cada ADR listado; não re-decida o que um ADR já fixou. Não expanda além do escopo do spec.md.
-</constraints>
-<success_criteria>
-O plano honra ADR-001 e ADR-003 e cobre o resultado observável do spec.md.
-</success_criteria>
-"
+/speckit.plan "Realize o spec.md desta feature (prévia ao digitar + persistência entre sessões)
+honrando estas decisões já fechadas, sem reabri-las: ADR-001 (motor de render escolhido), ADR-003
+(persistência local escolhida). Descreva a stack, a arquitetura e as restrições técnicas que
+decorrem dessas decisões e realizam o resultado observável do spec.md."
 ```
 
 **PARE.** A partir daqui o ciclo `/speckit.*` é seu.
