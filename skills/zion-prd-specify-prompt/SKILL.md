@@ -22,12 +22,14 @@ A fatia deve ter um **resultado observável** (o que o usuário consegue fazer/v
 usuário descreve a fatia citando **biblioteca/framework/stack**, avise: "isso é do `plan`, não do
 `specify`" (veja `quality-rules.md` `#fronteira`). Não bloqueie.
 
-## Fase 2/3 — Formatar e auto-delegar
-Invoque `zion-rewrite-prompt` no mesmo turno para montar o prompt XML do `specify`, seguindo
-`quality-rules.md` `#anatomia-specify`:
-- `<constraints>` — blinda "não citar linguagem/framework/bibliotecas; stack só no `plan`".
-- `<context>` — `RF-xx` e ADRs relevantes como **referência**, não como requisito.
-- `<success_criteria>` — o resultado observável da fatia.
+## Fase 2/3 — Montar o prompt (você mesmo)
+Monte, no mesmo turno, o prompt do `specify` em **linguagem natural (prosa)**, seguindo
+`references/quality-rules.md` `#anatomia-specify`. É **conteúdo, não formato**: não use tags XML nem
+dite as seções do artefato — o `/speckit.specify` já tem o próprio template. Em prosa, o prompt deve:
+- Declarar o **resultado observável** da fatia (o que o usuário faz/vê ao final).
+- Blindar a fronteira em prosa: "não citar linguagem, framework ou bibliotecas; a stack fica no
+  `plan`".
+- Citar `RF-xx` e ADRs relevantes como **referência** (contexto), não como requisito.
 
 ## Fase 4 — Validar saída e handoff (aconselha)
 Confira contra o critério **specify-prompt** de `#criterios-de-conclusao`: declara observável ∧ sem
