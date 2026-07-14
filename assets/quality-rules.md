@@ -30,6 +30,10 @@ cada feature carrega **como / com quê** (stack e detalhe técnico).
 
 Ao detectar vazamento, o comando aponta a linha ofensora e sugere movê-la para o `plan.md` da feature.
 
+> A ponte `plan-prompt` é a única que **cruza** esta fronteira de propósito: monta o prompt do
+> `/speckit.plan`, onde o "como" é decidido. Mesmo lá a guarda persiste, invertida — o plano fica
+> **preso aos ADRs** já provados (veja `#anatomia-plan`), sem reabrir decisões.
+
 ## Critérios de conclusão por estágio {#criterios-de-conclusao}
 
 Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
@@ -48,6 +52,9 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
 - **constitution-prompt**: o prompt gerado deriva princípios **decidíveis** (cada um com validador/
   limiar/teste) ∧ cada princípio rastreia a um NFR ou restrição de ADR ∧ **zero** princípio genérico
   ("código limpo", "boa cobertura").
+- **plan-prompt**: o prompt gerado referencia o `spec.md` da feature ∧ injeta os ADRs confirmados
+  como restrição (honrar, não re-decidir) ∧ `success_criteria` = plano honra cada ADR ∧ cobre o
+  resultado observável do `spec.md`.
 
 ## INVEST e SPIDR {#invest}
 
@@ -87,3 +94,18 @@ custo:
   genérico ('código limpo', 'boa cobertura')". Impede platitude de virar princípio.
 - `<success_criteria>` — todo princípio é **decidível** ∧ **rastreável** a um NFR/ADR; nenhum
   genérico. É o que torna a `constitution` cobrável depois.
+
+## Anatomia do prompt do plan {#anatomia-plan}
+
+O input do `/speckit.plan` também é um prompt — montado a partir do `spec.md` da feature e dos ADRs
+que o spike já provou. É a única ponte que **entra** no "como", presa ao que foi decidido. As tags:
+
+- `<context>` — **a fonte, separando referência de instrução**: o `spec.md` da fatia (o o-quê que o
+  plano realiza) e os **ADRs confirmados** (`ADR-00x: <decisão>`) como decisões fechadas.
+- `<instructions>` — pede para **derivar** o plano técnico (o como) que realiza o `spec.md` **dentro**
+  das decisões dos ADRs.
+- `<constraints>` — o **guardião da fronteira, invertido**: em vez de "sem stack", escreva explícito
+  "honre cada ADR listado; não re-decida o que um ADR já fixou". Secundário: "não expanda além do
+  escopo do `spec.md`". É o que impede o spike de virar esforço órfão.
+- `<success_criteria>` — o plano **honra cada ADR confirmado** ∧ cobre o resultado observável do
+  `spec.md`. É o que o gate `/speckit.analyze` vai cobrar depois.
