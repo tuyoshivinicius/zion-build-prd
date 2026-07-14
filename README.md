@@ -45,7 +45,6 @@ Alternativa (Claude Code plugin marketplace):
 | Dependência | Usada por | De onde vem |
 |-------------|-----------|-------------|
 | `superpowers` (skill `superpowers:brainstorming`) | `/zion-prd-discovery`, `/zion-prd-decompose`, `/zion-prd-write` | Externa — plugin `obra/superpowers-marketplace` |
-| `zion-rewrite-prompt` | `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt`, `/zion-prd-plan-prompt` | Incluída (skill first-party deste repo) |
 | `deep-research` | `/zion-prd-spike` | Built-in do Claude Code (degrada para pesquisa manual se ausente) |
 | `zion-adr-new` | `/zion-prd-spike` | Incluída (skill deste repo) |
 
