@@ -156,7 +156,8 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   - **Walking skeleton** — a **fatia zero** (R0) prova o pipeline inteiro com o mínimo de funcionalidade.
 - **Entradas:** `docs/PRD.md` (seção de `RF-xx` por épico).
 - **Saídas / artefatos:** lista de épicos, story map, **backlog de fatias verticais** com linhas de
-  release, e a primeira versão da **tabela de rastreabilidade** (ainda em branco, ver modelo abaixo).
+  release, e a **tabela de rastreabilidade semeada por máquina** (`trace-prd.sh` em bootstrap: tudo ☐
+  pendente; ver modelo abaixo). Depois, `/zion-prd-trace` a reconcilia a cada fatia.
 - **Critério de conclusão:** existe uma fila priorizada de fatias verticais, cada uma passando no teste
   INVEST, com o walking skeleton na frente. **Handoff:** a próxima fatia da fila entra no Passo 5.
 
@@ -251,20 +252,27 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 
 ## Passo 6 — Rastreabilidade & "pronto para codar"
 
-- **Objetivo:** manter a ponte `RF-xx ↔ specs/###-nome` viva e confirmar, via checklist, que a feature
-  está pronta para implementação.
+- **Objetivo:** manter a ponte `RF-xx ↔ specs/###-nome` **viva por máquina** e confirmar, via checklist,
+  que a feature está pronta para implementação. "Viva" aqui significa *"viva enquanto você roda
+  `/zion-prd-trace`"*: a tabela é um artefato **derivado**, reconciliado por comando a partir da §6 da
+  PRD e das `specs/`, não mantido à mão.
 - **Skill(s):**
+  - `zion-prd-trace` (real) — reconcilia a seção 12 da PRD a partir das `specs/*/spec.md` (status
+    ☐/◐/● derivado do `tasks.md`); rodável a qualquer momento, tipicamente após cada fatia.
   - `git-commit` (real) — versionar os artefatos-guia (PRD, ADRs, specs).
 - **Invocação (exemplo)** — *você executaria assim:*
   ```text
+  # Reconciliar a rastreabilidade a partir das specs:
+  /zion-prd-trace
   # Versionar os artefatos do processo:
   /git-commit
   ```
-- **Entradas:** `docs/PRD.md`, `specs/###-nome/`, a tabela de rastreabilidade.
-- **Saídas / artefatos:** tabela `RF-xx ↔ specs/###` atualizada (no uso real) + checklist "pronto para
+- **Entradas:** `docs/PRD.md` (§6 + §12), `specs/###-nome/` (com a linha `**RF cobertos:**` e o
+  `tasks.md`).
+- **Saídas / artefatos:** seção 12 da PRD reconciliada por `/zion-prd-trace` + checklist "pronto para
   codar" confirmado.
-- **Critério de conclusão:** todo `RF-xx` in-scope tem uma linha na tabela apontando para sua spec, e o
-  checklist final está inteiramente marcado.
+- **Critério de conclusão:** `/zion-prd-trace` roda limpo (ou os avisos — RF órfão / spec intraçável —
+  estão justificados), todo `RF-xx` in-scope tem sua linha na tabela, e o checklist final está marcado.
 
 ---
 
@@ -278,6 +286,7 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 | `deep-research` | `/deep-research <pergunta>` | Trade-offs de spikes (P2). |
 | `zion-adr-new` | `/zion-adr-new "<título>"` | Registrar decisões estruturantes como ADR em `docs/adr/` (P2). |
 | `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt`, `/zion-prd-plan-prompt` | Skill tool ou o comando homônimo | **Pontes para o Spec Kit (P5)** — cada uma monta, em prosa, o prompt do seu `/speckit.*`: guarda a decidibilidade+rastreabilidade dos princípios (constitution), a fronteira "sem stack" (specify) e o honrar-ADRs (plan); entrega o comando pronto e para. |
+| `/zion-prd-trace` | Skill tool ou o comando homônimo | **Rastreabilidade mecânica (P6)** — reconcilia a seção 12 da PRD a partir das `specs/*/spec.md` (RF↔spec + status ☐/◐/● do `tasks.md`); a tabela é derivada, não mantida à mão. |
 | `git-commit` | `/git-commit` ou "commit" | Versionar PRD, ADRs e specs (P6). |
 
 ---
@@ -301,9 +310,11 @@ Tudo isso é elaboração progressiva e entra no `spec.md`/`plan.md` de cada fea
 
 ## Modelo de tabela de rastreabilidade (`RF-xx ↔ specs/###-nome`)
 
-A tabela vive agora em **`assets/templates/traceability-table.md`** (dono único). O comando
-`/zion-prd-decompose` a injeta na seção 12 da PRD no Passo 4. Preencha uma linha por requisito funcional
-in-scope quando **você** executar o processo.
+A tabela é um **artefato derivado**: `/zion-prd-decompose` a **semeia** por máquina (rodando
+`trace-prd.sh` em bootstrap) na seção 12 da PRD no Passo 4, e `/zion-prd-trace` a **reconcilia** a
+qualquer momento a partir da §6 e das `specs/`. O template em `assets/templates/traceability-table.md`
+é só a forma inicial. **Não edite Status/Feature/Spec à mão** — o `trace` os recomputa; só a coluna
+**Release** você preenche (ela é preservada entre reconciliações).
 
 ---
 

@@ -38,6 +38,7 @@ Alternativa (Claude Code plugin marketplace):
 | `/zion-prd-constitution-prompt` | Ponte → `/speckit.constitution` |
 | `/zion-prd-specify-prompt` | Ponte → `/speckit.specify` |
 | `/zion-prd-plan-prompt` | Ponte → `/speckit.plan` |
+| `/zion-prd-trace` | Reconcilia a rastreabilidade (seção 12) a partir das specs |
 | `/zion-adr-new` | Cria um ADR em `docs/adr/` |
 
 ## Dependências
