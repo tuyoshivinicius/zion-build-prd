@@ -94,12 +94,18 @@ inclui os `references/` regenerados no commit. Nunca edite `references/` à mão
 Mapeamento asset → skills: `scripts/asset-map.sh` (sourced por sync e check).
 
 O CI roda `./scripts/check-assets.sh` como guard de drift (backstop para `--no-verify`
-ou quem não rodou o `setup-hooks.sh`). Para checar/sincronizar à mão:
+ou quem não rodou o `setup-hooks.sh`) e `bash scripts/test-check-prd.sh` como auto-teste do
+verificador de regras. Para checar/sincronizar/testar à mão:
 
 ```bash
-./scripts/sync-assets.sh   # regenera references/ a partir de assets/
-./scripts/check-assets.sh  # falha se algum references/ divergir
+./scripts/sync-assets.sh       # regenera references/ a partir de assets/
+./scripts/check-assets.sh      # falha se algum references/ divergir
+bash scripts/test-check-prd.sh # auto-teste do check-prd.sh contra as fixtures
 ```
+
+As Fases 4 de `/zion-prd-write` e `/zion-prd-specify-prompt` rodam `scripts/check-prd.sh` (sincronizado
+para o `references/` de cada uma) para verificar mecanicamente as regras decidíveis (zero-stack,
+NFR-com-número, RF-por-épico). A denylist de stack é curada em `assets/quality-rules.md` (`#denylist`).
 
 O histórico de design está em `docs/superpowers/`.
 

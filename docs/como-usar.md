@@ -39,7 +39,7 @@ Isso instala as 8 skills em `.claude/skills/` do seu projeto. Instale o **Spec K
 | `/zion-prd-write` | 3 · PRD enxuta | `docs/discovery.md` + `docs/adr/` | `docs/PRD.md` | `superpowers:brainstorming` |
 | `/zion-prd-decompose` | 4 · Decomposição | `docs/PRD.md` (com `RF-xx`) | fatias + tabela na PRD | `superpowers:brainstorming` |
 | `/zion-prd-constitution-prompt` | Ponte p/ 5a (bootstrap, 1×) | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | *(monta em prosa; sem delegação)* |
-| `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | *(monta em prosa; sem delegação)* |
+| `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | *(monta em prosa; zero-stack verificado por `check-prd.sh`)* |
 | `/zion-prd-plan-prompt` | Ponte p/ 5c | `spec.md` da feature + `docs/adr/` | prompt do `/speckit.plan` | *(monta em prosa; sem delegação)* |
 
 O harness termina na ponte: o ciclo `/speckit.*` (specify → clarify → plan → … → implement) é **seu**.
@@ -162,9 +162,11 @@ Sem argumento: trabalha sobre `docs/discovery.md` + `docs/adr/`. **Fase 2** copi
 - `NFR-02` Diagramas de até 200 nós mantêm interação abaixo de 100 ms.
 ```
 
-**Fase 4 — guarda de fronteira.** Confere: escopo in/out ✓, `RF-xx` por épico (1 frase) ✓, NFRs
-com número ✓, **zero stack/critério de aceite/tela**. Se uma linha vazar (veja o exemplo de gate
-abaixo), ela aponta a linha exata e sugere mover para o `plan.md`.
+**Fase 4 — guarda de fronteira.** As três regras decidíveis (zero-stack, `RF-xx` por épico, NFR com
+número) são verificadas **por máquina** — a skill roda `references/check-prd.sh prd docs/PRD.md` e
+ecoa o veredito com o número da linha de cada achado. O julgamento subjetivo (critério de aceite ou
+tela vazando em prosa) fica com o LLM. Se uma linha vazar, aponta a linha exata e sugere mover para o
+`plan.md`. Gate aconselha, não bloqueia.
 
 ### Estágio 4 — `/zion-prd-decompose`
 
