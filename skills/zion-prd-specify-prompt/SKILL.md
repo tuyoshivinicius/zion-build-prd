@@ -36,14 +36,17 @@ dite as seções do artefato — o `/speckit.specify` já tem o próprio templat
   não fere a fronteira sem-stack.
 
 ## Fase 4 — Validar saída e handoff (aconselha)
-Verifique o zero-stack por máquina, passando o prompt montado ao script via stdin:
+Verifique por máquina, passando o prompt montado ao script via stdin, que o prompt (a) não vaza stack
+e (b) pede a linha **`**RF cobertos:**`** — o elo forward RF↔spec:
 
     printf '%s' "<prompt montado>" | bash references/check-prd.sh specify -
 
-O script casa o prompt contra a denylist e os sinais estruturais e imprime cada achado com o número
-da linha do prompt. **Ecoe o veredito** — para cada achado, lembre que a stack fica no `plan`, não no
-`specify`. Complemente com o julgamento que o script não faz: o prompt declara um resultado
-observável ∧ cita `RF-xx`/ADR como contexto (referência), não como requisito. Não bloqueie.
+O script casa o prompt contra a denylist e os sinais estruturais (achados de `stack`) e confere que o
+prompt pede a linha `**RF cobertos:**` (achado `rf-cobertos-ausente` quando falta). **Ecoe o
+veredito** — para cada achado de stack, lembre que a stack fica no `plan`, não no `specify`; se faltar
+o pedido de `**RF cobertos:**`, acrescente-o antes do handoff. Complemente com o julgamento que o
+script não faz: o prompt declara um resultado observável ∧ cita `RF-xx`/ADR como contexto
+(referência), não como requisito. Não bloqueie.
 
 Então **entregue o comando pronto** para o usuário disparar, por exemplo:
 

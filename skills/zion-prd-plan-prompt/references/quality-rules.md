@@ -104,8 +104,10 @@ tags XML, nada de ditar cabeçalhos/seções do `spec.md`. Em prosa, o prompt de
   requisitos a copiar.
 - **A linha `**RF cobertos:**`** — peça que o `spec.md` inclua uma linha rotulada
   `**RF cobertos:** RF-xx, ...` com os RF que a fatia cobre. É o elo forward RF↔spec legível por
-  máquina: o `/zion-prd-trace` a grepa para reconciliar a tabela de rastreabilidade. Declarar *quais*
-  RF a fatia cobre é o-quê/rastreabilidade, não stack — não fere a fronteira sem-stack.
+  máquina. O `check-prd.sh specify` verifica por máquina que o prompt **pede** essa linha (achado
+  `rf-cobertos-ausente` quando falta); o `/zion-prd-trace` depois confere que o `spec.md` resultante a
+  **tem** (aviso "Spec intraçável"). Declarar *quais* RF a fatia cobre é o-quê/rastreabilidade, não
+  stack — não fere a fronteira sem-stack.
 
 ## Anatomia do prompt do constitution {#anatomia-constitution}
 
