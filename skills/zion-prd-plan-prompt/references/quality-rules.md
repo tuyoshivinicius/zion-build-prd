@@ -47,8 +47,9 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
   (zero-stack, NFR-com-número, RF-por-épico) são verificadas por `check-prd.sh` — a Fase 4 roda o
   script e ecoa o veredito.
 - **decompose**: existe backlog de fatias verticais priorizadas ∧ cada fatia passa no INVEST ∧
-  walking skeleton é a fatia zero (R0) ∧ a tabela de rastreabilidade está injetada na PRD com uma
-  linha por `RF-xx` in-scope.
+  walking skeleton é a fatia zero (R0) ∧ a tabela de rastreabilidade (§12) foi **semeada por
+  `trace-prd.sh`** (não à mão) com uma linha por `RF-xx` in-scope. A tabela é um artefato **derivado**,
+  reconciliado a qualquer momento por `/zion-prd-trace`; não é mantida à mão.
 - **specify-prompt**: o prompt gerado declara resultado observável ∧ não cita stack ∧ RF-xx/ADR
   entram como contexto (referência), não como requisito. O zero-stack é verificado por
   `check-prd.sh specify -` sobre o prompt montado.
@@ -84,6 +85,10 @@ tags XML, nada de ditar cabeçalhos/seções do `spec.md`. Em prosa, o prompt de
   bibliotecas; a stack fica no `plan`". Impede o "como" de vazar para o `specify`.
 - **`RF-xx` e ADRs como contexto** — cite-os como referência ("Contexto: RF-01…"), não como
   requisitos a copiar.
+- **A linha `**RF cobertos:**`** — peça que o `spec.md` inclua uma linha rotulada
+  `**RF cobertos:** RF-xx, ...` com os RF que a fatia cobre. É o elo forward RF↔spec legível por
+  máquina: o `/zion-prd-trace` a grepa para reconciliar a tabela de rastreabilidade. Declarar *quais*
+  RF a fatia cobre é o-quê/rastreabilidade, não stack — não fere a fronteira sem-stack.
 
 ## Anatomia do prompt do constitution {#anatomia-constitution}
 

@@ -38,11 +38,17 @@ Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-co
   demo ponta-a-ponta?". Se a resposta é "só a UI" ou "só o back", a fatia é **horizontal** → aponte e
   sugira refatiar pelos eixos do **SPIDR**.
 - O **walking skeleton** é a fatia zero (R0).
-- Injete a tabela: copie `references/traceability-table.md` para a **seção 12** de
-  `docs/PRD.md` e preencha uma linha por `RF-xx` in-scope (deixe Feature/Spec e Status pendentes).
+- Semeie a tabela de rastreabilidade **por máquina** (não à mão): rode
+
+      bash references/trace-prd.sh docs/PRD.md specs
+
+  Ainda não há specs neste ponto → o bootstrap produz a tabela semente na **seção 12** (RF/Descrição/
+  Épico da §6, Feature/Spec em branco, tudo ☐ pendente). `trace-prd.sh` é o **dono único** da tabela;
+  rodá-lo de novo depois reconcilia em vez de duplicar. A coluna **Release** é preenchida por você/
+  brainstorming após o bootstrap. Reconciliar após cada fatia é trabalho de `/zion-prd-trace`.
 Emita veredito por item. Não reverta — aconselhe.
 
 ## Saída
 Lista de épicos, story map, backlog de **fatias verticais** priorizadas com linhas de release, e a
-tabela de rastreabilidade dentro da PRD. **Handoff:** a próxima fatia da fila entra em
-`/zion-prd-specify-prompt`.
+tabela de rastreabilidade **semeada por `trace-prd.sh`** dentro da PRD. **Handoff:** a próxima fatia da
+fila entra em `/zion-prd-specify-prompt`; após cada fatia, `/zion-prd-trace` reconcilia a tabela.

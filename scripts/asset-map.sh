@@ -11,4 +11,5 @@ ASSET_MAP=(
   "assets/templates/traceability-table.md zion-prd-decompose"
   "assets/process-context.md              zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-adr-new"
   "scripts/check-prd.sh                   zion-prd-write zion-prd-specify-prompt"
+  "scripts/trace-prd.sh                   zion-prd-trace zion-prd-decompose"
 )

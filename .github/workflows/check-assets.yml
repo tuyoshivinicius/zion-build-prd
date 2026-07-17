@@ -11,3 +11,5 @@ jobs:
         run: ./scripts/check-assets.sh
       - name: Auto-teste do check-prd
         run: bash scripts/test-check-prd.sh
+      - name: Auto-teste do trace-prd
+        run: bash scripts/test-trace-prd.sh
