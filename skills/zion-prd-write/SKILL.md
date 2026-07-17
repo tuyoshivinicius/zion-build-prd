@@ -41,11 +41,20 @@ personas, escopo in/out, `RN-xx`, `RF-xx` por épico, NFRs (com número), restri
 glossário, riscos, questões abertas — desafiando cada `RF-xx` e cada NFR antes de fechá-la.
 
 ## Fase 4 — Validar saída (aconselha) — GUARDA DE FRONTEIRA
-Confira contra o critério **prd** de `quality-rules.md` `#criterios-de-conclusao`: escopo in/out
-explícito ∧ `RF-xx` por épico (1 frase) ∧ NFRs com número ∧ **zero** stack / critério de aceite /
-tela. Para o zero-stack, aplique o teste de vazamento de `#fronteira`: se alguma linha cita
-linguagem/framework/biblioteca/tela/contrato de API, **aponte a linha exata** e sugira movê-la para o
-`plan.md` da feature. Emita veredito por item. Não reverta — apenas aconselhe.
+As três regras decidíveis são verificadas por máquina. Rode:
+
+    bash references/check-prd.sh prd docs/PRD.md
+
+O script executa zero-stack (denylist + sinais estruturais), NFR-com-número e RF-por-épico, e imprime
+cada achado ancorado em `arquivo:linha`. **Ecoe o veredito com autoridade** — reproduza os achados
+com número de linha — e para cada um sugira mover a linha para o `plan.md` da feature (stack) ou
+corrigir/justificar (NFR, RF). Exit `1` = há achados; exit `0` = limpo.
+
+Complemente com o que o script não decide: os itens **prd** de `quality-rules.md`
+`#criterios-de-conclusao` que dependem de julgamento (escopo in/out explícito, critério de aceite ou
+tela vazando em prosa) — aplique o teste de vazamento de `#fronteira` e aponte a linha.
+
+Não reverta — apenas aconselhe. Falso-positivo o humano descarta na hora.
 
 ## Saída
 `docs/PRD.md` preenchido sobre o template, com `RF-xx` por épico e sem detalhe técnico. Insumo do
