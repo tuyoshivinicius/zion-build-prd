@@ -135,8 +135,10 @@ docs/adr/ADR-002-sincronizacao-texto-canvas.md
 docs/adr/ADR-003-persistencia-local.md
 ```
 
-**Fase 4:** avisa se algum ADR não referencia um spike de fato rodado — *"sem spike, a spec nasce
-ambígua"*. Cada ADR aceito vira **restrição** na seção 8 da PRD.
+**Fase 4:** roda `references/check-adr.sh docs/adr/` e ecoa o veredito — confere a **presença** da
+evidência do tipo certo por ADR (spike de código para risco de execução; fonte de pesquisa para risco
+de conhecimento), não a qualidade. Advisório: *"complete a evidência ou justifique"*, não reverte.
+Cada ADR aceito vira **restrição** na seção 8 da PRD.
 
 ### Estágio 3 — `/zion-prd-write` (o coração)
 
