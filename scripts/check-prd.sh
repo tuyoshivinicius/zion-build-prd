@@ -39,7 +39,41 @@ else
 fi
 
 # --- checks (preenchidos nas próximas tasks) ---
-check_stack() { :; }
+# Extrai os termos do bloco ```denylist do quality-rules.md (um por linha, minúsculo).
+extract_denylist() {
+  awk '
+    /^```denylist[[:space:]]*$/ { inblock=1; next }
+    inblock && /^```/           { inblock=0; next }
+    inblock && NF               { print tolower($0) }
+  ' "$QR"
+}
+
+check_stack() {
+  local denyfile; denyfile="$(mktemp)"
+  extract_denylist > "$denyfile"
+
+  # Denylist: palavra inteira, case-insensitive; -o imprime o termo casado, -n a linha.
+  if [ -s "$denyfile" ]; then
+    grep -niwoF -f "$denyfile" "$SRC" 2>/dev/null | while IFS=: read -r n term; do
+      printf '%s:%s: stack — "%s" (mova para o plan.md da feature)\n' "$LABEL" "$n" "$term"
+    done
+  fi
+  rm -f "$denyfile"
+
+  # Sinais estruturais de alta precisão.
+  grep -niEo 'npm install|pip install|yarn add' "$SRC" 2>/dev/null | while IFS=: read -r n m; do
+    printf '%s:%s: stack — "%s" (comando de instalação; vai no plan.md)\n' "$LABEL" "$n" "$m"
+  done
+  grep -nE '^[[:space:]]*(import |from [^ ]+ import )' "$SRC" 2>/dev/null | while IFS=: read -r n rest; do
+    printf '%s:%s: stack — "%s" (código; vai no plan.md)\n' "$LABEL" "$n" "$(printf '%s' "$rest" | sed 's/^[[:space:]]*//')"
+  done
+  grep -nE '^[[:space:]]*```' "$SRC" 2>/dev/null | while IFS=: read -r n _; do
+    printf '%s:%s: stack — "bloco de código" (detalhe técnico; vai no plan.md)\n' "$LABEL" "$n"
+  done
+  grep -niEo '[A-Za-z][A-Za-z0-9._-]*[[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+' "$SRC" 2>/dev/null | while IFS=: read -r n m; do
+    printf '%s:%s: stack — "%s" (versão de dependência; vai no plan.md)\n' "$LABEL" "$n" "$m"
+  done
+}
 check_nfr()   { :; }
 check_rf()    { :; }
 
