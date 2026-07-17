@@ -43,19 +43,35 @@ enxuta, cada uma com uma linha de justificativa ancorada no discovery. Sem short
 filtro, virou 4 dúvidas menores, ou ficou com 1 decisão só → aponte e sugira, mas a lista confirmada
 pelo usuário é a que vale. Não bloqueie.
 
-## Fase 2/3 — Formatar e auto-delegar
-Para cada decisão, no mesmo turno:
-1. Levante os trade-offs das opções (custo de manutenção, limites). Se a skill built-in
-   `deep-research` estiver disponível, invoque-a para isso; se **não** estiver (harness antigo ou
-   variante), avise "`deep-research` (built-in) indisponível — seguindo com pesquisa manual" e
-   conduza o levantamento manualmente. Nunca quebre por falta dela.
-2. Invoque `zion-adr-new` com o título da decisão para registrar o ADR em `docs/adr/`.
+**Classificação por risco (aconselha).** Fechadas as 2–3 decisões, **classifique cada uma** como
+*risco de execução* ou *risco de conhecimento*, cada classificação com **uma linha de justificativa**
+ancorada na heurística `#risco-do-spike` de `references/quality-rules.md`. Peça para **confirmar ou
+editar** — mesmo padrão de convergência. Não bloqueie. O risco confirmado escolhe o meio da evidência
+na Fase 2/3.
 
-## Fase 4 — Validar saída (aconselha)
-Confira contra o critério **spike** de `quality-rules.md` `#criterios-de-conclusao`: cada decisão tem
-um `docs/adr/ADR-00x-*.md` com Contexto/Decisão/Consequências, e o ADR referencia um spike real. Se
-um ADR não menciona um spike de fato rodado, avise: "sem spike, a spec nasce ambígua — sugiro rodar o
-spike antes de aceitar a ADR". Não bloqueie.
+## Fase 2/3 — Formatar e auto-delegar (ramifica por risco)
+Para cada decisão, no mesmo turno, **conforme o risco confirmado na Fase 1**:
+
+- **Risco de conhecimento** → levante os trade-offs das opções (custo de manutenção, limites). Se a
+  skill built-in `deep-research` estiver disponível, invoque-a; se **não** estiver (harness antigo ou
+  variante), avise "`deep-research` (built-in) indisponível — seguindo com pesquisa manual" e conduza
+  o levantamento manualmente. Nunca quebre por falta dela. Depois invoque `zion-adr-new` com o título
+  da decisão e preencha o campo **Evidência** do ADR com a **URL/caminho** da fonte.
+- **Risco de execução** → determine o próximo número de ADR (mesma regra do `zion-adr-new`: maior
+  `docs/adr/ADR-*.md` + 1, três dígitos) e o slug do título; **escreva o spike de código** em
+  `docs/adr/spikes/ADR-00x-<slug>/` com um `README.md` (pergunta + o que foi rodado + veredito) e os
+  artefatos descartáveis; então invoque `zion-adr-new` (que reusa o mesmo número) e preencha o campo
+  **Evidência** com o **caminho do dir** `docs/adr/spikes/ADR-00x-<slug>/`.
+
+O número do ADR é conhecido na criação, então o slug do spike dir casa com o do ADR.
+
+## Fase 4 — Rodar `check-adr.sh` (aconselha)
+Rode `bash references/check-adr.sh docs/adr/` e **ecoe o veredito** (com o achado e a ação sugerida).
+O script confere a **presença** da evidência do tipo certo por ADR — `sem-evidencia`,
+`spike-dir-ausente`, `spike-dir-vazio`, `spike-sem-readme`, `evidencia-sem-lastro` — presença, não
+qualidade. Exit `0` limpo / `1` achados / `2` erro de uso. Mantenha o tom advisório: "complete a
+evidência ou justifique", **não reverte**. Confira também, em prosa, contra o critério **spike** de
+`references/quality-rules.md` `#criterios-de-conclusao`.
 
 ## Saída
 `docs/adr/ADR-00x-*.md` por decisão. Cada ADR aceito vira **restrição** na PRD (seção 8) e alimenta a
