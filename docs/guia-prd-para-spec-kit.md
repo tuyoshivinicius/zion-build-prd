@@ -187,6 +187,10 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 > Todos os comandos abaixo são **exemplos de referência**. Cada fatia vertical do Passo 4 percorre este
 > ciclo **na sua própria branch** (o `/speckit.specify` já cria a branch e o `spec.md` em `specs/###-nome/`).
 
+> **Correspondência com o `como-usar.md`:** lá as três pontes aparecem como comandos numerados 5a/5b/5c
+> (uma por ponte); aqui a `constitution` é o bootstrap (Passo 5a) e as pontes `specify` e `plan` vivem
+> **dentro** deste ciclo 5b, cada uma no seu passo do Spec Kit.
+
 - **Objetivo:** levar **uma** fatia vertical de "o-quê/por-quê" até implementação, com os gates de
   qualidade no caminho.
 - **Skill(s):**
@@ -198,6 +202,10 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
       acidentais;
     - **declara o resultado observável** antes de rodar — justamente o que o gate `/speckit.clarify`
       vai cobrar em seguida, então você já antecipa o gate.
+  - `/zion-prd-plan-prompt` (real) — **ponte do passo PLAN**: depois de `specify`+`clarify`, lê o
+    `spec.md` da fatia, cruza com `docs/adr/`, propõe os ADRs relevantes para você confirmar e monta,
+    em prosa, o `/speckit.plan` que **honra cada ADR** (não re-decide o que o spike já provou); entrega
+    o comando pronto e **para**.
   - Spec Kit (real) — os comandos `/speckit.*`.
 - **Invocação (exemplo)** — *você executaria assim, na ordem:*
   ```text

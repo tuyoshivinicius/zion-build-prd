@@ -44,6 +44,10 @@ Isso instala as 8 skills em `.claude/skills/` do seu projeto. Instale o **Spec K
 
 O harness termina na ponte: o ciclo `/speckit.*` (specify → clarify → plan → … → implement) é **seu**.
 
+> **Correspondência com o `guia-prd-para-spec-kit.md`:** aqui cada ponte é um comando numerado
+> (5a `constitution` · 5b `specify` · 5c `plan`); lá a `constitution` é o Passo 5a (bootstrap) e as
+> pontes `specify`/`plan` vivem **dentro** do Passo 5b, o ciclo do Spec Kit por feature.
+
 ```mermaid
 flowchart LR
     A["/zion-prd-discovery"] --> B["/zion-prd-spike"]
