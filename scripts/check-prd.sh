@@ -85,7 +85,25 @@ check_nfr() {
     }
   ' "$SRC"
 }
-check_rf()    { :; }
+# Seção 6: RF-xx antes do primeiro "Épico E#" → solto. Fora da seção 6: RF-xx
+# em bullet não-tabela → definição fora do lugar. (match 2-arg = POSIX, portável.)
+check_rf() {
+  awk -v label="$LABEL" '
+    /^## / { n=$2; sub(/\./,"",n); sect=n; if (n=="6") epic=0; next }
+    {
+      if (sect=="6" && $0 ~ /pico[[:space:]]+[Ee][0-9]/) epic=1
+      if ($0 ~ /RF-[0-9]+/) {
+        match($0, /RF-[0-9]+/); rf=substr($0, RSTART, RLENGTH)
+        if (sect=="6") {
+          if (epic==0)
+            printf "%s:%d: rf-fora-de-epico — \"%s\" (agrupe sob um Épico E#)\n", label, NR, rf
+        } else if ($0 ~ /^[[:space:]]*[-*]/ && $0 !~ /^[[:space:]]*\|/) {
+          printf "%s:%d: rf-fora-de-epico — \"%s\" (definido fora da seção 6)\n", label, NR, rf
+        }
+      }
+    }
+  ' "$SRC"
+}
 
 case "$mode" in
   prd)     findings="$(check_stack; check_nfr; check_rf)" ;;
