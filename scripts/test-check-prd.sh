@@ -34,8 +34,13 @@ out="$(bash "$CHECK" specify - < "$FIX/specify-dirty.txt")"; rc=$?
 assert_exit "specify sujo sai 1" 1 "$rc"
 assert_contains "specify sujo acha stack" "stack" "$out"
 
-# 4. specify limpo via stdin → exit 0
-out="$(printf 'O usuário edita o diagrama e vê a prévia atualizar ao digitar.\n' | bash "$CHECK" specify -)"; rc=$?
+# 4. specify limpo (com o pedido de **RF cobertos:**) via stdin → exit 0
+out="$(printf 'O usuário edita o diagrama e vê a prévia atualizar ao digitar.\nPeça que o spec.md inclua a linha **RF cobertos:** RF-01 com os RF que a fatia cobre.\n' | bash "$CHECK" specify -)"; rc=$?
 assert_exit "specify limpo sai 0" 0 "$rc"
+
+# 5. specify sem o pedido de **RF cobertos:** → exit 1 + rf-cobertos-ausente
+out="$(bash "$CHECK" specify - < "$FIX/specify-sem-rf.txt")"; rc=$?
+assert_exit "specify sem RF sai 1" 1 "$rc"
+assert_contains "specify sem RF acha rf-cobertos-ausente" "rf-cobertos-ausente" "$out"
 
 if [ "$fail" -eq 0 ]; then echo "test-check-prd: tudo verde"; else echo "test-check-prd: FALHOU"; exit 1; fi

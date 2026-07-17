@@ -5,7 +5,7 @@
 #
 # Uso:
 #   check-prd.sh prd     <arquivo>    # stack + nfr-sem-numero + rf-fora-de-epico
-#   check-prd.sh specify <arquivo|->  # só stack (prompt do specify; - lê do stdin)
+#   check-prd.sh specify <arquivo|->  # stack + rf-cobertos-ausente (prompt do specify; - lê do stdin)
 #
 # Denylist: bloco ```denylist do quality-rules.md ao lado do script (references/)
 # ou, no repo, em ../assets/quality-rules.md.
@@ -74,6 +74,15 @@ check_stack() {
     printf '%s:%s: stack — "%s" (versão de dependência; vai no plan.md)\n' "$LABEL" "$n" "$m"
   done
 }
+# O prompt do specify deve pedir a linha **RF cobertos:** (elo forward RF↔spec).
+# Simétrica ao check_stack, mas só no modo specify. Grepa o MESMO padrão do trace-prd.sh.
+# Como é uma *ausência*, não há linha para ancorar → achado sem número de linha.
+# Gatilho: só o pedido do rótulo — NÃO um RF-xx concreto (o skeleton declara "(nenhum)").
+check_rf_cobertos() {
+  if ! grep -iqE 'RF cobertos:' "$SRC" 2>/dev/null; then
+    printf '%s: rf-cobertos-ausente — o prompt não pede a linha **RF cobertos:** (elo forward RF↔spec; veja quality-rules #anatomia-specify)\n' "$LABEL"
+  fi
+}
 # Seção 7: item de NFR (bullet ou id NFR-) sem nenhum dígito → achado.
 check_nfr() {
   awk -v label="$LABEL" '
@@ -107,7 +116,7 @@ check_rf() {
 
 case "$mode" in
   prd)     findings="$(check_stack; check_nfr; check_rf)" ;;
-  specify) findings="$(check_stack)" ;;
+  specify) findings="$(check_stack; check_rf_cobertos)" ;;
 esac
 
 if [ -n "$findings" ]; then

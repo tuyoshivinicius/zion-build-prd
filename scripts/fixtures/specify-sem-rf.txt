@@ -1,0 +1,2 @@
+Como usuário, quero editar o diagrama e ver a prévia atualizar ao digitar.
+Não citar linguagem, framework ou bibliotecas; a stack fica no plan.
