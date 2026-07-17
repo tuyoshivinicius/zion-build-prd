@@ -50,4 +50,31 @@ if diff -q "$prd" "$prd.bak" >/dev/null 2>&1; then echo "ok: reconciliação ide
 else echo "FALHOU: reconciliação não é idempotente"; fail=1; fi
 rm -f "$prd" "$prd.bak"
 
+# --- Task 4: avisos + exit codes + --check ---
+prd="$(fresh_prd "$FIX/PRD.md")"
+out="$(bash "$TRACE" "$prd" "$FIX/specs")"; rc=$?
+assert_exit "modo padrão com avisos sai 1" 1 "$rc"
+assert_contains "aviso RF órfão (RF-99)"       "RF órfão" "$out"
+assert_contains "aviso spec intraçável (004)"  "intraçável" "$out"
+assert_contains "aviso RF descoberto (RF-03)"  "RF descoberto" "$out"
+rm -f "$prd"
+
+# --check é read-only e sinaliza drift
+prd="$(fresh_prd "$FIX/PRD.md")"; cp "$prd" "$prd.bak"
+out="$(bash "$TRACE" "$prd" "$FIX/specs" --check)"; rc=$?
+assert_exit "--check com drift sai 1" 1 "$rc"
+if diff -q "$prd" "$prd.bak" >/dev/null 2>&1; then echo "ok: --check não escreve"
+else echo "FALHOU: --check escreveu no arquivo"; fail=1; fi
+rm -f "$prd" "$prd.bak"
+
+# fixture clean: reconcilia (exit 0, sem avisos) e depois --check diz "em dia" (exit 0)
+prd="$(fresh_prd "$FIX/clean/PRD.md")"
+out="$(bash "$TRACE" "$prd" "$FIX/clean/specs")"; rc=$?
+assert_exit "clean reconcilia sem avisos sai 0" 0 "$rc"
+assert_file_re "clean: RF-01 implementada" "$prd" 'RF-01.*specs/001-unica.*● implementada'
+out="$(bash "$TRACE" "$prd" "$FIX/clean/specs" --check)"; rc=$?
+assert_exit "clean --check em dia sai 0" 0 "$rc"
+assert_contains "clean --check diz em dia" "em dia" "$out"
+rm -f "$prd"
+
 if [ "$fail" -eq 0 ]; then echo "test-trace-prd: tudo verde"; else echo "test-trace-prd: FALHOU"; exit 1; fi

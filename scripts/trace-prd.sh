@@ -101,9 +101,20 @@ scan_specs() {
   done
 }
 
-# --- STUB (Task 4): avisos. Bootstrap = nenhum. ---
+# --- Avisos: RF órfão (spec cita RF fora da §6), spec intraçável, RF descoberto. ---
 compute_warnings() {
-  :
+  # RF órfão: RF em $RFSPEC ausente da §6.
+  awk -F'\t' 'NR==FNR{ins[$1]=1; next}
+    { if(!($1 in ins)) print "RF órfão: specs/" $2 " declara " $1 " (fora da seção 6 da PRD)" }' \
+    "$SEC6" "$RFSPEC" | sort -u
+  # Spec intraçável: sem a linha **RF cobertos:**.
+  while read -r name; do
+    [ -n "$name" ] && echo "Spec intraçável: specs/$name sem linha **RF cobertos:**"
+  done < "$UNTRACE"
+  # RF descoberto: RF in-scope na §6 sem nenhuma spec (permanece pendente).
+  awk -F'\t' 'NR==FNR{cov[$1]=1; next}
+    { if(!($1 in cov)) print "RF descoberto: " $1 " sem spec (permanece pendente)" }' \
+    "$RFSPEC" "$SEC6" | sort -u
 }
 
 specs_for_rf() {  # $1 rf → `specs/a`, `specs/b`  (vazio se nenhuma)
