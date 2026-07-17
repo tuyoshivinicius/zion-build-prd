@@ -74,7 +74,17 @@ check_stack() {
     printf '%s:%s: stack — "%s" (versão de dependência; vai no plan.md)\n' "$LABEL" "$n" "$m"
   done
 }
-check_nfr()   { :; }
+# Seção 7: item de NFR (bullet ou id NFR-) sem nenhum dígito → achado.
+check_nfr() {
+  awk -v label="$LABEL" '
+    /^## / { n=$2; sub(/\./,"",n); sect=(n=="7"); next }
+    sect && /^[[:space:]]*([-*]|NFR-)/ && $0 !~ /[0-9]/ {
+      line=$0
+      sub(/^[[:space:]]*[-*][[:space:]]*/,"",line)
+      printf "%s:%d: nfr-sem-numero — \"%s\" (dê um número)\n", label, NR, line
+    }
+  ' "$SRC"
+}
 check_rf()    { :; }
 
 case "$mode" in

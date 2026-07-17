@@ -26,6 +26,7 @@ out="$(bash "$CHECK" prd "$FIX/prd-dirty.md")"; rc=$?
 assert_exit "prd suja sai 1" 1 "$rc"
 assert_contains "prd suja acha stack" "stack" "$out"
 assert_contains "prd suja acha termo react" "react" "$out"
+assert_contains "prd suja acha nfr sem numero" "nfr-sem-numero" "$out"
 
 # 3. specify sujo via stdin → exit 1 + stack
 out="$(bash "$CHECK" specify - < "$FIX/specify-dirty.txt")"; rc=$?
