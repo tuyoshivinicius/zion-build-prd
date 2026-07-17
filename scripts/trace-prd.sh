@@ -75,9 +75,30 @@ table_col() {  # $1 prd  $2 nome-da-coluna
   ' "$1"
 }
 
-# --- STUB (Task 3): varre specs → $RFSPEC, $UNTRACE, $SPECSTATUS. Bootstrap = vazio. ---
+# --- Status de UMA spec a partir do tasks.md ---
+#   ausente ou com ao menos um "- [ ]" aberto → spec;  senão → impl.
+spec_status() {  # $1 spec-dir
+  local tasks="$1/tasks.md"
+  [ -f "$tasks" ] || { printf 'spec'; return; }
+  if grep -qE '^[[:space:]]*- \[ \]' "$tasks"; then printf 'spec'; return; fi
+  printf 'impl'
+}
+
+# --- Varre specs/*/spec.md → $RFSPEC (RF\tnome), $UNTRACE (nome), $SPECSTATUS (nome\tstatus). ---
 scan_specs() {
+  local dir="$1" spec name line rf
   : > "$RFSPEC"; : > "$UNTRACE"; : > "$SPECSTATUS"
+  [ -n "$dir" ] && [ -d "$dir" ] || return 0
+  for spec in "$dir"/*/spec.md; do
+    [ -f "$spec" ] || continue
+    name="$(basename "$(dirname "$spec")")"
+    printf '%s\t%s\n' "$name" "$(spec_status "$(dirname "$spec")")" >> "$SPECSTATUS"
+    line="$(grep -iE 'RF cobertos:' "$spec" | head -1)"
+    if [ -z "$line" ]; then printf '%s\n' "$name" >> "$UNTRACE"; continue; fi
+    for rf in $(printf '%s' "$line" | grep -oE 'RF-[0-9]+'); do
+      printf '%s\t%s\n' "$rf" "$name" >> "$RFSPEC"
+    done
+  done
 }
 
 # --- STUB (Task 4): avisos. Bootstrap = nenhum. ---

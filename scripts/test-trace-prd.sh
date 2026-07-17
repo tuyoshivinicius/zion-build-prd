@@ -37,4 +37,17 @@ rm -f "$prd"
 out="$(bash "$TRACE" nao/existe.md specs 2>&1)"; rc=$?
 assert_exit "PRD inexistente sai 2" 2 "$rc"
 
+# --- Task 3: specs varridas (status + Feature/Spec + idempotência) ---
+prd="$(fresh_prd "$FIX/PRD.md")"
+bash "$TRACE" "$prd" "$FIX/specs" >/dev/null 2>&1
+assert_file_re "RF-01 implementada c/ spec" "$prd" 'RF-01.*specs/001-acao.*● implementada'
+assert_file_re "RF-02 em spec c/ spec"      "$prd" 'RF-02.*specs/002-historico.*◐ em spec'
+assert_file_re "RF-03 permanece pendente"   "$prd" 'RF-03.*☐ pendente'
+# idempotência: rodar de novo não muda o arquivo
+cp "$prd" "$prd.bak"
+bash "$TRACE" "$prd" "$FIX/specs" >/dev/null 2>&1
+if diff -q "$prd" "$prd.bak" >/dev/null 2>&1; then echo "ok: reconciliação idempotente"
+else echo "FALHOU: reconciliação não é idempotente"; fail=1; fi
+rm -f "$prd" "$prd.bak"
+
 if [ "$fail" -eq 0 ]; then echo "test-trace-prd: tudo verde"; else echo "test-trace-prd: FALHOU"; exit 1; fi
