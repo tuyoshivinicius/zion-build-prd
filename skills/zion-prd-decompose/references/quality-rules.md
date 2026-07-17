@@ -43,12 +43,15 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
 - **spike** (`docs/adr/ADR-00x-*.md`): cada decisão estruturante tem um ADR com Contexto/Decisão/
   Consequências ∧ o ADR referencia um spike real.
 - **prd** (`docs/PRD.md`): escopo in/out explícito ∧ `RF-xx` agrupados por épico (1 frase cada) ∧
-  NFRs com número ∧ **zero** stack / critério de aceite / tela.
+  NFRs com número ∧ **zero** stack / critério de aceite / tela. As três regras decidíveis
+  (zero-stack, NFR-com-número, RF-por-épico) são verificadas por `check-prd.sh` — a Fase 4 roda o
+  script e ecoa o veredito.
 - **decompose**: existe backlog de fatias verticais priorizadas ∧ cada fatia passa no INVEST ∧
   walking skeleton é a fatia zero (R0) ∧ a tabela de rastreabilidade está injetada na PRD com uma
   linha por `RF-xx` in-scope.
 - **specify-prompt**: o prompt gerado declara resultado observável ∧ não cita stack ∧ RF-xx/ADR
-  entram como contexto (referência), não como requisito.
+  entram como contexto (referência), não como requisito. O zero-stack é verificado por
+  `check-prd.sh specify -` sobre o prompt montado.
 - **constitution-prompt**: o prompt gerado deriva princípios **decidíveis** (cada um com validador/
   limiar/teste) ∧ cada princípio rastreia a um NFR ou restrição de ADR ∧ **zero** princípio genérico
   ("código limpo", "boa cobertura").
@@ -111,3 +114,43 @@ cobrir:
   que realizam o resultado observável do `spec.md` **dentro** dessas decisões.
 - **A guarda secundária, em prosa** — "não expanda além do escopo do `spec.md`". É o que impede o
   spike de virar esforço órfão; o gate `/speckit.analyze` cobra isso depois.
+
+## Denylist de stack {#denylist}
+
+Termos de linguagem/framework/biblioteca que **não** podem aparecer na PRD nem no prompt do
+`/speckit.specify` (vivem no `plan.md` da feature). O `check-prd.sh` extrai o bloco cercado abaixo e
+casa cada termo **palavra inteira, case-insensitive** contra o alvo. Afinar a lista = editar aqui (o
+sync propaga para os `references/`). Um termo por linha, minúsculo.
+
+```denylist
+react
+react flow
+vue
+angular
+svelte
+zustand
+redux
+localstorage
+dagre
+elk
+next.js
+node.js
+codemirror
+tailwind
+postgres
+mysql
+mongodb
+redis
+sqlite
+prisma
+graphql
+django
+flask
+fastapi
+express
+webpack
+vite
+d3
+three.js
+typescript
+```
