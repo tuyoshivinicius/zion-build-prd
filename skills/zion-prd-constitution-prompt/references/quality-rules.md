@@ -41,7 +41,9 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
 - **discovery** (`docs/discovery.md`): tem visão em 1 frase ∧ ≥1 persona nomeada ∧ pelo menos um
   "não faz" explícito no quadro faz/não-faz.
 - **spike** (`docs/adr/ADR-00x-*.md`): cada decisão estruturante tem um ADR com Contexto/Decisão/
-  Consequências ∧ o ADR referencia um spike real.
+  Consequências ∧ o ADR carrega **evidência do tipo certo para seu risco** (spike de código para
+  risco de execução; fonte de pesquisa para risco de conhecimento — ver `#risco-do-spike`). A
+  presença da evidência é verificada por `check-adr.sh` — a Fase 4 roda o script e ecoa o veredito.
 - **prd** (`docs/PRD.md`): escopo in/out explícito ∧ `RF-xx` agrupados por épico (1 frase cada) ∧
   NFRs com número ∧ **zero** stack / critério de aceite / tela. As três regras decidíveis
   (zero-stack, NFR-com-número, RF-por-épico) são verificadas por `check-prd.sh` — a Fase 4 roda o
@@ -59,6 +61,21 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
 - **plan-prompt**: o prompt gerado referencia o `spec.md` da feature ∧ injeta os ADRs confirmados
   como restrição (honrar, não re-decidir) ∧ deixa claro que o plano deve honrar cada ADR e cobrir
   o resultado observável do `spec.md`.
+
+## Risco do spike {#risco-do-spike}
+
+Base da classificação da Fase 1 de `/zion-prd-spike`: cada decisão estruturante endereça um tipo de
+risco, e o risco escolhe o **meio da evidência**.
+
+- **Risco de execução** — a dúvida **só se resolve rodando algo**: performance sob carga,
+  compatibilidade, viabilidade de integração, comportamento observável. **Meio: spike de código** em
+  `docs/adr/spikes/ADR-00x-<slug>/` (dir com `README.md` + artefatos descartáveis).
+- **Risco de conhecimento** — trade-off **documentável sem rodar**: maturidade, licença, custo de
+  manutenção, ecossistema, aderência conceitual. **Meio: pesquisa (deep-research) com fonte citada.**
+
+Regra prática: se você decide lendo docs/benchmarks de terceiros, é **conhecimento**; se precisa do
+*seu* caso rodando para confiar, é **execução**. A presença da evidência do tipo certo é verificada
+por `check-adr.sh` — o script confere presença, o humano decide qualidade.
 
 ## INVEST e SPIDR {#invest}
 
