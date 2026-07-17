@@ -82,26 +82,38 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 
 ## Passo 2 — Spikes técnicos + ADRs
 
-- **Objetivo:** responder com **código descartável** (não com opinião) as 2–3 decisões estruturantes
-  que mudam a PRD inteira, e registrá-las como ADRs **antes** de fechar a PRD.
+- **Objetivo:** responder as 2–3 decisões estruturantes que mudam a PRD inteira com **evidência
+  proporcional ao risco** — não "código sempre" (força código onde o risco é de conhecimento) nem
+  "pesquisa sempre" (teatro de conformidade). O *risco* da decisão escolhe o meio, e a decisão vira
+  um ADR **antes** de fechar a PRD.
+  - **Risco de execução** (só se resolve rodando: performance, compatibilidade, viabilidade) →
+    **spike de código** em `docs/adr/spikes/ADR-00x-<slug>/`.
+  - **Risco de conhecimento** (documentável sem rodar: maturidade, licença, custo, ecossistema) →
+    **pesquisa** (`deep-research`) com fonte citada.
 - **Skill(s):**
-  - `deep-research` (real) — levantar trade-offs das opções (ex.: bibliotecas concorrentes).
+  - `deep-research` (real) — levantar trade-offs no caminho de conhecimento.
   - `superpowers:brainstorming` (real) — decidir critérios de escolha.
-  - `zion-adr-new` (real) — registra a decisão como ADR em `docs/adr/`.
-- **Invocação (exemplo)** — *você executaria assim:*
+  - `zion-adr-new` (real) — registra a decisão como ADR em `docs/adr/` (com o campo `Evidência`).
+- **Invocação (exemplo)** — *os dois caminhos:*
   ```text
-  # Avaliar opções antes de comprometer a arquitetura:
+  # Caminho de CONHECIMENTO (pesquisa → ADR):
   /deep-research  Trade-offs entre <Opção A> e <Opção B> para <capacidade central>,
   considerando custo de manutenção e limites conhecidos.
+  /zion-adr-new  "Escolha de <decisão de conhecimento>"   # Evidência = URL/caminho da fonte
 
-  # Registrar a decisão:
-  /zion-adr-new  "Escolha de <decisão estruturante>"   # gera docs/adr/ADR-001-*.md
+  # Caminho de EXECUÇÃO (spike de código → ADR):
+  #   escreva o spike em docs/adr/spikes/ADR-00x-<slug>/ (README.md + artefatos), então:
+  /zion-adr-new  "Viabilidade de <decisão de execução>"   # Evidência = docs/adr/spikes/ADR-00x-<slug>/
   ```
-- **Entradas:** dúvidas técnicas estruturantes levantadas no Passo 1; repositórios de spike descartáveis.
+- **Entradas:** dúvidas técnicas estruturantes levantadas no Passo 1; spikes de código descartáveis
+  (risco de execução).
 - **Saídas / artefatos:** `docs/adr/ADR-001-*.md`, `docs/adr/ADR-002-*.md` — cada uma com contexto,
-  decisão, consequências. Elas viram **restrições** na PRD (seção 8) e na `constitution`.
-- **Critério de conclusão:** cada decisão estruturante tem um ADR aceito, sustentado por um spike que
-  você de fato rodou. Sem isso, as specs nascem ambíguas.
+  decisão, consequências e o campo `Evidência`. Elas viram **restrições** na PRD (seção 8) e na
+  `constitution`.
+- **Critério de conclusão:** cada decisão estruturante tem um ADR com Contexto/Decisão/Consequências
+  **∧** o ADR carrega evidência do tipo certo para seu risco (spike de código para execução; fonte de
+  pesquisa para conhecimento). A presença da evidência é verificada por `check-adr.sh` — a Fase 4
+  roda o script e ecoa o veredito. Sem isso, as specs nascem ambíguas.
 
 ---
 
