@@ -13,7 +13,8 @@ disable-model-invocation: false
 Registra uma decisão estruturante como um ADR em `docs/adr/`, com as seções
 **Contexto / Decisão / Consequências / Status**. Use no Estágio 2 do harness (Spikes + ADRs) —
 ver `references/process-context.md` — para registrar as 2–3 decisões que mudam a PRD inteira,
-sustentadas por um spike que você de fato rodou.
+sustentadas por **evidência proporcional ao risco** (spike de código para risco de execução; fonte
+de pesquisa para risco de conhecimento — ver `#risco-do-spike` em `references/quality-rules.md`).
 
 ## Argumento
 
@@ -44,11 +45,15 @@ Um título curto para a decisão, entre aspas. Exemplos:
 - **Status:** Proposto
 - **Data:** <preencher>
 - **Decisores:** <preencher>
+- **Evidência:** <um dos dois — o tipo casa com o risco da decisão>
+    · execução (só se resolve rodando): `docs/adr/spikes/ADR-<n>-<slug>/` (dir com README.md + artefatos descartáveis)
+    · conhecimento (documentável sem rodar): <URL ou caminho do artefato de pesquisa que sustenta a decisão>
 
 ## Contexto
 
 Qual é a força / problema / dúvida estruturante? Que restrições e requisitos (RF-xx / RN-xx / NFRs)
-estão em jogo? Que spike foi rodado para sustentar a decisão?
+estão em jogo? Que evidência (spike de código ou pesquisa) sustenta a decisão, e qual o risco que
+ela endereça?
 
 ## Decisão
 
@@ -63,6 +68,18 @@ O que fica mais fácil e o que fica mais difícil a partir daqui. Impactos na PR
 
 Proposto → Aceito → (Substituído por ADR-<m>, se for o caso).
 ```
+
+## Convenção do spike dir (risco de execução)
+
+Quando a decisão é de **risco de execução**, o campo `Evidência` aponta um diretório
+`docs/adr/spikes/ADR-<n>-<slug>/` (mesmo número/slug do ADR), que deve conter:
+
+- **`README.md`** (obrigatório) — a pergunta do spike, o que foi rodado e o veredito.
+- **Artefatos descartáveis** — o código/medições do spike (livre).
+
+O `zion-adr-new` **não** cria o spike dir: o spike é escrito na Fase 2/3 de `/zion-prd-spike`, antes
+ou junto do ADR. O template só documenta a convenção e o campo que a referencia. A presença dessa
+evidência é verificada por `check-adr.sh` (rodado pela Fase 4 de `/zion-prd-spike`).
 
 ## Saída
 
