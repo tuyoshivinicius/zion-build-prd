@@ -30,6 +30,10 @@ dite as seções do artefato — o `/speckit.specify` já tem o próprio templat
 - Blindar a fronteira em prosa: "não citar linguagem, framework ou bibliotecas; a stack fica no
   `plan`".
 - Citar `RF-xx` e ADRs relevantes como **referência** (contexto), não como requisito.
+- Pedir explicitamente que o `spec.md` inclua uma linha rotulada **`**RF cobertos:** RF-xx, ...`** com
+  os RF que esta fatia cobre — é o elo legível por máquina que o `/zion-prd-trace` grepa para
+  reconciliar a rastreabilidade. Declarar *quais* RF a fatia cobre é o-quê/rastreabilidade, não stack:
+  não fere a fronteira sem-stack.
 
 ## Fase 4 — Validar saída e handoff (aconselha)
 Verifique o zero-stack por máquina, passando o prompt montado ao script via stdin:
