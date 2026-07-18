@@ -11,8 +11,8 @@ narra as camadas, indexa todas as fixtures e diz como rodá-las. A **fonte da ve
 ## 1. As duas camadas e quando cada uma roda
 
 - **Camada mecânica (determinística).** Os verificadores de script (`check-prd.sh`, `check-adr.sh`,
-  `trace-prd.sh`, `check-superpowers-contract.sh`) contra fixtures `clean`/`dirty`, consolidados em
-  `scripts/eval.sh`. Roda **no CI a cada push** (passo "Avaliação da camada mecânica"). Verde/vermelho
+  `trace-prd.sh`, `check-superpowers-contract.sh`, `check-canon.sh`) contra fixtures `clean`/`dirty`,
+  consolidados em `scripts/eval.sh`. Roda **no CI a cada push** (passo "Avaliação da camada mecânica"). Verde/vermelho
   binário. O check de contrato **degrada gracioso**: sem o superpowers instalado ele sai 0
   ("não verificável"), então quem garante a lógica no CI é o auto-teste contra fixtures.
 - **Camada LLM (não-determinística).** Fixtures com defeito plantado que exercitam o **julgamento** das
@@ -29,8 +29,8 @@ narra as camadas, indexa todas as fixtures e diz como rodá-las. A **fonte da ve
 
 ## 2. Rodar a camada mecânica
 
-    ./scripts/eval.sh              # roda os quatro self-tests → veredito agregado
-    ./scripts/eval.sh prd          # roda só um (prd | adr | trace | contract)
+    ./scripts/eval.sh              # roda todos os self-tests → veredito agregado
+    ./scripts/eval.sh prd          # roda só um (prd | adr | trace | backlog | contract | canon)
 
 Exit 0 = tudo verde; exit 1 = algum self-test falhou; exit 2 = argumento inválido. É exatamente o que o
 CI executa.
@@ -62,6 +62,8 @@ Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
 | `trace-prd.sh` | `fixtures/trace/clean/` | — | em dia (exit 0) |
 | `check-superpowers-contract.sh` | `fixtures/superpowers/clean/` | — (C1–C3 presentes) | contrato intacto (exit 0) |
 | `check-superpowers-contract.sh` | `fixtures/superpowers/drift-c2/` | marcador de C2 (gravar doc sob docs/) removido | drift, cita C2 (exit 1) |
+| `check-canon.sh` | `fixtures/canon/clean/` | — | limpo (exit 0) |
+| `check-canon.sh` | `fixtures/canon/dirty/` | skill órfã/fantasma, script/asset sem doc, ADR fora do índice, regra raiz incompleta, stack na PRD | achados (exit 1) |
 
 ### LLM (camada de julgamento — sob demanda)
 

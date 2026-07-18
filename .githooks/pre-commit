@@ -10,3 +10,7 @@ cd "$ROOT"
 
 # stage dos references regenerados; no-op se nada mudou.
 git add skills/*/references/
+
+# Canonização: docs/prd.md e docs/architecture.md devem refletir a implementação.
+# Diferente dos gates dos projetos-alvo (aconselham), aqui BLOQUEIA o commit.
+./scripts/check-canon.sh

@@ -11,3 +11,5 @@ jobs:
         run: ./scripts/check-assets.sh
       - name: Avaliação da camada mecânica
         run: ./scripts/eval.sh
+      - name: Guard de canonização (prd/architecture ↔ implementação)
+        run: ./scripts/check-canon.sh

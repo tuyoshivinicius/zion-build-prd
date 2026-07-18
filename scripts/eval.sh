@@ -19,14 +19,15 @@ declare -A TESTS=(
   [trace]="scripts/test-trace-prd.sh"
   [backlog]="scripts/test-trace-backlog.sh"
   [contract]="scripts/test-check-superpowers-contract.sh"
+  [canon]="scripts/test-check-canon.sh"
 )
-ORDER=(prd adr trace backlog contract)
+ORDER=(prd adr trace backlog contract canon)
 
 sel="${1:-}"
 if [ -n "$sel" ]; then
   case "$sel" in
-    prd|adr|trace|backlog|contract) ORDER=("$sel") ;;
-    *) echo "uso: eval.sh [prd|adr|trace|backlog|contract]" >&2; exit 2 ;;
+    prd|adr|trace|backlog|contract|canon) ORDER=("$sel") ;;
+    *) echo "uso: eval.sh [prd|adr|trace|backlog|contract|canon]" >&2; exit 2 ;;
   esac
 fi
 
