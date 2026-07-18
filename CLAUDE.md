@@ -3,7 +3,7 @@
 ## Fontes da verdade (governança)
 
 - **`docs/prd.md`** — o que o harness faz e por quê (RF-xx por épico, NFRs, escopo).
-- **`docs/architecture.md`** — como o harness é construído (decisões D-xx, índice de ADRs,
+- **`docs/architecture.md`** — como o harness é construído (decisões estruturantes como ADRs,
   scripts, fonte única).
 
 Todo agent DEVE ler os dois antes de escrever qualquer spec, plano ou mudança neste repo.
@@ -15,9 +15,9 @@ Toda mudança de comportamento ou estrutura reflete de volta nas fontes da verda
 commit**:
 
 - Skill nova/alterada/removida ⇒ RF na §6 e linha na §12 de `docs/prd.md`.
-- Script novo/removido ⇒ tabela de scripts (§4) de `docs/architecture.md`.
-- Fonte nova no `ASSET_MAP` ⇒ §5 de `docs/architecture.md`.
-- Decisão estruturante ⇒ ADR em `docs/adr/` (via `/zion-adr-new`) + índice (§3) do
+- Script novo/removido ⇒ tabela de scripts (§3) de `docs/architecture.md`.
+- Fonte nova no `ASSET_MAP` ⇒ §4 de `docs/architecture.md`.
+- Decisão estruturante ⇒ ADR em `docs/adr/` (via `/zion-adr-new`) + índice (§2) do
   `architecture.md`.
 
 O guard `scripts/check-canon.sh` roda no pre-commit e **bloqueia** commit com drift; o CI
@@ -30,7 +30,7 @@ O guard `scripts/check-canon.sh` roda no pre-commit e **bloqueia** commit com dr
 - Após clonar: `./scripts/setup-hooks.sh` (ativa os hooks versionados).
 - A fronteira o-quê/como (`assets/quality-rules.md#fronteira`) vale para os próprios docs:
   requisito sem stack em `docs/prd.md`; stack e mecânica em `docs/architecture.md`.
-- Decisões dos ADRs e D-xx não se reabrem em spec/plano — mudar de decisão é ADR novo
+- Decisões dos ADRs não se reabrem em spec/plano — mudar de decisão é ADR novo
   (supersessão simétrica).
 - Verificação local: `./scripts/check-assets.sh` · `./scripts/check-canon.sh` ·
   `./scripts/eval.sh`.

@@ -93,11 +93,10 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
 
 ## 8. Restrições (das decisões de arquitetura)
 
-As decisões estruturantes deste repo estão consolidadas em `docs/architecture.md` (D-01 em
-diante), que também indexa os ADRs futuros de `docs/adr/`. Em especial: fonte única com cópias
-derivadas (D-01), distribuição em dois canais com autocontenção (D-02), verificação mecânica que
-aconselha no projeto-alvo (D-04) e o contrato de capacidades com o executor externo de
-brainstorming (D-07).
+As decisões estruturantes deste repo estão registradas como ADRs em `docs/adr/`, indexadas na §2 de
+`docs/architecture.md`. Em especial: fonte única com cópias derivadas (ADR-001), distribuição em
+dois canais com autocontenção (ADR-002), verificação mecânica que aconselha no projeto-alvo
+(ADR-004) e o contrato de capacidades com o executor externo de brainstorming (ADR-007).
 
 ## 9. Glossário
 
