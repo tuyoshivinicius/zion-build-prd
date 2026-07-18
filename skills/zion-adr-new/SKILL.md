@@ -1,7 +1,7 @@
 ---
 name: zion-adr-new
 description: Cria um Architecture Decision Record em docs/adr/ (Contexto/Decisão/Consequências/Status) a partir de um título. Use no Estágio 2 do harness Zion Build PRD para registrar cada decisão estruturante sustentada por spike, ou sempre que o usuário pedir para "criar/registrar um ADR" ou "documentar uma decisão de arquitetura".
-argument-hint: "Título da decisão estruturante (ex.: \"Escolha de biblioteca de estado\")"
+argument-hint: "Título da decisão (ex.: \"Escolha de estado\"); opcional --substitui ADR-<n> no dia 2"
 metadata:
   author: zion-build-prd
 user-invocable: true
@@ -23,7 +23,10 @@ Um título curto para a decisão, entre aspas. Exemplos:
 ```text
 /zion-adr-new  "Escolha de biblioteca de renderização de diagramas"
 /zion-adr-new  "Estratégia de gerenciamento de estado do editor"
+/zion-adr-new  "Motor de exportação vetorial" --substitui ADR-002
 ```
+
+O sufixo opcional `--substitui ADR-<n>` ativa o **modo substituir** (dia 2 — ver abaixo).
 
 ## Procedimento
 
@@ -45,6 +48,7 @@ Um título curto para a decisão, entre aspas. Exemplos:
 - **Status:** Proposto
 - **Data:** <preencher>
 - **Decisores:** <preencher>
+- **Substitui:** <só no modo substituir: ADR-<n>; no modo normal, omita esta linha>
 - **Evidência:** <um dos dois — o tipo casa com o risco da decisão>
     · execução (só se resolve rodando): `docs/adr/spikes/ADR-<n>-<slug>/` (dir com README.md + artefatos descartáveis)
     · conhecimento (documentável sem rodar): <URL ou caminho do artefato de pesquisa que sustenta a decisão>
@@ -68,6 +72,19 @@ O que fica mais fácil e o que fica mais difícil a partir daqui. Impactos na PR
 
 Proposto → Aceito → (Substituído por ADR-<m>, se for o caso).
 ```
+
+## Modo substituir (supersessão) — dia 2
+
+Disparado por `/zion-adr-new "<título>" --substitui ADR-<n>` (ou pelo `/zion-prd-evolve` no C3). Além do
+modo normal:
+
+1. **No ADR novo (ADR-<m>):** mantenha a linha de cabeçalho `- **Substitui:** ADR-<n>` e escreva o
+   **Contexto** explicando por que a decisão anterior caiu.
+2. **No ADR antigo (ADR-<n>):** edite o cabeçalho para `- **Status:** Substituído por ADR-<m>` — a
+   referência é **cruzada e simétrica** (cada um aponta o outro). O `check-adr.sh` verifica essa simetria
+   (achado `supersessao-assimetrica` quando a referência é quebrada ou unilateral).
+3. **Restrição na PRD §8:** a restrição correspondente precisa de atualização — quem edita a §8 é o
+   `/zion-prd-evolve`, no plano de toque. Aqui, apenas **lembre** (advisório).
 
 ## Convenção do spike dir (risco de execução)
 
