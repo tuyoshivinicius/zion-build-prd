@@ -40,6 +40,13 @@ partir de `docs/discovery.md` + `docs/adr/`. Trabalhe uma seção por vez — vi
 personas, escopo in/out, `RN-xx`, `RF-xx` por épico, NFRs (com número), restrições (das ADRs),
 glossário, riscos, questões abertas — desafiando cada `RF-xx` e cada NFR antes de fechá-la.
 
+**Carregador de experiência:** leia a linha `Superfície de uso: sim/não` de `docs/discovery.md`
+e **carregue-a** para o cabeçalho da §7 (NFRs) como a linha bare `Superfície de uso: sim` (ou
+`não`). Quando `sim`, derive do bloco `## Experiência` do discovery **≥1 NFR de experiência**,
+tagueado e machine-legível: `NFR-0x` (experiência): a tarefa-núcleo é concluída em ≤N passos.
+Carrega um número, como todo NFR — a tag `(experiência)` é o marcador que o check casa. Mantém a
+fronteira: é NFR mensurável, nunca tela.
+
 ## Fase 4 — Validar saída (aconselha) — GUARDA DE FRONTEIRA
 As três regras decidíveis são verificadas por máquina. Rode:
 
@@ -49,6 +56,15 @@ O script executa zero-stack (denylist + sinais estruturais), NFR-com-número e R
 cada achado ancorado em `arquivo:linha`. **Ecoe o veredito com autoridade** — reproduza os achados
 com número de linha — e para cada um sugira mover a linha para o `plan.md` da feature (stack) ou
 corrigir/justificar (NFR, RF). Exit `1` = há achados; exit `0` = limpo.
+
+**Âncora de experiência (advisório).** Quando a §7 tem `Superfície de uso: sim`, rode também:
+
+    bash references/check-experiencia.sh docs/PRD.md
+
+Sem arg de backlog, o check avalia só o **limb-PRD**: surface=sim ∧ nenhum NFR tagueado
+`(experiência)` → ⚠ *"produto com superfície mas sem âncora de experiência na PRD"*. Ecoe o
+veredito e sugira aterrissar ≥1 NFR de experiência. Exit `1` = achado; `0` = limpo. Não reverte
+(`RN-01`).
 
 Complemente com o que o script não decide: os itens **prd** de `quality-rules.md`
 `#criterios-de-conclusao` que dependem de julgamento (escopo in/out explícito, critério de aceite ou

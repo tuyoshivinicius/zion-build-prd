@@ -26,6 +26,13 @@ Agrupados por épico. Uma frase por `RF-xx` — o-quê/por-quê, NUNCA como.
 - **Épico E2 — <nome>:** `RF-03` …
 
 ## 7. NFRs (com números)
+Superfície de uso: não
+
+> `sim/não` carregado do `docs/discovery.md`. Vira `sim` quando o produto opera uma superfície de
+> uso (tela, CLI, API que alguém maneja). Quando `sim`, inclua ≥1 NFR de experiência tagueado e
+> machine-legível — `NFR-0x` (experiência): a tarefa-núcleo é concluída em ≤N passos. É NFR
+> mensurável, nunca tela (veja `quality-rules.md` `#fronteira`).
+
 Requisitos não-funcionais mensuráveis (performance, disponibilidade, segurança) — sempre com número.
 
 ## 8. Restrições (das ADRs)

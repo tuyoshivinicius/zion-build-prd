@@ -58,7 +58,9 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   2–3 decisões estruturantes com evidência proporcional ao risco antes de fechar a PRD. `RF-03` O
   autor registra cada decisão como ADR com contexto, decisão e consequências — inclusive
   substituindo um ADR anterior com referência simétrica. `RF-04` O autor preenche a PRD seção a
-  seção a partir de um esqueleto, com requisitos de uma frase agrupados por épico. `RF-05` O autor
+  seção a partir de um esqueleto, com requisitos de uma frase agrupados por épico, carregando o
+  marcador de superfície para os NFRs e aterrissando ≥1 NFR de experiência mensurável quando há
+  superfície de uso. `RF-05` O autor
   decompõe a PRD em épicos, story map e specs verticais priorizadas, com o walking skeleton como
   spec zero.
   `RF-17` O autor estuda um candidato antes da descoberta — edge cases, alternativas comparadas
