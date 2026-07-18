@@ -1,6 +1,6 @@
 # Como usar o Zion Build PRD → Spec Kit (exemplos do Zion Mermaid Editor)
 
-> **O que este documento é:** um **guia prático** dos 7 comandos `/prd-*` — o harness que
+> **O que este documento é:** um **guia prático** dos comandos `/prd-*` — o harness que
 > *executa* o processo do `guia-prd-para-spec-kit.md`. Enquanto aquele guia **descreve** os seis
 > estágios de forma genérica, este mostra **como rodar** cada comando, com exemplos reais do
 > **Zion Mermaid Editor**.
@@ -17,7 +17,7 @@ Instale via [skills.sh](https://skills.sh):
 
     npx skills add tuyoshivinicius/zion-build-prd
 
-Isso instala as 9 skills em `.claude/skills/` do seu projeto. Instale o **Spec Kit** à parte — as pontes `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` e `/zion-prd-plan-prompt` apenas montam os prompts do `/speckit.*`.
+Isso instala as 10 skills em `.claude/skills/` do seu projeto. Instale o **Spec Kit** à parte — as pontes `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt` e `/zion-prd-plan-prompt` apenas montam os prompts do `/speckit.*`.
 
 ## Quando usar o harness (e quando não)
 
@@ -42,6 +42,7 @@ Isso instala as 9 skills em `.claude/skills/` do seu projeto. Instale o **Spec K
 | `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | *(monta em prosa; zero-stack verificado por `check-prd.sh`)* |
 | `/zion-prd-plan-prompt` | Ponte p/ 5c | `spec.md` da feature + `docs/adr/` | prompt do `/speckit.plan` | *(monta em prosa; sem delegação)* |
 | `/zion-prd-trace` | 6 · Rastreabilidade | `docs/PRD.md` (§6+§12) + `specs/` | seção 12 reconciliada | `scripts/trace-prd.sh` |
+| `/zion-prd-evolve` | 7 · Dia 2 (pós-release) | `docs/PRD.md` + a mudança | §13 + edições roteadas | `/zion-adr-new`, `/zion-prd-decompose`, `/zion-prd-trace`, `/zion-prd-specify-prompt` |
 
 O harness termina na ponte: o ciclo `/speckit.*` (specify → clarify → plan → … → implement) é **seu**.
 
@@ -62,6 +63,10 @@ flowchart LR
     G -.->|handoff 1×| H["/speckit.constitution (você)"]
     E -.->|handoff| F["/speckit.* (você)"]
     P -.->|handoff| F
+    C -.->|dia 2| V["/zion-prd-evolve"]
+    V -.->|C1/C2 parcial| D
+    V -.->|C2 re-specify| E
+    V -.->|reconcilia| T
 ```
 
 ---
@@ -147,7 +152,7 @@ Cada ADR aceito vira **restrição** na seção 8 da PRD.
 ```
 
 Sem argumento: trabalha sobre `docs/discovery.md` + `docs/adr/`. **Fase 2** copia
-`assets/templates/prd-skeleton.md` → `docs/PRD.md` (12 seções em branco). **Fase 3** delega a
+`assets/templates/prd-skeleton.md` → `docs/PRD.md` (13 seções em branco). **Fase 3** delega a
 `brainstorming` para preencher **seção a seção**. Trecho da PRD resultante:
 
 ```markdown
@@ -261,6 +266,31 @@ decorrem dessas decisões e realizam o resultado observável do spec.md."
 
 **PARE.** A partir daqui o ciclo `/speckit.*` é seu.
 
+### Dia 2 — `/zion-prd-evolve` (quando um requisito muda pós-release)
+
+O harness não termina na release 1. Quando um requisito muda depois — um RF novo, um RF alterado/removido
+ou uma decisão que caiu —, `/zion-prd-evolve` é o ponto de entrada único. Exemplo:
+
+```text
+/zion-prd-evolve Exportar PNG saiu de escopo; agora exportamos SVG — o motor de render atual não gera vetor.
+```
+
+Ele **classifica** (aqui é C2 **e** C3: o RF mudou *e* a decisão do motor caiu), **confirma com você** e
+mostra o **plano de toque**:
+
+> Plano de toque (C2+C3):
+> 1. §13 changelog — eu escrevo a linha da mudança. *(inline)*
+> 2. §6/§8 — eu edito o RF de exportação e a restrição. *(inline)*
+> 3. Supersessão do ADR do motor → `/zion-adr-new "Motor de exportação vetorial" --substitui ADR-002`. *(gate)*
+> 4. Re-fatiar o épico de exportação → `/zion-prd-decompose --epico E3`. *(gate)*
+> 5. Fatia já especificada → `/zion-prd-specify-prompt` em modo re-specify. *(gate)*
+> 6. Reconciliar a tabela → `/zion-prd-trace`. *(gate)*
+> 7. O ADR alimentava a constitution? Aconselho rodar `/zion-prd-constitution-prompt` de novo. *(aviso)*
+
+Executa inline só o barato e local (§13 + edição pontual) e **para em cada gate**, delegando um por vez.
+A Fase 4 roda `check-prd.sh` (confere a §13 e a §8) e `check-adr.sh` (confere a simetria da supersessão).
+**Termina na ponte:** o ciclo `/speckit.*` é seu.
+
 ---
 
 ## Os gates em ação (o que você vê)
@@ -312,7 +342,7 @@ Tudo num lugar só — mexa aqui, não nos comandos:
 
 - **Regras de qualidade** (fronteira, critérios de conclusão, INVEST/SPIDR, anatomia do specify):
   `assets/quality-rules.md`.
-- **Esqueleto da PRD** (12 seções): `assets/templates/prd-skeleton.md`.
+- **Esqueleto da PRD** (13 seções): `assets/templates/prd-skeleton.md`.
 - **Tabela de rastreabilidade:** `assets/templates/traceability-table.md`.
 
 > Após editar qualquer arquivo em `assets/`, rode `./scripts/sync-assets.sh` para propagar às skills e `./scripts/check-assets.sh` para garantir que não há drift.

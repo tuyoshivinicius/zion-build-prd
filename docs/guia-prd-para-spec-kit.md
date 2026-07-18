@@ -292,6 +292,37 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 
 ---
 
+## Passo 7 — O dia 2: evoluir os artefatos (`/zion-prd-evolve`)
+
+- **Objetivo:** endereçar mudanças que chegam **depois** da release 1 sem que os artefatos-guia
+  congelem. A tese do método é que o custo da PRD, dos ADRs e da rastreabilidade só se paga se eles
+  **viverem mais que a release 1**: artefato-guia que não evolui vira documentação morta. O dia 2 tem um
+  **dono com gatilho** — um comando —, não prosa solta num guia.
+- **Skill:** `zion-prd-evolve` (real) — ponto de entrada único do dia 2.
+- **Os três cenários canônicos:**
+  - **C1 — RF novo:** um requisito que não existia. Entra na §6 (no épico certo ou num épico novo), vira
+    linha no changelog (§13), dispara re-decomposição **parcial** do épico e reconciliação da tabela.
+  - **C2 — RF alterado ou removido:** um requisito muda de significado ou sai de escopo. Toca a §6, o
+    changelog e as fatias do épico afetado; se a fatia já tem `spec.md`, a ponte monta um prompt de
+    **re-specify** (revê a spec contra a mudança) em vez de especificar do zero.
+  - **C3 — Decisão revertida:** uma decisão estruturante caiu. Nasce um ADR novo que **substitui** o
+    antigo (referência cruzada simétrica: `Substitui:` / `Status: Substituído por`), a restrição da §8 é
+    atualizada, e o evolve aconselha rodar a `constitution` de novo se o ADR alimentava um princípio.
+- **O fluxo pelo evolve:** ele **classifica** a mudança (pode ser mais de um cenário — cuidado com a
+  decisão que cai disfarçada de requisito, que parece C2 e é C3), **confirma com você**, mostra o
+  **plano de toque** (que artefato muda e qual comando é dono), executa inline só o barato e local (o
+  changelog e a edição pontual da §6/§8) e **para em cada gate** delegando o resto:
+  `/zion-adr-new --substitui` (supersessão), `/zion-prd-decompose --epico E<k>` (re-fatiamento parcial),
+  `/zion-prd-trace` (tabela), `/zion-prd-specify-prompt` (re-specify). **Termina na ponte:** o ciclo
+  `/speckit.*` é seu.
+- **Verificação:** a Fase 4 roda `check-prd.sh` (confere a §13 e a §8) e `check-adr.sh` (confere a
+  simetria da supersessão) — os mesmos checks que beneficiam quem edita à mão.
+- **Fora do escopo do dia 2:** não orquestra o `/speckit.*`, não edita a `constitution` (só aconselha a
+  ponte), não versiona a PRD com número semântico (só o changelog) e não detecta drift por histórico de
+  git (auditoria contínua é outro gap).
+
+---
+
 ## Implementação das skills
 
 Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no passo.
@@ -303,6 +334,7 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 | `zion-adr-new` | `/zion-adr-new "<título>"` | Registrar decisões estruturantes como ADR em `docs/adr/` (P2). |
 | `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt`, `/zion-prd-plan-prompt` | Skill tool ou o comando homônimo | **Pontes para o Spec Kit (P5)** — cada uma monta, em prosa, o prompt do seu `/speckit.*`: guarda a decidibilidade+rastreabilidade dos princípios (constitution), a fronteira "sem stack" (specify) e o honrar-ADRs (plan); entrega o comando pronto e para. |
 | `/zion-prd-trace` | Skill tool ou o comando homônimo | **Rastreabilidade mecânica (P6)** — reconcilia a seção 12 da PRD a partir das `specs/*/spec.md` (RF↔spec + status ☐/◐/● do `tasks.md`); a tabela é derivada, não mantida à mão. |
+| `/zion-prd-evolve` | Skill tool ou o comando homônimo | **Dia 2 (P7)** — classifica a mudança pós-release (C1/C2/C3), versiona a PRD (§13), executa inline o barato e local e roteia o resto (adr-new `--substitui`, decompose `--epico`, trace, specify re-specify) parando em cada gate. |
 | `git-commit` | `/git-commit` ou "commit" | Versionar PRD, ADRs e specs (P6). |
 
 ---

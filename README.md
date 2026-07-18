@@ -40,6 +40,7 @@ Alternativa (Claude Code plugin marketplace):
 | `/zion-prd-plan-prompt` | Ponte → `/speckit.plan` |
 | `/zion-prd-trace` | Reconcilia a rastreabilidade (seção 12) a partir das specs |
 | `/zion-adr-new` | Cria um ADR em `docs/adr/` |
+| `/zion-prd-evolve` | Dia 2 — mudança pós-release (RF novo/alterado, decisão revertida) |
 
 ## Dependências
 
