@@ -95,6 +95,23 @@ inclui os `references/` regenerados no commit. Nunca edite `references/` à mão
 
 Mapeamento asset → skills: `scripts/asset-map.sh` (sourced por sync e check).
 
+### Dogfooding local das skills
+
+Para usar as skills do **working tree** (inclusive as ainda não publicadas) no terminal, sem
+republicar no GitHub nem reinstalar o plugin:
+
+```bash
+./scripts/dev-claude.sh   # abre o Claude Code servindo o working tree via --plugin-dir
+```
+
+O `--plugin-dir` tem **precedência** sobre a cópia instalada do marketplace **naquela sessão** —
+comando único, sem `/plugin disable` nem desinstalar nada. Argumentos extras são repassados ao
+`claude` (ex.: `./scripts/dev-claude.sh --resume`).
+
+Depois de editar um `SKILL.md`, rode `/reload-plugins` na sessão para aplicar a mudança. Alterações
+em `hooks/`, `agents/` e afins exigem reabrir a sessão. O escopo vale **só** para sessões abertas
+pelo wrapper: o `--plugin-dir` é resolvido no start do `claude` e não retroage à sessão atual.
+
 O CI roda `./scripts/check-assets.sh` como guard de drift (backstop para `--no-verify`
 ou quem não rodou o `setup-hooks.sh`) e os auto-testes `test-check-prd.sh`, `test-trace-prd.sh`,
 `test-trace-backlog.sh`, `test-check-adr.sh` e `test-check-canon.sh` dos verificadores. Para
