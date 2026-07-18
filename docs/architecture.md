@@ -96,8 +96,9 @@ Fontes mapeadas no `ASSET_MAP` (`check-canon.sh` acusa fonte `assets/` fora dest
 - assets/templates/architecture-skeleton.md — esqueleto do docs/architecture.md do produto (análogo ao prd-skeleton).
 
 Também distribuídos como references executáveis: `scripts/check-prd.sh`, `scripts/check-adr.sh`,
-`scripts/check-estudo.sh`, `scripts/check-experiencia.sh`, `scripts/trace-prd.sh`,
-`scripts/trace-backlog.sh` (cobertos pela tabela da §3).
+`scripts/check-estudo.sh`, `scripts/check-experiencia.sh`, `scripts/check-arquitetura.sh`,
+`scripts/trace-prd.sh`, `scripts/trace-backlog.sh`, `scripts/trace-arquitetura.sh` (cobertos pela
+tabela da §3).
 
 ## 5. Canonização — o que muda ⇒ onde reflete
 
@@ -122,7 +123,7 @@ não criar uma quarta fonte da verdade a manter.
 
 | Natureza | O que é | Artefatos |
 |---|---|---|
-| **Distribuído** | Viaja ao usuário via plugin/skills.sh | `skills/zion-*`, `assets/`, `.claude-plugin/`, os `references/` derivados, e os scripts distribuídos como references da §4 (`check-prd.sh`, `check-adr.sh`, `check-estudo.sh`, `trace-prd.sh`, `trace-backlog.sh`) |
+| **Distribuído** | Viaja ao usuário via plugin/skills.sh | `skills/zion-*`, `assets/`, `.claude-plugin/`, os `references/` derivados, e os scripts distribuídos como references da §4 (`check-prd.sh`, `check-adr.sh`, `check-estudo.sh`, `check-arquitetura.sh`, `trace-prd.sh`, `trace-backlog.sh`, `trace-arquitetura.sh`) |
 | **Governança** | Governa o próprio harness (canon) | `docs/prd.md`, `docs/architecture.md`, `docs/adr/`, `CLAUDE.md`, `scripts/check-canon.sh`, `scripts/check-assets.sh`, os guards versionados e o CI |
 | **Dev-workflow** | SDD leve interno (não viaja) | `docs/superpowers/specs\|plans/`, `docs/estudos/` (deste repo), `scripts/dev-claude.sh`, `scripts/setup-hooks.sh`, `scripts/eval.sh`, os `test-*.sh` |
 

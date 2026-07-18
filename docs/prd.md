@@ -68,11 +68,14 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   estudo gravado, com o próximo passo sugerido roteado conforme o contexto detectado, para escolher
   a direção. Pode reabrir um estudo já gravado pelo seu slug para revisá-lo, sem re-digitar o
   candidato.
-- **Épico E2 — Pontes para o Spec Kit:** `RF-06` O autor recebe pronto o prompt da constitution,
+- **Épico E2 — Pontes e integração com o Spec Kit:** `RF-06` O autor recebe pronto o prompt da constitution,
   derivado dos NFRs e restrições da PRD, com princípios decidíveis. `RF-07` O autor recebe pronto
   o prompt do specify de uma spec, blindado contra vazamento de fronteira e com o elo de
   rastreabilidade pedido. `RF-08` O autor recebe pronto o prompt do plan de uma feature, com os
-  ADRs confirmados injetados como restrição a honrar.
+  ADRs confirmados injetados como restrição a honrar. `RF-18` O autor instala num comando, no
+  repositório do produto, a integração com o Spec Kit — fontes canônicas declaradas nas regras do
+  repositório, documento de arquitetura semeado de esqueleto e guard opt-in — re-rodável sem
+  perder o que ele escreveu.
 - **Épico E3 — Rastreabilidade:** `RF-09` O autor reconcilia a qualquer momento a tabela de
   rastreabilidade e o backlog a partir das specs existentes, vendo RF órfão, spec intraçável e RF
   descoberto.
@@ -151,6 +154,7 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-06 | E2 | skills/zion-prd-constitution-prompt |
 | RF-07 | E2 | skills/zion-prd-specify-prompt |
 | RF-08 | E2 | skills/zion-prd-plan-prompt |
+| RF-18 | E2 | skills/zion-speckit-install |
 | RF-09 | E3 | skills/zion-prd-trace |
 | RF-10 | E4 | skills/zion-prd-evolve |
 | RF-11 | E5 | scripts/check-prd.sh · scripts/check-adr.sh · scripts/check-estudo.sh · scripts/check-experiencia.sh · scripts/check-arquitetura.sh · scripts/trace-prd.sh · scripts/trace-backlog.sh · scripts/trace-arquitetura.sh |
@@ -172,3 +176,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-18 | C2 | `RF-17` alterado: reabrir um estudo pelo slug para revisar, sem re-digitar o candidato | remover o atrito de re-digitar o candidato só para revisitar um estudo já gravado | skills/zion-prd-estudo (Fase 0) |
 | 2026-07-18 | C2 | Carregador forte de experiência: `RF-01`/`RF-04`/`RF-05`/`RF-11` passam a carregar o marcador `Superfície de uso` e a âncora de experiência (NFR tagueado + coluna no backlog); `check-experiencia.sh` novo | app rico em função e pobre de uso — o sinal de experiência precisa nascer no discovery e sobreviver até o backlog | ADR-014 · scripts/check-experiencia.sh · skills/zion-prd-discovery · skills/zion-prd-write · skills/zion-prd-decompose |
 | 2026-07-18 | C2 | `RF-11` alterado: verificadores de arquitetura do produto na camada mecânica | sustentar por conselho a autoridade do documento de arquitetura distribuído | ADR-015 · scripts/check-arquitetura.sh · scripts/trace-arquitetura.sh |
+| 2026-07-18 | C1 | `RF-18` novo: instalação da integração com o Spec Kit no repositório do produto | o canon chegava ao Spec Kit só pelas pontes manuais; clarify e implement rodavam sem canon | ADR-015 · skills/zion-speckit-install · assets/templates/regras-speckit.md · assets/templates/architecture-skeleton.md |
