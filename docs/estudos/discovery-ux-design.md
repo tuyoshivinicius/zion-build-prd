@@ -44,10 +44,10 @@ responde; ⚙️ = o design responde.
 
 **Escopo e "quando fizer sentido"**
 - 🔴 O que "UX" abrange: **só apps visuais/frontend**, ou usabilidade ampla (ergonomia de CLI,
-  mensagens de erro, APIs)? *Assumido neste estudo: usabilidade ampla, foco agudo em frontend;
-  não-visual só quando fizer sentido — confirmar.*
+  mensagens de erro, APIs)? *Confirmado pelo Autor: usabilidade ampla, foco agudo em frontend;
+  não-visual só quando fizer sentido.*
 - 🔴 **Acessibilidade** entra (é UX com NFR mensurável — WCAG) ou fica de fora nesta rodada?
-  *Assumido: ângulo opcional de NFR, não forçado — confirmar.*
+  *Confirmado pelo Autor: ângulo opcional de NFR, não forçado.*
 - 🔴 Qual é o **gatilho** de "faz sentido"? Pergunta barata que pula UX para produto sem UI, ou
   sempre oferecer?
 
@@ -153,12 +153,12 @@ em um ou dois produtos, o sinal de UX **evaporar** antes do backlog (a dor centr
 é o carregador forte que fecha a lacuna — e o esforço extra passa a se justificar. **A3** fica
 desaconselhada nesta rodada: o ganho de profundidade não compensa quebrar o `NFR-02` e superseder o
 `ADR-007`, ainda mais porque a skill de design tende ao "como" e o brainstorming — a dependência que
-já temos — cobre a exploração de UX no nível de o-quê. Antes de decidir, confirme as três 🔴 de
-escopo (o que "UX" abrange, acessibilidade dentro ou fora, e disposição a pagar a supersessão): elas
-podem reordenar a recomendação.
+já temos — cobre a exploração de UX no nível de o-quê. Das três 🔴 de escopo, o Autor já confirmou
+duas (usabilidade ampla com foco agudo em frontend; acessibilidade como NFR opcional); resta
+confirmar a disposição a pagar a supersessão do `ADR-007` — que só pesa se a A3 voltar à mesa.
 
 ## Próximo passo sugerido
 
-Se aprovado, rodar `/zion-prd-discovery` com a alternativa escolhida (e `/zion-prd-spike` se houver
-decisão estruturante nova — o caso da A2, cujo NFR de experiência e possível verificador podem pedir
-um ADR).
+Se aprovado, rodar `superpowers:brainstorming` com a alternativa escolhida →
+`superpowers:writing-plans` → `superpowers:executing-plans`. Decisão estruturante nova vira ADR via
+`/zion-adr-new` e reflete no canon (`prd.md`/`architecture.md` no mesmo commit — CLAUDE.md).
