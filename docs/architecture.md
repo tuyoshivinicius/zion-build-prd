@@ -44,6 +44,7 @@ do próprio ADR (campo **Evidência**, que aponta o design doc de origem), não 
 | [ADR-009](adr/ADR-009-unidade-spec.md) | A unidade de trabalho chama-se **spec** (rename fatia → spec) em toda a superfície. |
 | [ADR-010](adr/ADR-010-governanca-canon.md) | O repo governa a si mesmo: `docs/prd.md` + `docs/architecture.md` como fontes da verdade, com guard de canonização bloqueante. |
 | [ADR-011](adr/ADR-011-adrs-canonicos.md) | Promover as decisões consolidadas D-xx a ADRs reais; o canon passa a citar ADRs, não specs. |
+| [ADR-012](adr/ADR-012-estagio-0-estudo-pre-discovery.md) | Estágio 0 formal e opcional (`/zion-prd-estudo`): estudo pré-discovery que aconselha e não decide, verificado por `check-estudo.sh` no padrão E5. |
 
 ## 3. Scripts
 

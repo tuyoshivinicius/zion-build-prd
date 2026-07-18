@@ -2,7 +2,7 @@
 
 Decisões estruturantes **deste repo** (não dos projetos-alvo), registradas no padrão do
 `/zion-adr-new` com as seções Contexto / Decisão / Consequências / Status. O índice está populado
-com **ADR-001…ADR-011** e é espelhado na §2 de `docs/architecture.md` — `scripts/check-canon.sh`
+com **ADR-001…ADR-012** e é espelhado na §2 de `docs/architecture.md` — `scripts/check-canon.sh`
 acusa ADR fora do índice.
 
 ADR-001…ADR-010 são **retroativos**: promovem as decisões antes consolidadas como D-01…D-10 e sua
