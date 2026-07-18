@@ -63,7 +63,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   `RF-17` O autor estuda um candidato antes da descoberta — edge cases, alternativas comparadas
   (sempre incluindo "não fazer") com ROI justificado e recomendação não vinculante — e recebe o
   estudo gravado, com o próximo passo sugerido roteado conforme o contexto detectado, para escolher
-  a direção.
+  a direção. Pode reabrir um estudo já gravado pelo seu slug para revisá-lo, sem re-digitar o
+  candidato.
 - **Épico E2 — Pontes para o Spec Kit:** `RF-06` O autor recebe pronto o prompt da constitution,
   derivado dos NFRs e restrições da PRD, com princípios decidíveis. `RF-07` O autor recebe pronto
   o prompt do specify de uma spec, blindado contra vazamento de fronteira e com o elo de
@@ -164,3 +165,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 |------|---------|---------|--------|--------------------|
 | 2026-07-18 | C1 | `RF-17` novo: Estágio 0 opcional de estudo pré-discovery | governar o estudo que vivia num prompt one-shot fora do harness | ADR-012 · skills/zion-prd-estudo · scripts/check-estudo.sh |
 | 2026-07-18 | C2 | `RF-17` alterado: próximo passo do estudo roteado por persona (interno × distribuído) | o dev do harness usa a mesma skill internamente, onde o downstream é SDD leve, não discovery | ADR-013 · skills/zion-prd-estudo · docs/architecture.md §6 |
+| 2026-07-18 | C2 | `RF-17` alterado: reabrir um estudo pelo slug para revisar, sem re-digitar o candidato | remover o atrito de re-digitar o candidato só para revisitar um estudo já gravado | skills/zion-prd-estudo (Fase 0) |

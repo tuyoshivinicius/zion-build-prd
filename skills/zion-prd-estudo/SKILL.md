@@ -1,7 +1,7 @@
 ---
 name: zion-prd-estudo
 description: Estágio 0 (opcional) do harness Zion Build PRD — estudo pré-discovery de UM candidato: edge cases, 2–4 alternativas comparadas (sempre incluindo "não fazer"), ROI justificado e recomendação não vinculante, gravado em docs/estudos/<slug>.md do projeto-alvo. Use antes do discovery, quando a direção ainda não está clara, ou quando o usuário quiser "estudar uma ideia", "comparar alternativas" ou "avaliar o ROI antes da descoberta".
-argument-hint: "Candidato a discovery em 2–6 frases: quem sofre, solução imaginada, restrições conhecidas"
+argument-hint: "Candidato em 2–6 frases (quem sofre, solução imaginada, restrições) OU o slug de um estudo já gravado para reabri-lo"
 metadata:
   author: zion-build-prd
 user-invocable: true
@@ -22,11 +22,27 @@ candidatos) e não persiste estado entre sessões além do próprio documento gr
 
 ## Fase 0 — Entrada (aconselha)
 
-O candidato vem no argumento, em 2–6 frases: **quem sofre**, **solução imaginada**, **restrições
-conhecidas**. Peça o que faltar — sem candidato completo não há o que estudar. Derive o `<slug>`
-do candidato (kebab-case minúsculo, sem acentos). Se `docs/estudos/<slug>.md` **já existe**,
-avise e pergunte: **retomar** (partir do documento atual e revisar) ou **sobrescrever**. Não
-bloqueie.
+O argumento chega em **uma de duas formas**, distinguidas por **match de arquivo** (sem flag nova):
+
+1. **Candidato** — 2–6 frases: **quem sofre**, **solução imaginada**, **restrições conhecidas**.
+2. **Slug de estudo existente** — um token único cujo arquivo já existe em `docs/estudos/`.
+
+**Detecção (match de arquivo):** faça `trim` do argumento. Se for um **token único** (sem espaços)
+**e** existir `docs/estudos/<token>.md` → **modo recarregar**. Caso contrário → **modo candidato**
+(comportamento atual): um token único que **não** casa com arquivo cai aqui e, se não constituir
+candidato completo, peça o que faltar — sem candidato completo não há o que estudar. A regra é
+robusta: um candidato em prosa (várias palavras) nunca casa com nome de arquivo, e um slug existente
+casa sempre.
+
+**Modo candidato (fluxo atual, intocado):** derive o `<slug>` do candidato (kebab-case minúsculo,
+sem acentos). Se `docs/estudos/<slug>.md` **já existe**, avise e pergunte: **retomar** (partir do
+documento atual e revisar) ou **sobrescrever**. Não bloqueie.
+
+**Modo recarregar:** leia `docs/estudos/<slug>.md`. Use a seção **`## Contexto`** do documento como
+fonte do candidato — **não** peça as 2–6 frases de novo. Vá **direto para retomar**: revise o
+documento percorrendo as Fases 1–4, cada fase reapresentada para o Autor **confirmar ou editar**.
+**Não ofereça sobrescrever** — quem quiser sobrescrever passa o candidato em texto (modo candidato),
+o slug colide e a Fase 0 oferece retomar/sobrescrever como hoje.
 
 **Detecte o modo (aconselha, não bloqueia):** se o projeto-alvo tiver
 `.claude-plugin/plugin.json` com `name: zion-build-prd`, o modo é **interno** (dev do próprio
