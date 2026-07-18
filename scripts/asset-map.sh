@@ -13,5 +13,7 @@ ASSET_MAP=(
   "assets/superpowers-contract.md         zion-prd-discovery zion-prd-write zion-prd-decompose"
   "scripts/check-prd.sh                   zion-prd-write zion-prd-specify-prompt zion-prd-evolve"
   "scripts/trace-prd.sh                   zion-prd-trace zion-prd-decompose"
+  "scripts/trace-backlog.sh               zion-prd-trace zion-prd-decompose"
+  "assets/templates/backlog.md            zion-prd-decompose"
   "scripts/check-adr.sh                   zion-prd-spike zion-prd-evolve"
 )
