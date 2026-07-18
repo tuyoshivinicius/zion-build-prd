@@ -15,7 +15,8 @@ O harness conduz a autoria da PRD em estágios encadeados, cada um alimentando o
 3. **PRD enxuta** (`/zion-prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
    números, restrições (das ADRs) → `docs/PRD.md`. Sem comportamento detalhado nem stack.
 4. **Decomposição** (`/zion-prd-decompose`) — PRD → épicos → story map → fatias verticais validadas
-   por INVEST; walking skeleton como fatia zero; tabela de rastreabilidade injetada na PRD.
+   por INVEST; walking skeleton como fatia zero; tabela de rastreabilidade injetada na PRD e o backlog
+   de fatias `docs/backlog.md` (slug + demo + RFs por fatia; Spec/Status por máquina).
    **Handoff:** cada fatia priorizada entra no Spec Kit via `/speckit.specify`.
 5. **Spec Kit por feature** — `constitution` e o ciclo
    `specify → clarify → plan → checklist → tasks → analyze → implement → converge` (fora do

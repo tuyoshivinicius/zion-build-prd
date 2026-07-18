@@ -51,8 +51,10 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
   script e ecoa o veredito.
 - **decompose**: existe backlog de fatias verticais priorizadas ∧ cada fatia passa no INVEST ∧
   walking skeleton é a fatia zero (R0) ∧ a tabela de rastreabilidade (§12) foi **semeada por
-  `trace-prd.sh`** (não à mão) com uma linha por `RF-xx` in-scope. A tabela é um artefato **derivado**,
-  reconciliado a qualquer momento por `/zion-prd-trace`; não é mantida à mão.
+  `trace-prd.sh`** (não à mão) com uma linha por `RF-xx` in-scope ∧ o **backlog** `docs/backlog.md` foi
+  semeado por `trace-backlog.sh` (colunas humanas — Fatia/slug, Demo, RFs, Release — preenchidas;
+  colunas Spec/Status por máquina). Ambos são artefatos **derivados**, reconciliados a qualquer momento
+  por `/zion-prd-trace`; não são mantidos à mão.
 - **specify-prompt**: o prompt gerado declara resultado observável ∧ não cita stack ∧ RF-xx/ADR
   entram como contexto (referência), não como requisito. O zero-stack é verificado por
   `check-prd.sh specify -` sobre o prompt montado.
@@ -114,6 +116,9 @@ tags XML, nada de ditar cabeçalhos/seções do `spec.md`. Em prosa, o prompt de
   `rf-cobertos-ausente` quando falta); o `/zion-prd-trace` depois confere que o `spec.md` resultante a
   **tem** (aviso "Spec intraçável"). Declarar *quais* RF a fatia cobre é o-quê/rastreabilidade, não
   stack — não fere a fronteira sem-stack.
+- **O slug como nome da feature** — peça que a feature/branch use o `<slug>` da fatia (do
+  `docs/backlog.md`) como nome curto: a spec nasce `specs/###-<slug>`, fechando o elo fatia↔spec por
+  construção que o `trace-backlog.sh` casa por sufixo. Declarar o slug é o-quê/rastreabilidade, não stack.
 
 ## Anatomia do prompt do constitution {#anatomia-constitution}
 
