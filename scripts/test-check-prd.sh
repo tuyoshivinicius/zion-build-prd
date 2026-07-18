@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Auto-teste do check-prd.sh contra fixtures. Semente da suíte de avaliação (R7).
+# Auto-teste do check-prd.sh contra fixtures. Roda pela camada mecânica (scripts/eval.sh).
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
