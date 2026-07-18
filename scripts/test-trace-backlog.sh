@@ -27,7 +27,7 @@ fresh() {  # copia a fixture $1 para um temp e ecoa o caminho
 bl="$(fresh "$FIX/bootstrap.md")"
 out="$(bash "$TRACE" "$bl" "$FIX/nao-existe")"; rc=$?
 assert_exit "bootstrap sai 0" 0 "$rc"
-assert_file_re "bootstrap: fatia vira ☐ pendente" "$bl" 'walking-skeleton .*\| — \| ☐ pendente'
+assert_file_re "bootstrap: spec vira ☐ pendente"  "$bl" 'walking-skeleton .*\| — \| ☐ pendente'
 rm -f "$bl"
 
 # erro de uso: backlog inexistente → exit 2
@@ -43,7 +43,7 @@ assert_contains "sem tabela: mensagem aponta o template" "assets/templates/backl
 bl="$(fresh "$FIX/backlog.md")"
 bash "$TRACE" "$bl" "$FIX/specs" >/dev/null 2>&1
 assert_file_re "casa por sufixo → ● implementada" "$bl" 'preview-ao-vivo .*specs/003-preview-ao-vivo.*● implementada'
-assert_file_re "tasks aberto → ◐ em spec"          "$bl" 'erros-sintaxe .*specs/004-erros-sintaxe.*◐ em spec'
+assert_file_re "tasks aberto → ◐ em especificação" "$bl" 'erros-sintaxe .*specs/004-erros-sintaxe.*◐ em especificação'
 assert_file_re "sem spec → ☐ pendente"             "$bl" 'exportar-svg .*\| — \| ☐ pendente'
 assert_file_re "substring não casa (vivo)"         "$bl" 'vivo .*\| — \| ☐ pendente'
 # idempotência
@@ -59,8 +59,8 @@ assert_exit "modo padrão com avisos sai 1" 1 "$rc"
 assert_contains "aviso divergência de escopo" "Divergência de escopo" "$out"
 assert_contains "aviso slug duplicado"        "Slug duplicado" "$out"
 assert_contains "aviso spec órfã"             "Spec órfã" "$out"
-assert_contains "aviso fatia sem spec"        "Fatia sem spec" "$out"
-assert_contains "quadro de fatias"            "Quadro de fatias" "$out"
+assert_contains "aviso spec sem pasta"        "Spec sem pasta" "$out"
+assert_contains "quadro de specs"             "Quadro de specs" "$out"
 rm -f "$bl"
 
 # --- preservação: colunas humanas, ordem das linhas, texto fora da tabela ---

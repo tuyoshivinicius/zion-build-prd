@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# trace-backlog.sh — reconciliador do backlog de fatias (docs/backlog.md).
-# Espelho do trace-prd.sh no grão da FATIA. Preserva as colunas humanas
-# (Fatia/Demo/RFs/Release) e a ordem das linhas; recomputa as colunas de
-# máquina (Spec, Status) casando specs/###-<slug> ⇔ slug por sufixo.
+# trace-backlog.sh — reconciliador do backlog de specs (docs/backlog.md).
+# Espelho do trace-prd.sh no grão da SPEC. Preserva as colunas humanas
+# (Spec/Demo/RFs/Release) e a ordem das linhas; recomputa as colunas de
+# máquina (Pasta, Status) casando specs/###-<slug> ⇔ slug por sufixo.
 # ESCREVE (git é o desfazer); --check é read-only.
 #
 # Uso:
@@ -33,7 +33,7 @@ ROWS=""; NEWCOLS=""; SPECDIRS=""
 cleanup() { rm -f "$ROWS" "$NEWCOLS" "$SPECDIRS" 2>/dev/null; }
 trap cleanup EXIT
 
-# --- Lê a PRIMEIRA tabela do arquivo (a canônica). Emite uma linha por fatia:
+# --- Lê a PRIMEIRA tabela do arquivo (a canônica). Emite uma linha por spec:
 #     slug \t demo \t rfs \t release \t spec-antiga \t status-antigo.
 #     Só emite se o cabeçalho tiver as 6 colunas esperadas. ---
 parse_table() {
@@ -48,11 +48,11 @@ parse_table() {
       if (!intab) {
         for(i=1;i<=nc;i++){
           h=lc(c[i])
-          if      (index(h,"fatia"))   scol=i
+          if      (index(h,"slug"))    scol=i
           else if (index(h,"demo"))    dcol=i
           else if (index(h,"rfs"))     rcol=i
           else if (index(h,"release")) relcol=i
-          else if (index(h,"spec"))    spcol=i
+          else if (index(h,"pasta"))   spcol=i
           else if (index(h,"status"))  stcol=i
         }
         ok = (scol && dcol && rcol && relcol && spcol && stcol)
@@ -124,8 +124,8 @@ rewrite_table() {  # imprime o backlog reconciliado no stdout
       if (!intab) {
         for(i=1;i<=nc;i++){
           h=lc(c[i])
-          if      (index(h,"fatia"))  scol=i
-          else if (index(h,"spec"))   spcol=i
+          if      (index(h,"slug"))   scol=i
+          else if (index(h,"pasta"))  spcol=i
           else if (index(h,"status")) stcol=i
         }
         intab=1; print raw; next
@@ -145,7 +145,7 @@ rewrite_table() {  # imprime o backlog reconciliado no stdout
 # --- Orquestração ---
 ROWS="$(mktemp)"; NEWCOLS="$(mktemp)"; SPECDIRS="$(mktemp)"
 parse_table "$BACKLOG" > "$ROWS"
-[ -s "$ROWS" ] || { echo "trace-backlog: $BACKLOG sem tabela canônica de fatias (veja assets/templates/backlog.md)" >&2; exit 2; }
+[ -s "$ROWS" ] || { echo "trace-backlog: $BACKLOG sem tabela canônica de specs (veja assets/templates/backlog.md)" >&2; exit 2; }
 
 scan_specs_dirs
 SPEC_COUNT=$(grep -c . "$SPECDIRS")
@@ -170,7 +170,7 @@ while IFS="$TAB" read -r slug demo rfs release oldspec oldstatus; do
     [ "$matched" -gt 1 ] && warnings="${warnings}Colisão de casamento: mais de um diretório casa \`$slug\`; \`specs/$dir\` (menor prefixo) vence.
 "
     st="$(spec_status "$SPECS_DIR/$dir")"
-    case "$st" in impl) glyph="● implementada" ;; *) glyph="◐ em spec" ;; esac
+    case "$st" in impl) glyph="● implementada" ;; *) glyph="◐ em especificação" ;; esac
     speccell="\`specs/$dir\`"
     decl="$(printf '%s' "$rfs" | grep -oE 'RF-[0-9]+' | sort -u | tr '\n' ' ')"
     covline="$(grep -iE 'RF cobertos:' "$SPECS_DIR/$dir/spec.md" 2>/dev/null | head -1)"
@@ -181,7 +181,7 @@ while IFS="$TAB" read -r slug demo rfs release oldspec oldstatus; do
     fi
   else
     glyph="☐ pendente"; speccell="—"
-    [ "$SPEC_COUNT" -gt 0 ] && warnings="${warnings}Fatia sem spec: \`$slug\` ainda não tem spec (permanece ☐ pendente).
+    [ "$SPEC_COUNT" -gt 0 ] && warnings="${warnings}Spec sem pasta: \`$slug\` ainda não tem \`specs/###-<slug>\` (permanece ☐ pendente).
 "
   fi
 
@@ -194,7 +194,7 @@ while IFS="$TAB" read -r slug demo rfs release oldspec oldstatus; do
 
   case "$glyph" in
     "● implementada") impl=$((impl+1)) ;;
-    "◐ em spec")      inspec=$((inspec+1)) ;;
+    "◐ em especificação") inspec=$((inspec+1)) ;;
     *)                pend=$((pend+1)); [ -z "$firstpending" ] && firstpending="$slug" ;;
   esac
 done < "$ROWS"
@@ -203,7 +203,7 @@ done < "$ROWS"
 if [ "$SPEC_COUNT" -gt 0 ]; then
   while read -r d; do
     [ -n "$d" ] || continue
-    [ -n "${USEDDIR[$d]:-}" ] || warnings="${warnings}Spec órfã: \`specs/$d\` não casa com nenhum slug do backlog (registre a fatia ou renomeie).
+    [ -n "${USEDDIR[$d]:-}" ] || warnings="${warnings}Spec órfã: \`specs/$d\` não casa com nenhum slug do backlog (registre a spec ou renomeie).
 "
   done < "$SPECDIRS"
 fi
@@ -211,7 +211,7 @@ fi
 wcount=0; [ -n "$warnings" ] && wcount="$(printf '%s' "$warnings" | grep -c .)"
 
 quadro() {
-  printf 'Quadro de fatias: ● %s · ◐ %s · ☐ %s' "$impl" "$inspec" "$pend"
+  printf 'Quadro de specs: ● %s · ◐ %s · ☐ %s' "$impl" "$inspec" "$pend"
   if [ -n "$firstpending" ]; then printf ' · próxima ☐: %s\n' "$firstpending"; else printf '\n'; fi
 }
 
