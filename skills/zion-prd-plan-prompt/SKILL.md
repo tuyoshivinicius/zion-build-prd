@@ -21,8 +21,12 @@ rodados no Spec Kit). Sem ADR aceito → avise "sem ADR aceito não há o que ho
 `/zion-prd-spike` antes". Sem `spec.md` → avise "recomendo `/speckit.specify` + `/speckit.clarify`
 antes". Não bloqueie; pergunte se segue mesmo assim.
 
+`docs/architecture.md` do produto é opcional: existindo, a prosa estrutural dele entra no prompt
+(ADR-015); ausente → aconselhe `/zion-speckit-install` (não bloqueie).
+
 ## Fase 1 — Levantar e confirmar os ADRs relevantes
-1. Leia o `spec.md` da spec e cruze com `docs/adr/`.
+1. Leia o `spec.md` da spec e cruze com `docs/adr/`; se `docs/architecture.md` existir, leia
+   também a prosa do Autor (§1 Visão geral, §2 Integrações externas).
 2. Proponha os ADRs relevantes àquela feature, cada um com uma linha de justificativa
    (ex.: "ADR-001 (Postgres) → a spec persiste pedidos").
 3. Peça ao usuário para **confirmar / adicionar / remover**. A lista confirmada por ele é a que vale.
@@ -38,6 +42,10 @@ dite as seções do artefato — o `/speckit.plan` já tem o próprio template e
 como fonte (não repita os requisitos). Em prosa, o prompt deve:
 - Listar os **ADRs confirmados** (`ADR-00x: <decisão>`) como decisões fechadas a honrar: "honre cada
   ADR listado; não re-decida o que um ADR já fixou".
+- Injetar a prosa estrutural do `docs/architecture.md` do produto (§1–§2) como restrição a honrar:
+  resuma fiel os componentes e contratos externos descritos — não invente estrutura que o
+  documento não tem. A injeção é seletiva por passo (RN-02): só o plan recebe este documento;
+  specify e clarify nunca.
 - Pedir o plano técnico (stack, arquitetura, restrições) que realiza o resultado observável do
   `spec.md` **dentro** dessas decisões.
 - Blindar o escopo em prosa: "não expanda além do escopo do `spec.md`".
@@ -46,8 +54,9 @@ Não invoque `deep-research` — a pesquisa já aconteceu no spike; o ADR é a d
 
 ## Fase 4 — Validar saída e handoff (aconselha)
 Confira contra o critério **plan-prompt** de `#criterios-de-conclusao`: referencia o `spec.md` ∧
-injeta os ADRs confirmados como restrição a honrar ∧ deixa claro que o plano honra cada ADR e cobre
-o resultado observável do `spec.md`. Então
+injeta os ADRs confirmados — e, quando existe, a prosa estrutural do `architecture.md` do produto —
+como restrição a honrar ∧ deixa claro que o plano honra cada ADR e cobre o resultado observável do
+`spec.md`. Então
 **entregue o comando pronto** para o usuário disparar, por exemplo:
 
     /speckit.plan "<prompt montado>"

@@ -72,7 +72,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   derivado dos NFRs e restrições da PRD, com princípios decidíveis. `RF-07` O autor recebe pronto
   o prompt do specify de uma spec, blindado contra vazamento de fronteira e com o elo de
   rastreabilidade pedido. `RF-08` O autor recebe pronto o prompt do plan de uma feature, com os
-  ADRs confirmados injetados como restrição a honrar. `RF-18` O autor instala num comando, no
+  ADRs confirmados e a prosa estrutural do documento de arquitetura do produto injetados como
+  restrição a honrar. `RF-18` O autor instala num comando, no
   repositório do produto, a integração com o Spec Kit — fontes canônicas declaradas nas regras do
   repositório, documento de arquitetura semeado de esqueleto e guard opt-in — re-rodável sem
   perder o que ele escreveu.
@@ -179,3 +180,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-18 | C2 | `RF-11` alterado: verificadores de arquitetura do produto na camada mecânica | sustentar por conselho a autoridade do documento de arquitetura distribuído | ADR-015 · scripts/check-arquitetura.sh · scripts/trace-arquitetura.sh |
 | 2026-07-18 | C1 | `RF-18` novo: instalação da integração com o Spec Kit no repositório do produto | o canon chegava ao Spec Kit só pelas pontes manuais; clarify e implement rodavam sem canon | ADR-015 · skills/zion-speckit-install · assets/templates/regras-speckit.md · assets/templates/architecture-skeleton.md |
 | 2026-07-18 | C2 | `RF-09` alterado: o trace reconcilia também os blocos derivados do documento de arquitetura do produto | artefato derivado se reconcilia por máquina, nunca à mão (RN-04) | ADR-015 · skills/zion-prd-trace · scripts/trace-arquitetura.sh |
+| 2026-07-18 | C2 | `RF-08` alterado: o prompt do plan injeta também a prosa estrutural do documento de arquitetura do produto | o plan é o único passo do Spec Kit que lê o como estrutural (recorte por passo) | ADR-015 · skills/zion-prd-plan-prompt |
