@@ -35,6 +35,11 @@ dite as seções do artefato — o `/speckit.specify` já tem o próprio templat
   reconciliar a rastreabilidade. Declarar *quais* RF a fatia cobre é o-quê/rastreabilidade, não stack:
   não fere a fronteira sem-stack.
 
+**Modo re-specify (dia 2):** quando a fatia apontada **já** tem `specs/<n>-*/spec.md` (invocado pelo
+`/zion-prd-evolve` no C2), monte o prompt como **revisão** — "revise a spec existente contra a mudança X"
+—, trazendo a linha da §13 (changelog) como contexto, em vez de "especifique do zero". A fronteira
+sem-stack fica blindada igual (a stack segue no `plan`), e o `check-prd.sh specify -` verifica igual.
+
 ## Fase 4 — Validar saída e handoff (aconselha)
 Verifique por máquina, passando o prompt montado ao script via stdin, que o prompt (a) não vaza stack
 e (b) pede a linha **`**RF cobertos:**`** — o elo forward RF↔spec:
