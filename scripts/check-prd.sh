@@ -38,6 +38,23 @@ else
   SRC="$target"; LABEL="$(basename "$target")"
 fi
 
+# --- R8: descobre os ADRs vizinhos da PRD (docs/adr/ ao lado do arquivo) para os checks §13/§8. ---
+# Só para arquivo real (não stdin); degrada em silêncio se docs/adr/ não existir.
+ADR_DIR="$(dirname "$SRC")/adr"
+adr_ids=""; superseded_ids=""
+if [ "$target" != "-" ] && [ -d "$ADR_DIR" ]; then
+  for af in "$ADR_DIR"/ADR-*.md; do
+    [ -f "$af" ] || continue
+    aid="$(basename "$af" | grep -oE '^ADR-[0-9]+')"
+    [ -n "$aid" ] || continue
+    adr_ids="$adr_ids $aid"
+    ast="$(sed -n 's/^[[:space:]]*-[[:space:]]*\*\*Status:\*\*[[:space:]]*//p' "$af" | head -1)"
+    if printf '%s' "$ast" | grep -qiE 'Substitu[ií]do por[[:space:]]+ADR-[0-9]+'; then
+      superseded_ids="$superseded_ids $aid"
+    fi
+  done
+fi
+
 # --- checks (preenchidos nas próximas tasks) ---
 # Extrai os termos do bloco ```denylist do quality-rules.md (um por linha, minúsculo).
 extract_denylist() {
@@ -113,9 +130,49 @@ check_rf() {
     }
   ' "$SRC"
 }
+# Seção 13 (changelog): cada linha de dados da tabela — Cenário ∈ {C1,C2,C3}; todo RF-xx citado existe
+# na §6 (ou a linha diz "removido"); todo ADR-xxx citado existe em docs/adr/ (só quando a lista foi
+# descoberta). §13 ausente → nada dispara (compatível com PRDs pré-R8 / dia 1).
+check_changelog() {
+  awk -v label="$LABEL" -v adrs="$adr_ids" '
+    BEGIN { na=split(adrs,aa,/[[:space:]]+/); for(i=1;i<=na;i++) if(aa[i]!="") have_adr[aa[i]]=1 }
+    /^## / { sec=$2; sub(/\./,"",sec); next }
+    sec=="6" {
+      t=$0; while (match(t,/RF-[0-9]+/)) { have_rf[substr(t,RSTART,RLENGTH)]=1; t=substr(t,RSTART+RLENGTH) }
+      next
+    }
+    sec=="13" {
+      if ($0 !~ /^[[:space:]]*\|/) next
+      bar=$0; gsub(/[[:space:]]/,"",bar); if (bar ~ /^\|(:?-+:?\|)+$/) next
+      split($0,col,/\|/); cen=col[3]; gsub(/^[[:space:]]+|[[:space:]]+$/,"",cen)
+      if (cen=="Cenário" || col[2] ~ /^[[:space:]]*Data[[:space:]]*$/) next
+      if (cen !~ /^C[123]$/)
+        printf "%s:%d: changelog-cenario-invalido — \"%s\" (use só C1/C2/C3)\n", label, NR, cen
+      removido = ($0 ~ /removido/)
+      t=$0; while (match(t,/RF-[0-9]+/)) { rf=substr(t,RSTART,RLENGTH); t=substr(t,RSTART+RLENGTH)
+        if (!(rf in have_rf) && !removido)
+          printf "%s:%d: changelog-rf-inexistente — \"%s\" não existe na §6 (ou declare \"removido\")\n", label, NR, rf }
+      if (adrs != "") { t=$0; while (match(t,/ADR-[0-9]+/)) { adr=substr(t,RSTART,RLENGTH); t=substr(t,RSTART+RLENGTH)
+        if (!(adr in have_adr))
+          printf "%s:%d: changelog-adr-inexistente — \"%s\" não existe em docs/adr/\n", label, NR, adr } }
+    }
+  ' "$SRC"
+}
+# Seção 8: restrição apontando um ADR já substituído (Status: Substituído por) → restrição morta.
+check_restricao_morta() {
+  awk -v label="$LABEL" -v sup="$superseded_ids" '
+    BEGIN { ns=split(sup,ss,/[[:space:]]+/); for(i=1;i<=ns;i++) if(ss[i]!="") is_sup[ss[i]]=1 }
+    /^## / { sec=$2; sub(/\./,"",sec); next }
+    sec=="8" {
+      t=$0; while (match(t,/ADR-[0-9]+/)) { adr=substr(t,RSTART,RLENGTH); t=substr(t,RSTART+RLENGTH)
+        if (adr in is_sup)
+          printf "%s:%d: restricao-morta — a restrição aponta %s, já substituído (veja o Status do ADR)\n", label, NR, adr }
+    }
+  ' "$SRC"
+}
 
 case "$mode" in
-  prd)     findings="$(check_stack; check_nfr; check_rf)" ;;
+  prd)     findings="$(check_stack; check_nfr; check_rf; check_changelog; check_restricao_morta)" ;;
   specify) findings="$(check_stack; check_rf_cobertos)" ;;
 esac
 

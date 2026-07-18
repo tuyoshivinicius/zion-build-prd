@@ -43,4 +43,17 @@ out="$(bash "$CHECK" specify - < "$FIX/specify-sem-rf.txt")"; rc=$?
 assert_exit "specify sem RF sai 1" 1 "$rc"
 assert_contains "specify sem RF acha rf-cobertos-ausente" "rf-cobertos-ausente" "$out"
 
+# 6. PRD dia-2 limpa (§13 + §8 coerentes com docs/adr/ vizinho) → exit 0
+out="$(bash "$CHECK" prd "$FIX/prd-evolve/clean/PRD.md")"; rc=$?
+assert_exit "prd dia-2 limpa sai 0" 0 "$rc"
+assert_contains "prd dia-2 limpa reporta limpo" "check-prd: limpo" "$out"
+
+# 7. PRD dia-2 suja → exit 1 + um achado de cada tipo novo
+out="$(bash "$CHECK" prd "$FIX/prd-evolve/dirty/PRD.md")"; rc=$?
+assert_exit "prd dia-2 suja sai 1" 1 "$rc"
+assert_contains "acha changelog-rf-inexistente"   "changelog-rf-inexistente"   "$out"
+assert_contains "acha changelog-cenario-invalido" "changelog-cenario-invalido" "$out"
+assert_contains "acha changelog-adr-inexistente"  "changelog-adr-inexistente"  "$out"
+assert_contains "acha restricao-morta"            "restricao-morta"            "$out"
+
 if [ "$fail" -eq 0 ]; then echo "test-check-prd: tudo verde"; else echo "test-check-prd: FALHOU"; exit 1; fi
