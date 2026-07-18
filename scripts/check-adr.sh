@@ -10,11 +10,12 @@
 #
 # Para cada <dir>/ADR-*.md (glob de filhos diretos → ignora spikes/):
 #   1. sem linha **Evidência:** preenchida (vazia ou placeholder <…>) → sem-evidencia
-#   2. Evidência aponta docs/adr/spikes/<seg>/ (risco de execução):
+#   2. Evidência "Decisão dada: <racional>" com racional vazio/placeholder → decisao-dada-sem-racional
+#   3. Evidência aponta docs/adr/spikes/<seg>/ (risco de execução):
 #        <dir>/spikes/<seg> ausente        → spike-dir-ausente
 #        <dir>/spikes/<seg> vazio          → spike-dir-vazio
 #        <dir>/spikes/<seg> sem README.md  → spike-sem-readme
-#   3. Evidência de conhecimento sem URL nem caminho → evidencia-sem-lastro
+#   4. Evidência de conhecimento sem URL nem caminho → evidencia-sem-lastro
 set -u
 
 usage() { echo "uso: check-adr.sh <dir-de-adrs>" >&2; exit 2; }
@@ -61,6 +62,18 @@ for f in "$DIR"/ADR-*.md; do
   # Vazia ou placeholder <…> → sem evidência.
   if [ -z "$ev" ] || printf '%s' "$ev" | grep -qE '^<.*>$'; then
     add "$label: sem-evidencia — nenhuma linha **Evidência:** preenchida (aponte o spike dir ou a fonte de pesquisa)"
+    continue
+  fi
+
+  # Decisão dada: o lastro é o racional escrito no próprio ADR (quem/que autoridade decidiu e por
+  # quê). Casa ANTES dos ramos de spike/conhecimento para que um racional em prosa não seja
+  # mal-acusado como evidencia-sem-lastro. O rótulo "Decisão dada" é bytes UTF-8 fixos do template.
+  if printf '%s' "$ev" | grep -qiE '^decisão dada[[:space:]]*:'; then
+    rac="$(printf '%s' "$ev" | sed 's/^[^:]*:[[:space:]]*//')"
+    rac="$(printf '%s' "$rac" | sed 's/[[:space:]]*$//')"
+    if [ -z "$rac" ] || printf '%s' "$rac" | grep -qE '^<.*>$'; then
+      add "$label: decisao-dada-sem-racional — marcador \"Decisão dada:\" sem racional (aponte a autoridade/racional — quem decidiu e por quê)"
+    fi
     continue
   fi
 
