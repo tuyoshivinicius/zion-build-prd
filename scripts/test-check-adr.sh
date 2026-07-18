@@ -37,4 +37,14 @@ assert_contains "dirty acha evidencia-sem-lastro" "evidencia-sem-lastro" "$out"
 out="$(bash "$CHECK" "$FIX/nao-existe" 2>&1)"; rc=$?
 assert_exit "dir inexistente sai 2" 2 "$rc"
 
+# 4. Supersessão simétrica → limpa (exit 0)
+out="$(bash "$CHECK" "$FIX/superseded-clean")"; rc=$?
+assert_exit "supersessão simétrica sai 0" 0 "$rc"
+assert_contains "supersessão simétrica reporta limpo" "check-adr: limpo" "$out"
+
+# 5. Supersessão assimétrica (referência unilateral) → exit 1 + achado
+out="$(bash "$CHECK" "$FIX/superseded-dirty")"; rc=$?
+assert_exit "supersessão assimétrica sai 1" 1 "$rc"
+assert_contains "acha supersessao-assimetrica" "supersessao-assimetrica" "$out"
+
 if [ "$fail" -eq 0 ]; then echo "test-check-adr: tudo verde"; else echo "test-check-adr: FALHOU"; exit 1; fi

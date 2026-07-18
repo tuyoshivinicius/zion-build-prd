@@ -30,6 +30,20 @@ evidence_value() {  # $1 arquivo
   sed -n 's/^[[:space:]]*-[[:space:]]*\*\*Evidência:\*\*[[:space:]]*//p' "$1" | head -1
 }
 
+# --- R8: supersessão (referência simétrica Substitui / Status: Substituído por) ---
+adr_file_for() {  # $1 id (ADR-002) -> caminho do arquivo em $DIR, ou vazio
+  local m; m="$(ls "$DIR/$1-"*.md 2>/dev/null | head -1)"; [ -n "$m" ] && printf '%s' "$m"
+}
+field_substitui() {  # $1 arquivo -> ADR-<n> que declara substituir (maiúsculo), ou vazio
+  sed -n 's/^[[:space:]]*-[[:space:]]*\*\*Substitui:\*\*[[:space:]]*//p' "$1" \
+    | grep -oiE 'ADR-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]'
+}
+status_superseded_by() {  # $1 arquivo -> ADR-<m> pelo qual foi substituído, ou vazio
+  local st; st="$(sed -n 's/^[[:space:]]*-[[:space:]]*\*\*Status:\*\*[[:space:]]*//p' "$1" | head -1)"
+  printf '%s' "$st" | grep -qiE 'Substitu[ií]do por' || return 0
+  printf '%s' "$st" | grep -oiE 'ADR-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]'
+}
+
 findings=""
 add() {  # $1 achado
   if [ -z "$findings" ]; then findings="$1"; else findings="$findings
@@ -70,6 +84,33 @@ for f in "$DIR"/ADR-*.md; do
       fi
       ;;
   esac
+done
+
+# Simetria da supersessão: cada elo Substitui / Status-substituído-por exige o par recíproco.
+for f in "$DIR"/ADR-*.md; do
+  [ -f "$f" ] || continue
+  id="$(basename "$f" | grep -oE '^ADR-[0-9]+')"
+  label="$(basename "$f")"
+  sub="$(field_substitui "$f")"
+  if [ -n "$sub" ]; then
+    tf="$(adr_file_for "$sub")"
+    if [ -z "$tf" ]; then
+      add "$label: supersessao-assimetrica — declara Substitui: $sub, mas $sub não existe em $DIR"
+    else
+      back="$(status_superseded_by "$tf")"
+      [ "$back" = "$id" ] || add "$label: supersessao-assimetrica — Substitui: $sub, mas $sub não tem Status \"Substituído por $id\" (unilateral)"
+    fi
+  fi
+  supby="$(status_superseded_by "$f")"
+  if [ -n "$supby" ]; then
+    tf="$(adr_file_for "$supby")"
+    if [ -z "$tf" ]; then
+      add "$label: supersessao-assimetrica — Status aponta $supby, mas $supby não existe em $DIR"
+    else
+      fwd="$(field_substitui "$tf")"
+      [ "$fwd" = "$id" ] || add "$label: supersessao-assimetrica — Status: Substituído por $supby, mas $supby não declara Substitui: $id (unilateral)"
+    fi
+  fi
 done
 
 if [ "$nadr" -eq 0 ]; then
