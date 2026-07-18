@@ -76,8 +76,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
 - **Épico E4 — Dia 2:** `RF-10` O autor classifica uma mudança pós-release nos cenários canônicos
   e é roteado aos comandos donos de cada artefato afetado, com o histórico registrado na PRD.
 - **Épico E5 — Qualidade mecânica:** `RF-11` O harness verifica por máquina as regras decidíveis
-  dos artefatos (fronteira sem stack, NFR com número, RF por épico, evidência presente por risco)
-  e ecoa o veredito nos estágios. `RF-12` O harness avalia a si mesmo em duas camadas —
+  dos artefatos (fronteira sem stack, NFR com número, RF por épico, evidência presente por risco,
+  âncora de experiência presente quando há superfície de uso) e ecoa o veredito nos estágios. `RF-12` O harness avalia a si mesmo em duas camadas —
   determinística com fixtures no CI e de julgamento sob demanda. `RF-13` O harness governa a si
   mesmo: requisitos e arquitetura são fontes da verdade versionadas, e o drift entre elas e a
   implementação é acusado por máquina antes do commit.
@@ -149,8 +149,8 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-08 | E2 | skills/zion-prd-plan-prompt |
 | RF-09 | E3 | skills/zion-prd-trace |
 | RF-10 | E4 | skills/zion-prd-evolve |
-| RF-11 | E5 | scripts/check-prd.sh · scripts/check-adr.sh · scripts/check-estudo.sh · scripts/trace-prd.sh · scripts/trace-backlog.sh |
-| RF-12 | E5 | scripts/eval.sh · scripts/test-check-estudo.sh · scripts/fixtures/ · docs/guias/avaliacao-harness.md |
+| RF-11 | E5 | scripts/check-prd.sh · scripts/check-adr.sh · scripts/check-estudo.sh · scripts/check-experiencia.sh · scripts/trace-prd.sh · scripts/trace-backlog.sh |
+| RF-12 | E5 | scripts/eval.sh · scripts/test-check-estudo.sh · scripts/test-check-experiencia.sh · scripts/fixtures/ · docs/guias/avaliacao-harness.md |
 | RF-13 | E5 | scripts/check-canon.sh · CLAUDE.md · docs/prd.md · docs/architecture.md |
 | RF-14 | E6 | .claude-plugin/ · README.md |
 | RF-15 | E6 | scripts/sync-assets.sh · scripts/asset-map.sh · assets/ |

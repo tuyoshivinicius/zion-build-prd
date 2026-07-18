@@ -16,19 +16,20 @@ cd "$ROOT"
 declare -A TESTS=(
   [prd]="scripts/test-check-prd.sh"
   [estudo]="scripts/test-check-estudo.sh"
+  [experiencia]="scripts/test-check-experiencia.sh"
   [adr]="scripts/test-check-adr.sh"
   [trace]="scripts/test-trace-prd.sh"
   [backlog]="scripts/test-trace-backlog.sh"
   [contract]="scripts/test-check-superpowers-contract.sh"
   [canon]="scripts/test-check-canon.sh"
 )
-ORDER=(prd estudo adr trace backlog contract canon)
+ORDER=(prd estudo experiencia adr trace backlog contract canon)
 
 sel="${1:-}"
 if [ -n "$sel" ]; then
   case "$sel" in
-    prd|estudo|adr|trace|backlog|contract|canon) ORDER=("$sel") ;;
-    *) echo "uso: eval.sh [prd|estudo|adr|trace|backlog|contract|canon]" >&2; exit 2 ;;
+    prd|estudo|experiencia|adr|trace|backlog|contract|canon) ORDER=("$sel") ;;
+    *) echo "uso: eval.sh [prd|estudo|experiencia|adr|trace|backlog|contract|canon]" >&2; exit 2 ;;
   esac
 fi
 

@@ -17,4 +17,5 @@ ASSET_MAP=(
   "assets/templates/backlog.md            zion-prd-decompose"
   "scripts/check-adr.sh                   zion-prd-spike zion-prd-evolve"
   "scripts/check-estudo.sh                zion-prd-estudo"
+  "scripts/check-experiencia.sh           zion-prd-write zion-prd-decompose"
 )
