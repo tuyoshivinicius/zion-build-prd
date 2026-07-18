@@ -1,7 +1,7 @@
 ---
 name: zion-prd-decompose
 description: Estágio 4 do harness Zion Build PRD — transforma os RF-xx da PRD em épicos, story map e fatias verticais validadas por INVEST, e injeta a tabela de rastreabilidade. Use para "decompor a PRD", "fatiar em histórias/épicos" ou "montar o backlog vertical" depois que a PRD estiver escrita.
-argument-hint: "(sem argumento — trabalha sobre docs/PRD.md)"
+argument-hint: "(sem argumento = modo integral; --epico E<k> = re-fatiar só um épico no dia 2)"
 metadata:
   author: zion-build-prd
 user-invocable: true
@@ -31,6 +31,13 @@ marketplace está registrado.)
 Invoque `superpowers:brainstorming` no mesmo turno para: (1) agrupar os `RF-xx` em épicos;
 (2) montar o story map (backbone da jornada); (3) cortar linhas de release R0..Rn; (4) fatiar cada
 épico em fatias verticais.
+
+**Modo parcial (dia 2) — `--epico E<k>`:** re-fatia **apenas** o épico indicado (invocado à mão ou pelo
+`/zion-prd-evolve` com o épico afetado). Invoque `superpowers:brainstorming` com escopo naquele épico,
+aplicando INVEST/SPIDR como no modo integral. **Fatias já implementadas do épico são intocáveis** — viram
+**restrição** do re-fatiamento (as novas fatias partem do que já existe). Não mexa na §12 à mão: ao final,
+mande rodar `/zion-prd-trace` (dono único da tabela), que reconcilia sem duplicar. O **modo integral**
+continua o default; se a PRD **já** tem backlog decomposto, prefira o modo parcial (`--epico E<k>`).
 
 ## Fase 4 — Validar saída (aconselha)
 Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-conclusao`:
