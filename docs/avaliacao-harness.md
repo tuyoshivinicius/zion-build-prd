@@ -1,0 +1,101 @@
+# Avaliação do harness
+
+O harness tem uma suíte de avaliação de si mesmo, em duas camadas. Este documento é o **roteiro**:
+narra as camadas, indexa todas as fixtures e diz como rodá-las. A **fonte da verdade** de cada caso LLM
+é o `esperado.md` ao lado da entrada — este índice só aponta para eles.
+
+## 1. As duas camadas e quando cada uma roda
+
+- **Camada mecânica (determinística).** Os verificadores de script (`check-prd.sh`, `check-adr.sh`,
+  `trace-prd.sh`) contra fixtures `clean`/`dirty`, consolidados em `scripts/eval.sh`. Roda **no CI a
+  cada push** (passo "Avaliação da camada mecânica"). Verde/vermelho binário.
+- **Camada LLM (não-determinística).** Fixtures com defeito plantado que exercitam o **julgamento** das
+  skills criativas (discovery, write, decompose) — os vereditos que nenhum script decide (fatia
+  horizontal, vazamento de tela/aceite, ausência de "não faz"). Roda **sob demanda**, à mão ou por
+  agentes: custa token e não é reprodutível bit-a-bit, então **nunca entra no CI**.
+
+## 2. Rodar a camada mecânica
+
+    ./scripts/eval.sh              # roda os três self-tests → veredito agregado
+    ./scripts/eval.sh prd          # roda só um (prd | adr | trace)
+
+Exit 0 = tudo verde; exit 1 = algum self-test falhou; exit 2 = argumento inválido. É exatamente o que o
+CI executa.
+
+## 3. Rodar a camada LLM à mão
+
+Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
+
+1. Abra o `esperado.md` e leia o frontmatter (`skill`, `fase`, `regra`, `veredito`, `achado_esperado`).
+2. Invoque a **skill alvo** (`zion-prd-<skill>`) rodando a **lente da Fase 4 dela** sobre o artefato de
+   entrada (`discovery.md` / `PRD.md` / `backlog.md`) da pasta.
+3. Compare a resposta da skill ao `achado_esperado` (casado por **semântica**, não literal) e ao
+   `veredito` (reprova/aprova).
+4. Marque **acerto** (a skill produziu o veredito esperado e cobriu os achados) ou **erro**.
+
+## 4. Índice de fixtures
+
+### Mecânicas (camada determinística — CI)
+
+| Verificador | Fixture | Defeito plantado | Veredito |
+|---|---|---|---|
+| `check-prd.sh` | `fixtures/prd-clean.md` | — | limpo (exit 0) |
+| `check-prd.sh` | `fixtures/prd-dirty.md` | stack (React/Zustand/npm), NFR sem número, RF fora de épico | achados (exit 1) |
+| `check-prd.sh specify` | `fixtures/specify-dirty.txt` | stack no prompt do specify | achados (exit 1) |
+| `check-prd.sh specify` | `fixtures/specify-sem-rf.txt` | prompt sem a linha **RF cobertos:** | achados (exit 1) |
+| `check-adr.sh` | `fixtures/adr/clean/` | — | limpo (exit 0) |
+| `check-adr.sh` | `fixtures/adr/dirty/` | sem-evidência, spike-dir ausente/vazio/sem-readme, evidência-sem-lastro | achados (exit 1) |
+| `trace-prd.sh` | `fixtures/trace/` | RF órfão, spec intraçável, RF descoberto | avisos (exit 1) |
+| `trace-prd.sh` | `fixtures/trace/clean/` | — | em dia (exit 0) |
+
+### LLM (camada de julgamento — sob demanda)
+
+| Skill | Caso | Entrada | Defeito plantado | Veredito |
+|---|---|---|---|---|
+| discovery | `falta-nao-faz` | `discovery.md` | quadro faz/não-faz sem nenhum "não faz" | reprova |
+| discovery | `limpa` | `discovery.md` | — (visão + persona + "não faz") | aprova |
+| write | `vazamento-tela-aceite` | `PRD.md` | tela/critério de aceite em prosa (fora da denylist) | reprova |
+| write | `limpa` | `PRD.md` | — | aprova |
+| decompose | `fatia-horizontal` | `backlog.md` | fatia só-back ("montar todos os endpoints") | reprova |
+| decompose | `skeleton-nao-r0` | `backlog.md` | walking skeleton fora da fatia zero (R0) | reprova |
+| decompose | `limpa` | `backlog.md` | — (backlog vertical + skeleton em R0) | aprova |
+
+Cada skill tem ao menos um par **defeito/`limpa`** — a suíte pega falso-negativo (não acusou o defeito)
+e falso-positivo (reprovou o que estava bom).
+
+## 5. Interpretação
+
+A camada LLM reporta **taxa de acerto**, não verde/vermelho binário. Um erro isolado **não reprova o
+harness** — dispara investigação:
+
+- A skill mudou (regressão de comportamento)?
+- O `quality-rules.md` derivou (o critério afrouxou/apertou)?
+- A fixture está ambígua (o defeito não é claro, ou o `esperado.md` cobra além do razoável)?
+
+Um `esperado.md` malformado (ex.: sem `veredito`) é **erro de suíte**, não falha da skill — conserte o
+sidecar e rode de novo.
+
+## Runner por agentes (opcional — "automatiza depois")
+
+Na v1 isto é um **procedimento**, não uma skill nem um script. Cole o prompt abaixo no Claude Code, que
+itera as pastas `scripts/fixtures/skills/`, dispara **um subagente por caso** para rodar a lente da
+skill e um **agente-juiz** para comparar ao `achado_esperado`, emitindo pass/fail + taxa de acerto.
+
+> **Prompt colável:**
+>
+> Rode a camada LLM da suíte de avaliação do harness. Para cada pasta
+> `scripts/fixtures/skills/<skill>/<caso>/`:
+> 1. Leia o `esperado.md` (frontmatter: `skill`, `fase`, `regra`, `veredito`, `achado_esperado`). Se
+>    faltar `veredito`, marque **erro de suíte** e siga.
+> 2. Dispare **um subagente** que invoca a skill `zion-prd-<skill>` rodando a lente da Fase 4 dela
+>    sobre o artefato de entrada da pasta (`discovery.md`/`PRD.md`/`backlog.md`), e devolve o veredito
+>    (reprova/aprova) + os achados, sem editar nada.
+> 3. Dispare um **agente-juiz** que compara a resposta do subagente ao `veredito` e ao
+>    `achado_esperado` (semântica, não literal) e devolve **acerto** ou **erro** com uma linha de
+>    justificativa.
+> 4. Ao final, imprima uma tabela caso→acerto/erro e a **taxa de acerto** global. Não altere fixtures
+>    nem skills.
+
+Zero superfície nova a manter além desta prosa. Se o roteiro provar valor, promove-se depois a uma
+skill `/zion-prd-eval` **sem reescrever fixture nenhuma** — o contrato `esperado.md` já serve os dois
+modos.
