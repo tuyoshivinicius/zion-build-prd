@@ -14,3 +14,7 @@ git add skills/*/references/
 # Canonização: docs/prd.md e docs/architecture.md devem refletir a implementação.
 # Diferente dos gates dos projetos-alvo (aconselham), aqui BLOQUEIA o commit.
 ./scripts/check-canon.sh
+
+# Dogfood dos ADRs: evidência presente + supersessão simétrica nos ADRs do repo.
+# Mesmo molde do check-canon (aqui BLOQUEIA); o CI repete como backstop.
+./scripts/check-adr.sh docs/adr

@@ -13,3 +13,5 @@ jobs:
         run: ./scripts/eval.sh
       - name: Guard de canonização (prd/architecture ↔ implementação)
         run: ./scripts/check-canon.sh
+      - name: Guard de ADRs (evidência + supersessão simétrica)
+        run: ./scripts/check-adr.sh docs/adr
