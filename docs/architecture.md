@@ -45,6 +45,7 @@ do próprio ADR (campo **Evidência**, que aponta o design doc de origem), não 
 | [ADR-010](adr/ADR-010-governanca-canon.md) | O repo governa a si mesmo: `docs/prd.md` + `docs/architecture.md` como fontes da verdade, com guard de canonização bloqueante. |
 | [ADR-011](adr/ADR-011-adrs-canonicos.md) | Promover as decisões consolidadas D-xx a ADRs reais; o canon passa a citar ADRs, não specs. |
 | [ADR-012](adr/ADR-012-estagio-0-estudo-pre-discovery.md) | Estágio 0 formal e opcional (`/zion-prd-estudo`): estudo pré-discovery que aconselha e não decide, verificado por `check-estudo.sh` no padrão E5. |
+| [ADR-013](adr/ADR-013-estudo-workflow-adaptativo.md) | Skill de estudo (Estágio 0) roteia o "Próximo passo sugerido" por marcador do repo-harness: modo interno (SDD leve) × distribuído (discovery), numa única `SKILL.md` gated. |
 
 ## 3. Scripts
 
@@ -101,3 +102,22 @@ tabela da §3).
 `scripts/check-canon.sh` verifica o decidível disto no pre-commit (**bloqueia**) e no CI
 (backstop). O indecidível (o texto do RF ainda descreve o comportamento?) é dever de quem edita —
 regra em `CLAUDE.md`.
+
+## 6. As três naturezas do repo
+
+Este repo mistura três naturezas de artefato; a separação já é **física** (só `skills/` é empacotado
+pelo plugin — `docs/` e o tooling interno nunca viajam), esta seção a **nomeia e canoniza**. Ela
+**aponta** para as tabelas existentes (§3 scripts, §4 assets, §12 da PRD) em vez de re-listar — para
+não criar uma quarta fonte da verdade a manter.
+
+| Natureza | O que é | Artefatos |
+|---|---|---|
+| **Distribuído** | Viaja ao usuário via plugin/skills.sh | `skills/zion-*`, `assets/`, `.claude-plugin/`, os `references/` derivados, e os scripts distribuídos como references da §4 (`check-prd.sh`, `check-adr.sh`, `check-estudo.sh`, `trace-prd.sh`, `trace-backlog.sh`) |
+| **Governança** | Governa o próprio harness (canon) | `docs/prd.md`, `docs/architecture.md`, `docs/adr/`, `CLAUDE.md`, `scripts/check-canon.sh`, `scripts/check-assets.sh`, os guards versionados e o CI |
+| **Dev-workflow** | SDD leve interno (não viaja) | `docs/superpowers/specs\|plans/`, `docs/estudos/` (deste repo), `scripts/dev-claude.sh`, `scripts/setup-hooks.sh`, `scripts/eval.sh`, os `test-*.sh` |
+
+**Marcador do repo-harness.** O projeto-alvo cujo `.claude-plugin/plugin.json` tem
+`name: zion-build-prd` é este repo — identidade única que nenhum produto de usuário possui. É o
+marcador que a skill de estudo (`zion-prd-estudo`) lê na Fase 0 para decidir o modo (interno ×
+distribuído) e ramificar o "Próximo passo sugerido" na Fase 4 (ADR-013). O ramo interno viaja
+shipado mas fica **inerte** no produto do usuário, onde o marcador nunca casa.

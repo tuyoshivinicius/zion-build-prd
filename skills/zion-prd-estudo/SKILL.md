@@ -28,6 +28,11 @@ do candidato (kebab-case minúsculo, sem acentos). Se `docs/estudos/<slug>.md` *
 avise e pergunte: **retomar** (partir do documento atual e revisar) ou **sobrescrever**. Não
 bloqueie.
 
+**Detecte o modo (aconselha, não bloqueia):** se o projeto-alvo tiver
+`.claude-plugin/plugin.json` com `name: zion-build-prd`, o modo é **interno** (dev do próprio
+harness); caso contrário, **distribuído** (default). O modo afeta **apenas** o "Próximo passo
+sugerido" da Fase 4 — as Fases 1–3 são idênticas.
+
 **Preflight (dependência):** a Fase 2 exige `superpowers:brainstorming`. Se a skill não estiver
 disponível, avise e pare graciosamente: "Instale o superpowers — `/plugin marketplace add
 obra/superpowers-marketplace` e `/plugin install superpowers@superpowers-marketplace` — e rode de
@@ -102,6 +107,17 @@ citada — ou a declaração de greenfield da Fase 1>
 Se aprovado, rodar `/zion-prd-discovery` com a alternativa escolhida (e `/zion-prd-spike` se
 houver decisão estruturante nova).
 ```
+
+**Ramo por modo (Fase 0) — a seção "## Próximo passo sugerido" gravada reflete o modo detectado:**
+
+- **Distribuído (default):** o texto do template acima — `/zion-prd-discovery` com a alternativa
+  escolhida (e `/zion-prd-spike` se houver decisão estruturante nova).
+- **Interno:** substitua o corpo da seção por: "Se aprovado, rodar `superpowers:brainstorming` com a
+  alternativa escolhida → `superpowers:writing-plans` → `superpowers:executing-plans`. Decisão
+  estruturante nova vira ADR via `/zion-adr-new` e reflete no canon (`prd.md`/`architecture.md` no
+  mesmo commit — CLAUDE.md)."
+
+Os 6 cabeçalhos e o resto do documento não mudam com o modo — só o corpo desta seção.
 
 Rode `bash references/check-estudo.sh docs/estudos/<slug>.md` e **ecoe o veredito como conselho**
 (exit `0` limpo / `1` achados / `2` erro de uso): aponte cada achado — `secao-ausente`,

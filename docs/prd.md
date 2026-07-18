@@ -62,7 +62,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   spec zero.
   `RF-17` O autor estuda um candidato antes da descoberta — edge cases, alternativas comparadas
   (sempre incluindo "não fazer") com ROI justificado e recomendação não vinculante — e recebe o
-  estudo gravado para escolher a direção.
+  estudo gravado, com o próximo passo sugerido roteado conforme o contexto detectado, para escolher
+  a direção.
 - **Épico E2 — Pontes para o Spec Kit:** `RF-06` O autor recebe pronto o prompt da constitution,
   derivado dos NFRs e restrições da PRD, com princípios decidíveis. `RF-07` O autor recebe pronto
   o prompt do specify de uma spec, blindado contra vazamento de fronteira e com o elo de
@@ -101,7 +102,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
 As decisões estruturantes deste repo estão registradas como ADRs em `docs/adr/`, indexadas na §2 de
 `docs/architecture.md`. Em especial: fonte única com cópias derivadas (ADR-001), distribuição em
 dois canais com autocontenção (ADR-002), verificação mecânica que aconselha no projeto-alvo
-(ADR-004) e o contrato de capacidades com o executor externo de brainstorming (ADR-007).
+(ADR-004), o contrato de capacidades com o executor externo de brainstorming (ADR-007) e a skill de
+estudo workflow-adaptativa por persona (ADR-013).
 
 ## 9. Glossário
 
@@ -161,3 +163,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | Data | Cenário | Mudança | Motivo | Artefatos afetados |
 |------|---------|---------|--------|--------------------|
 | 2026-07-18 | C1 | `RF-17` novo: Estágio 0 opcional de estudo pré-discovery | governar o estudo que vivia num prompt one-shot fora do harness | ADR-012 · skills/zion-prd-estudo · scripts/check-estudo.sh |
+| 2026-07-18 | C2 | `RF-17` alterado: próximo passo do estudo roteado por persona (interno × distribuído) | o dev do harness usa a mesma skill internamente, onde o downstream é SDD leve, não discovery | ADR-013 · skills/zion-prd-estudo · docs/architecture.md §6 |
