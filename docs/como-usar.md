@@ -151,6 +151,21 @@ evidência do tipo certo por ADR (spike de código para risco de execução; fon
 de conhecimento), não a qualidade. Advisório: *"complete a evidência ou justifique"*, não reverte.
 Cada ADR aceito vira **restrição** na seção 8 da PRD.
 
+**Decisão dada.** Nem toda decisão estruturante tem dúvida a provar: às vezes ela já chega batida de
+fora (política da org, restrição externa, padrão já estabelecido). Aí o lastro é o **racional
+escrito**, não um spike. Dois caminhos:
+
+- **Direto:** `/zion-adr-new "Provider de nuvem" --dada` — a skill conduz um **micro-diálogo** curto
+  (quem bateu o martelo, que restrição força, o que ficou de fora, que trade-off você aceita) e grava
+  `Evidência: Decisão dada: <racional>`. Se você já passar o racional (`--dada "mandato de infra…"`),
+  ela sonda só os buracos.
+- **Via Fase 1 do spike:** classifique a decisão como *decisão dada* (o terceiro rótulo, ao lado de
+  execução e conhecimento); a Fase 2/3 roda o mesmo micro-diálogo e registra o ADR sem spike nem
+  pesquisa.
+
+O `check-adr.sh` reconhece o marcador `Decisão dada:` e cobra só a **presença** do racional (não a
+qualidade) — campo em branco segue erro.
+
 ### Estágio 3 — `/zion-prd-write` (o coração)
 
 ```text
