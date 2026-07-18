@@ -7,6 +7,10 @@
 
 O harness conduz a autoria da PRD em estágios encadeados, cada um alimentando o próximo:
 
+0. **Estudo pré-discovery — opcional** (`/zion-prd-estudo`) — quando a direção ainda não está
+   clara: edge cases, 2–4 alternativas comparadas (sempre incluindo "não fazer"), ROI justificado
+   e recomendação **não vinculante** → `docs/estudos/<slug>.md`. Subsidia; o humano escolhe a
+   alternativa e conduz ele mesmo a descoberta.
 1. **Descoberta** (`/zion-prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
    Idempotente: rodar de novo sobre um `docs/discovery.md` existente **retoma/revisa** (não
    sobrescreve) — permite descoberta em várias sessões.

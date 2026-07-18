@@ -15,8 +15,9 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
 
 - Toda PRD produzida chega à ponte do specify com 0 achados de fronteira na verificação mecânica.
 - 100% dos RF in-scope de uma PRD rastreados a uma spec na tabela de rastreabilidade.
-- O autor sai da ideia bruta ao primeiro prompt de specify em 1 jornada contínua de 5 estágios,
-  sem montar prompt de ponte à mão.
+- O autor sai da ideia bruta ao primeiro prompt de specify em 1 jornada contínua de 5 estágios —
+  precedida, quando a direção ainda não está clara, por um estudo opcional (Estágio 0) —, sem
+  montar prompt de ponte à mão.
 
 ## 3. Personas
 
@@ -27,7 +28,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
 
 ## 4. Escopo (in / out)
 
-- **Faz (in):** conduz descoberta enxuta retomável; prova decisões estruturantes com evidência
+- **Faz (in):** produz sob demanda um estudo pré-discovery com alternativas comparadas, ROI e
+  recomendação não vinculante; conduz descoberta enxuta retomável; prova decisões estruturantes com evidência
   proporcional ao risco e as registra como ADRs; escreve a PRD enxuta a partir de esqueleto;
   decompõe em épicos e specs verticais com backlog e rastreabilidade; monta os prompts das três
   pontes para o Spec Kit; verifica por máquina as regras decidíveis; acompanha a evolução
@@ -58,6 +60,9 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   seção a partir de um esqueleto, com requisitos de uma frase agrupados por épico. `RF-05` O autor
   decompõe a PRD em épicos, story map e specs verticais priorizadas, com o walking skeleton como
   spec zero.
+  `RF-17` O autor estuda um candidato antes da descoberta — edge cases, alternativas comparadas
+  (sempre incluindo "não fazer") com ROI justificado e recomendação não vinculante — e recebe o
+  estudo gravado para escolher a direção.
 - **Épico E2 — Pontes para o Spec Kit:** `RF-06` O autor recebe pronto o prompt da constitution,
   derivado dos NFRs e restrições da PRD, com princípios decidíveis. `RF-07` O autor recebe pronto
   o prompt do specify de uma spec, blindado contra vazamento de fronteira e com o elo de
@@ -135,6 +140,7 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-03 | E1 | skills/zion-adr-new |
 | RF-04 | E1 | skills/zion-prd-write |
 | RF-05 | E1 | skills/zion-prd-decompose |
+| RF-17 | E1 | skills/zion-prd-estudo |
 | RF-06 | E2 | skills/zion-prd-constitution-prompt |
 | RF-07 | E2 | skills/zion-prd-specify-prompt |
 | RF-08 | E2 | skills/zion-prd-plan-prompt |
@@ -154,3 +160,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 
 | Data | Cenário | Mudança | Motivo | Artefatos afetados |
 |------|---------|---------|--------|--------------------|
+| 2026-07-18 | C1 | `RF-17` novo: Estágio 0 opcional de estudo pré-discovery | governar o estudo que vivia num prompt one-shot fora do harness | ADR-012 · skills/zion-prd-estudo · scripts/check-estudo.sh |
