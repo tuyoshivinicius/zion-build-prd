@@ -168,8 +168,9 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   - **Walking skeleton** — a **fatia zero** (R0) prova o pipeline inteiro com o mínimo de funcionalidade.
 - **Entradas:** `docs/PRD.md` (seção de `RF-xx` por épico).
 - **Saídas / artefatos:** lista de épicos, story map, **backlog de fatias verticais** com linhas de
-  release, e a **tabela de rastreabilidade semeada por máquina** (`trace-prd.sh` em bootstrap: tudo ☐
-  pendente; ver modelo abaixo). Depois, `/zion-prd-trace` a reconcilia a cada fatia.
+  release em `docs/backlog.md` (slug/demo/RFs por fatia; Spec/Status semeados por `trace-backlog.sh`), e a
+  **tabela de rastreabilidade semeada por máquina** (`trace-prd.sh` em bootstrap: tudo ☐ pendente; ver
+  modelo abaixo). Depois, `/zion-prd-trace` reconcilia **os dois** a cada fatia.
 - **Critério de conclusão:** existe uma fila priorizada de fatias verticais, cada uma passando no teste
   INVEST, com o walking skeleton na frente. **Handoff:** a próxima fatia da fila entra no Passo 5.
 
@@ -253,7 +254,9 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   #    tarefas para lacunas restantes.
   /speckit.converge
   ```
-- **Entradas:** a próxima fatia vertical da fila (Passo 4); `constitution`; `docs/PRD.md`; ADRs.
+- **Entradas:** a próxima fatia vertical da fila (Passo 4, resolvida contra `docs/backlog.md` pela ponte
+  `specify`, que instrui o Spec Kit a usar o **slug** da fatia como nome curto → `specs/###-<slug>`);
+  `constitution`; `docs/PRD.md`; ADRs.
 - **Saídas / artefatos:** `specs/###-nome/spec.md`, `plan.md`, `tasks.md` e o código implementado, na
   branch da feature.
 - **Critério de conclusão:** `spec.md` sem `[NEEDS CLARIFICATION]`; `plan.md` e `tasks.md` revisados;
@@ -271,8 +274,10 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   `/zion-prd-trace`"*: a tabela é um artefato **derivado**, reconciliado por comando a partir da §6 da
   PRD e das `specs/`, não mantido à mão.
 - **Skill(s):**
-  - `zion-prd-trace` (real) — reconcilia a seção 12 da PRD a partir das `specs/*/spec.md` (status
-    ☐/◐/● derivado do `tasks.md`); rodável a qualquer momento, tipicamente após cada fatia.
+  - `zion-prd-trace` (real) — reconcilia a seção 12 da PRD **e** o backlog `docs/backlog.md` a partir das
+    `specs/*/spec.md` (status ☐/◐/● derivado do `tasks.md`); rodável a qualquer momento. Rodá-lo após
+    `/speckit.implement`/`converge` é o **ritual de fim de fatia** — fecha a fatia e ecoa o quadro
+    `● / ◐ / ☐` com a próxima da fila.
   - `git-commit` (real) — versionar os artefatos-guia (PRD, ADRs, specs).
 - **Invocação (exemplo)** — *você executaria assim:*
   ```text

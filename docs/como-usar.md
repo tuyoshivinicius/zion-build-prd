@@ -37,11 +37,11 @@ Isso instala as 10 skills em `.claude/skills/` do seu projeto. Instale o **Spec 
 | `/zion-prd-discovery` | 1 · Descoberta | *(nada)* | `docs/discovery.md` | `superpowers:brainstorming` |
 | `/zion-prd-spike` | 2 · Spikes + ADRs | `docs/discovery.md` | `docs/adr/ADR-00x-*.md` | `deep-research` → `zion-adr-new` |
 | `/zion-prd-write` | 3 · PRD enxuta | `docs/discovery.md` + `docs/adr/` | `docs/PRD.md` | `superpowers:brainstorming` |
-| `/zion-prd-decompose` | 4 · Decomposição | `docs/PRD.md` (com `RF-xx`) | fatias + tabela na PRD | `superpowers:brainstorming` |
+| `/zion-prd-decompose` | 4 · Decomposição | `docs/PRD.md` (com `RF-xx`) | fatias + `docs/backlog.md` + tabela na PRD | `superpowers:brainstorming` |
 | `/zion-prd-constitution-prompt` | Ponte p/ 5a (bootstrap, 1×) | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | *(monta em prosa; sem delegação)* |
 | `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | *(monta em prosa; zero-stack verificado por `check-prd.sh`)* |
 | `/zion-prd-plan-prompt` | Ponte p/ 5c | `spec.md` da feature + `docs/adr/` | prompt do `/speckit.plan` | *(monta em prosa; sem delegação)* |
-| `/zion-prd-trace` | 6 · Rastreabilidade | `docs/PRD.md` (§6+§12) + `specs/` | seção 12 reconciliada | `scripts/trace-prd.sh` |
+| `/zion-prd-trace` | 6 · Rastreabilidade | `docs/PRD.md` (§6+§12) + `docs/backlog.md` + `specs/` | §12 + backlog reconciliados | `scripts/trace-prd.sh` + `trace-backlog.sh` |
 | `/zion-prd-evolve` | 7 · Dia 2 (pós-release) | `docs/PRD.md` + a mudança | §13 + edições roteadas | `/zion-adr-new`, `/zion-prd-decompose`, `/zion-prd-trace`, `/zion-prd-specify-prompt` |
 
 O harness termina na ponte: o ciclo `/speckit.*` (specify → clarify → plan → … → implement) é **seu**.
@@ -222,6 +222,15 @@ E **injeta a tabela** de `assets/templates/traceability-table.md` na **seção 1
 | RF-01 | Prévia renderiza ao digitar | E1 | `specs/001-preview-ao-vivo` | R0 | ☐ pendente |
 | RF-05 | Diagrama persiste entre sessões | E3 | `specs/001-preview-ao-vivo` | R0 | ☐ pendente |
 | RF-02 | Erro de sintaxe apontado | E1 | `specs/002-erros-sintaxe` | R1 | ☐ pendente |
+```
+
+E **semeia o backlog** `docs/backlog.md` (fila de fatias; slug/demo/RFs humanos, Spec/Status por máquina):
+
+```markdown
+| Fatia (slug) | Demo (1 frase) | RFs | Release | Spec | Status |
+|--------------|----------------|-----|---------|------|--------|
+| preview-ao-vivo | Digitar mermaid, ver prévia, recarregar e continuar | RF-01, RF-05 | R0 | — | ☐ pendente |
+| erros-sintaxe | Erro de sintaxe apontado sem perder a prévia | RF-02 | R1 | — | ☐ pendente |
 ```
 
 ### Ponte (bootstrap, 1×) — `/zion-prd-constitution-prompt`
