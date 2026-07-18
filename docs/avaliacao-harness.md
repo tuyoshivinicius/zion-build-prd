@@ -7,17 +7,26 @@ narra as camadas, indexa todas as fixtures e diz como rodá-las. A **fonte da ve
 ## 1. As duas camadas e quando cada uma roda
 
 - **Camada mecânica (determinística).** Os verificadores de script (`check-prd.sh`, `check-adr.sh`,
-  `trace-prd.sh`) contra fixtures `clean`/`dirty`, consolidados em `scripts/eval.sh`. Roda **no CI a
-  cada push** (passo "Avaliação da camada mecânica"). Verde/vermelho binário.
+  `trace-prd.sh`, `check-superpowers-contract.sh`) contra fixtures `clean`/`dirty`, consolidados em
+  `scripts/eval.sh`. Roda **no CI a cada push** (passo "Avaliação da camada mecânica"). Verde/vermelho
+  binário. O check de contrato **degrada gracioso**: sem o superpowers instalado ele sai 0
+  ("não verificável"), então quem garante a lógica no CI é o auto-teste contra fixtures.
 - **Camada LLM (não-determinística).** Fixtures com defeito plantado que exercitam o **julgamento** das
   skills criativas (discovery, write, decompose) — os vereditos que nenhum script decide (fatia
   horizontal, vazamento de tela/aceite, ausência de "não faz"). Roda **sob demanda**, à mão ou por
   agentes: custa token e não é reprodutível bit-a-bit, então **nunca entra no CI**.
 
+> A camada mecânica inclui um **check de contrato** (`check-superpowers-contract.sh`, R9): o harness usa
+> `superpowers:brainstorming` como executor de três estágios e depende de **três capacidades** dele
+> (C1–C3). O check faz `grep` de marcadores dessas capacidades no `SKILL.md` instalado e acusa se
+> alguma sumir num upgrade. A especificação das capacidades, os marcadores e o runbook de drift vivem
+> em `assets/superpowers-contract.md`. O pin `">=5 <7"` no `plugin.json` trava a porta; o check diz
+> se dá para alargar.
+
 ## 2. Rodar a camada mecânica
 
-    ./scripts/eval.sh              # roda os três self-tests → veredito agregado
-    ./scripts/eval.sh prd          # roda só um (prd | adr | trace)
+    ./scripts/eval.sh              # roda os quatro self-tests → veredito agregado
+    ./scripts/eval.sh prd          # roda só um (prd | adr | trace | contract)
 
 Exit 0 = tudo verde; exit 1 = algum self-test falhou; exit 2 = argumento inválido. É exatamente o que o
 CI executa.
@@ -47,6 +56,8 @@ Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
 | `check-adr.sh` | `fixtures/adr/dirty/` | sem-evidência, spike-dir ausente/vazio/sem-readme, evidência-sem-lastro | achados (exit 1) |
 | `trace-prd.sh` | `fixtures/trace/` | RF órfão, spec intraçável, RF descoberto | avisos (exit 1) |
 | `trace-prd.sh` | `fixtures/trace/clean/` | — | em dia (exit 0) |
+| `check-superpowers-contract.sh` | `fixtures/superpowers/clean/` | — (C1–C3 presentes) | contrato intacto (exit 0) |
+| `check-superpowers-contract.sh` | `fixtures/superpowers/drift-c2/` | marcador de C2 (gravar doc sob docs/) removido | drift, cita C2 (exit 1) |
 
 ### LLM (camada de julgamento — sob demanda)
 
