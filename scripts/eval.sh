@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # eval.sh — runner único da camada mecânica da suíte de avaliação (R7).
-# Roda os três auto-testes (check-prd, check-adr, trace-prd) e emite veredito
+# Roda os auto-testes (check-prd, check-adr, trace-prd, contract) e emite veredito
 # agregado. Exit 0 = todos verdes; exit 1 = qualquer um falhou; exit 2 = uso.
 #
 # Uso:
-#   eval.sh              # roda os três, na ordem prd → adr → trace
+#   eval.sh              # roda todos, na ordem prd → adr → trace → contract
 #   eval.sh prd          # roda só um (conveniência de dev)
 #   eval.sh adr
 #   eval.sh trace
+#   eval.sh contract
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -16,14 +17,15 @@ declare -A TESTS=(
   [prd]="scripts/test-check-prd.sh"
   [adr]="scripts/test-check-adr.sh"
   [trace]="scripts/test-trace-prd.sh"
+  [contract]="scripts/test-check-superpowers-contract.sh"
 )
-ORDER=(prd adr trace)
+ORDER=(prd adr trace contract)
 
 sel="${1:-}"
 if [ -n "$sel" ]; then
   case "$sel" in
-    prd|adr|trace) ORDER=("$sel") ;;
-    *) echo "uso: eval.sh [prd|adr|trace]" >&2; exit 2 ;;
+    prd|adr|trace|contract) ORDER=("$sel") ;;
+    *) echo "uso: eval.sh [prd|adr|trace|contract]" >&2; exit 2 ;;
   esac
 fi
 
