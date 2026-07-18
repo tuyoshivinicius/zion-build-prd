@@ -43,11 +43,19 @@ enxuta, cada uma com uma linha de justificativa ancorada no discovery. Sem short
 filtro, virou 4 dúvidas menores, ou ficou com 1 decisão só → aponte e sugira, mas a lista confirmada
 pelo usuário é a que vale. Não bloqueie.
 
-**Classificação por risco (aconselha).** Fechadas as 2–3 decisões, **classifique cada uma** como
-*risco de execução* ou *risco de conhecimento*, cada classificação com **uma linha de justificativa**
-ancorada na heurística `#risco-do-spike` de `references/quality-rules.md`. Peça para **confirmar ou
-editar** — mesmo padrão de convergência. Não bloqueie. O risco confirmado escolhe o meio da evidência
-na Fase 2/3.
+**Classificação por risco (aconselha).** Fechadas as 2–3 decisões, **classifique cada uma** em um de
+**três** rótulos — *risco de execução*, *risco de conhecimento* ou *decisão dada* —, cada
+classificação com **uma linha de justificativa** ancorada na heurística `#risco-do-spike` de
+`references/quality-rules.md`. *Decisão dada* é a escolha que já chegou batida de fora (política da
+org, restrição externa, padrão já estabelecido): não há dúvida a resolver rodando nem lendo, e o
+lastro é o racional escrito. Peça para **confirmar ou editar** — mesmo padrão de convergência. Não
+bloqueie. O risco confirmado escolhe o meio da evidência na Fase 2/3.
+
+**Guarda advisory (aconselha).** Se **todas** as 2–3 decisões forem classificadas como *decisão
+dada* — não sobrou nada a provar rodando nem lendo —, aponte que o valor do estágio de spike sumiu e
+sugira revisar (talvez a lista não seja realmente estruturante, ou uma decisão dada esconda uma
+dúvida). Só avisa, não bloqueia. Impede a classificação de virar escotilha para pular spikes
+legítimos.
 
 ## Fase 2/3 — Formatar e auto-delegar (ramifica por risco)
 Para cada decisão, no mesmo turno, **conforme o risco confirmado na Fase 1**:
@@ -62,6 +70,12 @@ Para cada decisão, no mesmo turno, **conforme o risco confirmado na Fase 1**:
   `docs/adr/spikes/ADR-00x-<slug>/` com um `README.md` (pergunta + o que foi rodado + veredito) e os
   artefatos descartáveis; então invoque `zion-adr-new` (que reusa o mesmo número) e preencha o campo
   **Evidência** com o **caminho do dir** `docs/adr/spikes/ADR-00x-<slug>/`.
+- **Decisão dada** → sem spike, sem `deep-research`. Conduza o **micro-diálogo** de decisão dada — o
+  procedimento compartilhado descrito em `zion-adr-new` (seção "Modo decisão dada"): quatro probes
+  (autoridade, restrição que força, opções preteridas, trade-off aceito), uma pergunta por vez, tom
+  advisório, converge com confirmar/editar; se a decisão já veio com racional forte, sonde só os
+  buracos. Então invoque `zion-adr-new` com o título da decisão e preencha o campo **Evidência** com
+  `Decisão dada: <racional destilado>`.
 
 O número do ADR é conhecido na criação, então o slug do spike dir casa com o do ADR.
 
