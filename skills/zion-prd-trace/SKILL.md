@@ -1,6 +1,6 @@
 ---
 name: zion-prd-trace
-description: Reconcilia a rastreabilidade da PRD (§12) e o backlog de specs (docs/backlog.md) a partir das specs/*/spec.md — RF↔spec, spec↔pasta e status ☐/◐/● derivados por máquina. É o ritual de fim de spec. Use para "atualizar a rastreabilidade", "reconciliar a tabela/o backlog" ou depois de fatiar/implementar uma spec. Rodável a qualquer momento.
+description: Reconcilia a rastreabilidade da PRD (§12), o backlog de specs (docs/backlog.md) e os blocos derivados do docs/architecture.md do produto (índice de ADRs, visão do backlog) a partir das specs/*/spec.md — RF↔spec, spec↔pasta e status ☐/◐/● derivados por máquina, com o veredito advisório do check de arquitetura ecoado. É o ritual de fim de spec. Use para "atualizar a rastreabilidade", "reconciliar a tabela/o backlog" ou depois de fatiar/implementar uma spec. Rodável a qualquer momento.
 argument-hint: "(sem argumento — trabalha sobre docs/PRD.md e specs/)"
 metadata:
   author: zion-build-prd
@@ -72,8 +72,10 @@ Do lado da arquitetura (quando `docs/architecture.md` existe), ecoe também o ve
 
     bash references/check-arquitetura.sh .
 
-- **Marcador ausente** — o documento perdeu os marcadores `zion:adr-index`/`zion:backlog-view`:
-  restaure as §3/§4 do esqueleto para os blocos voltarem a reconciliar.
+- **Marcador ausente** (aviso do `trace-arquitetura.sh` da Fase 2/3; o check acusa o efeito como
+  `adr-index-defasado`/`backlog-view-defasada`) — o documento perdeu os marcadores
+  `zion:adr-index`/`zion:backlog-view`: restaure as §3/§4 do esqueleto para os blocos voltarem a
+  reconciliar.
 - **regras-ausentes / regras-defasadas** — o bloco do `CLAUDE.md` nunca foi instalado ou ficou
   velho após upgrade: rode/re-rode `/zion-speckit-install`.
 - **visao-vazia / secao-ausente** — prosa e estrutura do documento são do Autor; aconselhe, não

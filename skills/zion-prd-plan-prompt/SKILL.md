@@ -1,6 +1,6 @@
 ---
 name: zion-prd-plan-prompt
-description: Ponte do harness Zion Build PRD para o Spec Kit — monta o prompt do /speckit.plan de UMA feature injetando os ADRs confirmados como restrição a honrar, entrega pronto e para. Use para levar uma feature (spec.md + ADRs) ao passo plan do Spec Kit; não dispara o /speckit.* por você.
+description: Ponte do harness Zion Build PRD para o Spec Kit — monta o prompt do /speckit.plan de UMA feature injetando os ADRs confirmados — e, quando existe, a prosa estrutural do docs/architecture.md do produto — como restrição a honrar, entrega pronto e para. Use para levar uma feature (spec.md + ADRs) ao passo plan do Spec Kit; não dispara o /speckit.* por você.
 argument-hint: "Qual feature/spec.md levar ao plan (e, se quiser, os ADRs a honrar)"
 metadata:
   author: zion-build-prd

@@ -7,7 +7,7 @@ _(prosa do Autor ainda não escrita)_
 ## 3. Decisões estruturantes
 
 <!-- zion:adr-index:start -->
-_(nenhum ADR ainda)_
+- [ADR-099 — Fantasma](adr/ADR-099-fantasma.md)
 <!-- zion:adr-index:end -->
 
 ## 4. Visão do backlog

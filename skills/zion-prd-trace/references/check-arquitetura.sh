@@ -64,8 +64,9 @@ check_visao_vazia() {
 }
 
 # 3. Índice de ADRs (bloco zion:adr-index) em dia com docs/adr/ — nos dois sentidos.
+#    docs/adr/ ausente não engole o sentido bloco→disco: citação vira fantasma e é acusada.
 check_adr_index() {
-  [ -f "$ARCH" ] && [ -d "$ADR_DIR" ] || return 0
+  [ -f "$ARCH" ] || return 0
   local blk f base tgt
   blk="$(block_content "$ARCH" adr-index)"
   for f in "$ADR_DIR"/ADR-*.md; do

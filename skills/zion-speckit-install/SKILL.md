@@ -58,6 +58,11 @@ O conteúdo canônico do bloco é `references/regras-speckit.md` (marcadores inc
 
 ## Fase 3 — Guard de pre-commit (opt-in; default NÃO instalar)
 
+Se `.zion/check-arquitetura.sh` **já existe** no repo (re-execução/upgrade), o opt-in já foi
+exercido antes: **atualize a cópia incondicionalmente**, sem re-perguntar — um guard de versão
+velha passaria a bloquear todo commit após o upgrade do bloco de regras. A pergunta abaixo é só
+para instalação nova.
+
 Pergunte ao Autor se quer o guard **bloqueante** de drift de arquitetura no próprio repo — o
 enforcement do harness (ADR-010) exportado **por escolha**. Sem resposta afirmativa clara, **não
 instale** (RN-01 intacto). Se ele aceitar:

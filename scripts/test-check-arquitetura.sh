@@ -26,12 +26,13 @@ assert_exit "clean sai 0" 0 "$rc"
 assert_contains "clean reporta limpo" "check-arquitetura: limpo" "$out"
 assert_not_contains "clean não acusa defasado" "defasad" "$out"
 
-# 2. Fixture suja → exit 1 com os cinco achados.
+# 2. Fixture suja → exit 1 com os seis achados (índice defasado nos dois sentidos).
 out="$(bash "$CHECK" "$FIX/dirty")"; rc=$?
 assert_exit "dirty sai 1" 1 "$rc"
 assert_contains "acha secao-ausente" "secao-ausente" "$out"
 assert_contains "acha visao-vazia" "visao-vazia" "$out"
 assert_contains "acha adr-index-defasado" "adr-index-defasado" "$out"
+assert_contains "acha ADR citado mas ausente do disco" "ADR-099-fantasma.md citado no bloco mas ausente" "$out"
 assert_contains "acha backlog-view-defasada" "backlog-view-defasada" "$out"
 assert_contains "acha regras-defasadas" "regras-defasadas" "$out"
 
@@ -46,5 +47,15 @@ rmdir "$empty"
 # 4. ROOT inexistente → exit 2.
 out="$(bash "$CHECK" nao/existe 2>/dev/null)"; rc=$?
 assert_exit "ROOT inexistente sai 2" 2 "$rc"
+
+# 5. Índice cita ADR mas docs/adr/ foi deletado por inteiro → o guard não engole a citação fantasma.
+semadr="$(mktemp -d)"; mkdir -p "$semadr/docs"
+cp "$FIX/clean/CLAUDE.md" "$semadr/CLAUDE.md"
+cp "$FIX/clean/docs/architecture.md" "$semadr/docs/architecture.md"
+cp "$FIX/clean/docs/backlog.md" "$semadr/docs/backlog.md"
+out="$(bash "$CHECK" "$semadr")"; rc=$?
+assert_exit "docs/adr ausente com citação sai 1" 1 "$rc"
+assert_contains "acusa citado mas ausente sem docs/adr" "citado no bloco mas ausente" "$out"
+rm -rf "$semadr"
 
 if [ "$fail" -eq 0 ]; then echo "test-check-arquitetura: tudo verde"; else echo "test-check-arquitetura: FALHOU"; exit 1; fi
