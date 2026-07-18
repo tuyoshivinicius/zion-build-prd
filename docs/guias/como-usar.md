@@ -1,5 +1,9 @@
 # Como usar o Zion Build PRD → Spec Kit (exemplos do Zion Mermaid Editor)
 
+> **Governança:** este documento é **guia de uso**, não normativo. Os requisitos do harness vivem
+> em [`docs/prd.md`](../prd.md) e a arquitetura em [`docs/architecture.md`](../architecture.md) —
+> as fontes da verdade deste repo.
+
 > **O que este documento é:** um **guia prático** dos comandos `/prd-*` — o harness que
 > *executa* o processo do `guia-prd-para-spec-kit.md`. Enquanto aquele guia **descreve** os seis
 > estágios de forma genérica, este mostra **como rodar** cada comando, com exemplos reais do

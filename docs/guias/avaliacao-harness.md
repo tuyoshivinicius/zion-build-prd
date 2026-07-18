@@ -1,5 +1,9 @@
 # Avaliação do harness
 
+> **Governança:** este documento é **guia de uso**, não normativo. Os requisitos do harness vivem
+> em [`docs/prd.md`](../prd.md) e a arquitetura em [`docs/architecture.md`](../architecture.md) —
+> as fontes da verdade deste repo.
+
 O harness tem uma suíte de avaliação de si mesmo, em duas camadas. Este documento é o **roteiro**:
 narra as camadas, indexa todas as fixtures e diz como rodá-las. A **fonte da verdade** de cada caso LLM
 é o `esperado.md` ao lado da entrada — este índice só aponta para eles.

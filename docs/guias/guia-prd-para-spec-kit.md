@@ -1,5 +1,9 @@
 # Guia de processo — PRD → épicos → features prontas para o Spec Kit (via skills do Claude Code CLI)
 
+> **Governança:** este documento é **guia de uso**, não normativo. Os requisitos do harness vivem
+> em [`docs/prd.md`](../prd.md) e a arquitetura em [`docs/architecture.md`](../architecture.md) —
+> as fontes da verdade deste repo.
+
 > **O que este documento é:** um **guia de execução** (how-to / manual de processo). Ele
 > *descreve como executar* cada passo — qual skill usar, com que comando, com que argumentos e o
 > que esperar. Ele **não executa** o processo: nenhuma PRD é escrita aqui, nenhum épico é extraído
