@@ -34,27 +34,41 @@ Ao detectar vazamento, o comando aponta a linha ofensora e sugere movê-la para 
 > `/speckit.plan`, onde o "como" é decidido. Mesmo lá a guarda persiste, invertida — o plano fica
 > **preso aos ADRs** já provados (veja `#anatomia-plan`), sem reabrir decisões.
 
+> **Experiência é NFR, não tela.** A qualidade de experiência entra na PRD como **NFR mensurável**
+> tagueado `(experiência)` — "o usuário conclui a tarefa-núcleo em ≤N passos" —, nunca como arranjo
+> de tela. Já está dentro do que esta fronteira admite (NFR com número). O `check-experiencia.sh`
+> verifica a **presença** dessa âncora (marcador `Superfície de uso` → NFR tagueado → coluna no
+> backlog); detectar "tela" vazando continua julgamento humano — o denylist do `check-prd.sh`
+> permanece stack-only.
+
 ## Critérios de conclusão por estágio {#criterios-de-conclusao}
 
 Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
 
 - **discovery** (`docs/discovery.md`): tem visão em 1 frase ∧ ≥1 persona nomeada ∧ pelo menos um
-  "não faz" explícito no quadro faz/não-faz.
+  "não faz" explícito no quadro faz/não-faz ∧ **quando o produto opera uma superfície de uso**, a
+  linha bare `Superfície de uso: sim` e um bloco `## Experiência` em prosa (contexto de uso e a
+  qualidade de experiência esperada, no nível de o-quê). `não` é o default — produto sem superfície
+  não grava bloco algum.
 - **spike** (`docs/adr/ADR-00x-*.md`): cada decisão estruturante tem um ADR com Contexto/Decisão/
   Consequências ∧ o ADR carrega **evidência do tipo certo para seu risco** (spike de código para
   risco de execução; fonte de pesquisa para risco de conhecimento; racional escrito para decisão
   dada — ver `#risco-do-spike`). A presença da evidência é verificada por `check-adr.sh` — a Fase 4
   roda o script e ecoa o veredito.
 - **prd** (`docs/PRD.md`): escopo in/out explícito ∧ `RF-xx` agrupados por épico (1 frase cada) ∧
-  NFRs com número ∧ **zero** stack / critério de aceite / tela. As três regras decidíveis
-  (zero-stack, NFR-com-número, RF-por-épico) são verificadas por `check-prd.sh` — a Fase 4 roda o
-  script e ecoa o veredito.
+  NFRs com número ∧ **zero** stack / critério de aceite / tela ∧ **quando surface=sim**, a §7
+  carrega a linha `Superfície de uso: sim` e ≥1 NFR tagueado `(experiência)` com número. As três
+  regras decidíveis (zero-stack, NFR-com-número, RF-por-épico) são verificadas por `check-prd.sh`;
+  a âncora de experiência é verificada por `check-experiencia.sh docs/PRD.md` — a Fase 4 roda os
+  scripts e ecoa o veredito.
 - **decompose**: existe backlog de specs verticais priorizadas ∧ cada spec passa no INVEST ∧
   walking skeleton é a spec zero (R0) ∧ a tabela de rastreabilidade (§12) foi **semeada por
   `trace-prd.sh`** (não à mão) com uma linha por `RF-xx` in-scope ∧ o **backlog** `docs/backlog.md` foi
   semeado por `trace-backlog.sh` (colunas humanas — Spec/slug, Demo, RFs, Release — preenchidas;
   colunas Pasta/Status por máquina). Ambos são artefatos **derivados**, reconciliados a qualquer momento
-  por `/zion-prd-trace`; não são mantidos à mão.
+  por `/zion-prd-trace`; não são mantidos à mão ∧ **quando surface=sim**, ≥1 spec que toca a
+  superfície tem a coluna `Âncora de experiência` preenchida (verificada por
+  `check-experiencia.sh docs/PRD.md docs/backlog.md`; spec puramente de backend deixa a âncora em branco).
 - **specify-prompt**: o prompt gerado declara resultado observável ∧ não cita stack ∧ RF-xx/ADR
   entram como contexto (referência), não como requisito. O zero-stack é verificado por
   `check-prd.sh specify -` sobre o prompt montado.

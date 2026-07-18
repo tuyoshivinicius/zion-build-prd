@@ -31,6 +31,11 @@ avise: "isso é cedo — stack é do `plan.md`; aqui é só visão e escopo" (ve
 *o que revisar* (ex.: "quero rever a persona"); sem argumento, pressione os blocos incompletos ou
 fracos do discovery atual.
 
+**Gate de superfície (advisório, `não` por default):** pergunte uma vez — *"o usuário opera uma
+superfície de uso (tela, CLI, API que alguém maneja)?"*. Aconselha, não bloqueia (`RN-01`). Em
+**não** (o default), skip silencioso: o fluxo fica idêntico ao de hoje, sem bloco de experiência.
+Em **sim**, a Fase 2/3 captura a camada de experiência (abaixo).
+
 ## Fase 2/3 — Formatar e auto-delegar
 **Preflight (dependência):** esta etapa exige `superpowers:brainstorming`. Se a skill não estiver
 disponível, avise e pare graciosamente: "Instale o superpowers — `/plugin marketplace add
@@ -43,15 +48,23 @@ na Fase 0:
 
 - **Modo do-zero:** "Refine a visão do produto: (1) visão em UMA frase; (2) persona principal
   nomeada; (3) quadro faz/não-faz, com os 'não faz' explícitos. Grave o resultado em
-  `docs/discovery.md`."
+  `docs/discovery.md`." **Quando surface=sim,** acrescente um 4º item de captura — a camada de
+  experiência, em **prosa**, ancorada na persona nomeada: contexto de uso, expectativas, e a
+  qualidade de experiência que o produto precisa transmitir — sempre no nível de o-quê ("o usuário
+  percebe X"), nunca "tela Y". Grave em `docs/discovery.md` a **linha bare** `Superfície de uso: sim`
+  e um bloco `## Experiência` com essa prosa.
 - **Modo retomar/revisar:** "Aqui está o `docs/discovery.md` atual: «<conteúdo do arquivo>».
   Preserve visão/persona/faz-não-faz que já estão sólidos; pressione o que está incompleto ou o
   que o usuário quer rever (ver argumento da Fase 1); não reescreva o que está bom. Mantenha os 3
   blocos: visão em UMA frase, persona nomeada, quadro faz/não-faz. Regrave `docs/discovery.md`."
+  **Idempotência do bloco de experiência:** pressione o bloco `## Experiência` só se estiver
+  incompleto ou se o usuário pedir para revê-lo; não reescreva o que já está sólido. Se o gate de
+  superfície virou `sim` agora, capture o bloco pela primeira vez.
 
 ## Fase 4 — Validar saída (aconselha)
 Ao terminar, confira `docs/discovery.md` contra o critério **discovery** de `quality-rules.md`
-`#criterios-de-conclusao`: visão em 1 frase ∧ ≥1 persona nomeada ∧ pelo menos um "não faz" explícito.
+`#criterios-de-conclusao`: visão em 1 frase ∧ ≥1 persona nomeada ∧ pelo menos um "não faz" explícito
+∧ **quando surface=sim**, a linha `Superfície de uso: sim` e o bloco `## Experiência` presentes.
 Emita veredito: `✓` cada item ok, ou `⚠ <item> faltando — sugiro <correção>`. Não reverta nada.
 
 ## Saída

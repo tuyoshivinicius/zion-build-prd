@@ -53,7 +53,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
 ## 6. Requisitos funcionais por épico (RF-xx)
 
 - **Épico E1 — Jornada de autoria:** `RF-01` O autor conduz a descoberta enxuta (visão, persona,
-  faz/não-faz) e a retoma entre sessões sem perder o que já respondeu. `RF-02` O autor prova as
+  faz/não-faz) e a retoma entre sessões sem perder o que já respondeu, capturando — quando o produto
+  opera uma superfície de uso — a qualidade de experiência esperada como marcador que viaja a jusante. `RF-02` O autor prova as
   2–3 decisões estruturantes com evidência proporcional ao risco antes de fechar a PRD. `RF-03` O
   autor registra cada decisão como ADR com contexto, decisão e consequências — inclusive
   substituindo um ADR anterior com referência simétrica. `RF-04` O autor preenche a PRD seção a
