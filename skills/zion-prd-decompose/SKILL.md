@@ -62,8 +62,8 @@ Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-co
 
       bash references/trace-backlog.sh docs/backlog.md specs
 
-  Ainda não há specs → Spec `—`, tudo ☐ pendente; a **ordem das linhas é a fila de prioridade**.
-  `trace-backlog.sh` é o **dono único** das colunas Spec/Status. **Backlog já existente → não
+  Ainda não há specs → Pasta `—`, tudo ☐ pendente; a **ordem das linhas é a fila de prioridade**.
+  `trace-backlog.sh` é o **dono único** das colunas Pasta/Status. **Backlog já existente → não
   sobrescreva:** atualize as linhas humanas por conversa e deixe a reconciliação com o script
   (idempotência, como nos demais estágios).
 Emita veredito por item. Não reverta — aconselhe.

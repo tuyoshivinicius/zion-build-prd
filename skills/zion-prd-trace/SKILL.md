@@ -37,7 +37,7 @@ Rode também o reconciliador do backlog:
 
     bash references/trace-backlog.sh docs/backlog.md specs
 
-Ele recomputa as colunas de máquina (Spec, Status) do backlog casando `specs/###-<slug>` ⇔ slug por
+Ele recomputa as colunas de máquina (Pasta, Status) do backlog casando `specs/###-<slug>` ⇔ slug por
 sufixo, **preserva** as colunas humanas e a ordem das linhas, e imprime as transições de status, os avisos
 e o **quadro de specs**.
 
