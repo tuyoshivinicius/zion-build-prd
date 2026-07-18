@@ -17,15 +17,16 @@ declare -A TESTS=(
   [prd]="scripts/test-check-prd.sh"
   [adr]="scripts/test-check-adr.sh"
   [trace]="scripts/test-trace-prd.sh"
+  [backlog]="scripts/test-trace-backlog.sh"
   [contract]="scripts/test-check-superpowers-contract.sh"
 )
-ORDER=(prd adr trace contract)
+ORDER=(prd adr trace backlog contract)
 
 sel="${1:-}"
 if [ -n "$sel" ]; then
   case "$sel" in
-    prd|adr|trace|contract) ORDER=("$sel") ;;
-    *) echo "uso: eval.sh [prd|adr|trace|contract]" >&2; exit 2 ;;
+    prd|adr|trace|backlog|contract) ORDER=("$sel") ;;
+    *) echo "uso: eval.sh [prd|adr|trace|backlog|contract]" >&2; exit 2 ;;
   esac
 fi
 
