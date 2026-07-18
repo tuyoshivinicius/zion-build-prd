@@ -20,17 +20,18 @@ declare -A TESTS=(
   [adr]="scripts/test-check-adr.sh"
   [trace]="scripts/test-trace-prd.sh"
   [backlog]="scripts/test-trace-backlog.sh"
+  [arquitetura]="scripts/test-check-arquitetura.sh"
   [trace-arquitetura]="scripts/test-trace-arquitetura.sh"
   [contract]="scripts/test-check-superpowers-contract.sh"
   [canon]="scripts/test-check-canon.sh"
 )
-ORDER=(prd estudo experiencia adr trace backlog trace-arquitetura contract canon)
+ORDER=(prd estudo experiencia adr trace backlog arquitetura trace-arquitetura contract canon)
 
 sel="${1:-}"
 if [ -n "$sel" ]; then
   case "$sel" in
-    prd|estudo|experiencia|adr|trace|backlog|trace-arquitetura|contract|canon) ORDER=("$sel") ;;
-    *) echo "uso: eval.sh [prd|estudo|experiencia|adr|trace|backlog|trace-arquitetura|contract|canon]" >&2; exit 2 ;;
+    prd|estudo|experiencia|adr|trace|backlog|arquitetura|trace-arquitetura|contract|canon) ORDER=("$sel") ;;
+    *) echo "uso: eval.sh [prd|estudo|experiencia|adr|trace|backlog|arquitetura|trace-arquitetura|contract|canon]" >&2; exit 2 ;;
   esac
 fi
 

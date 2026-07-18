@@ -80,7 +80,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   e é roteado aos comandos donos de cada artefato afetado, com o histórico registrado na PRD.
 - **Épico E5 — Qualidade mecânica:** `RF-11` O harness verifica por máquina as regras decidíveis
   dos artefatos (fronteira sem stack, NFR com número, RF por épico, evidência presente por risco,
-  âncora de experiência presente quando há superfície de uso) e ecoa o veredito nos estágios. `RF-12` O harness avalia a si mesmo em duas camadas —
+  âncora de experiência presente quando há superfície de uso, documento de arquitetura do produto e
+  regra instalada em dia) e ecoa o veredito nos estágios. `RF-12` O harness avalia a si mesmo em duas camadas —
   determinística com fixtures no CI e de julgamento sob demanda. `RF-13` O harness governa a si
   mesmo: requisitos e arquitetura são fontes da verdade versionadas, e o drift entre elas e a
   implementação é acusado por máquina antes do commit.
@@ -152,7 +153,7 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-08 | E2 | skills/zion-prd-plan-prompt |
 | RF-09 | E3 | skills/zion-prd-trace |
 | RF-10 | E4 | skills/zion-prd-evolve |
-| RF-11 | E5 | scripts/check-prd.sh · scripts/check-adr.sh · scripts/check-estudo.sh · scripts/check-experiencia.sh · scripts/trace-prd.sh · scripts/trace-backlog.sh |
+| RF-11 | E5 | scripts/check-prd.sh · scripts/check-adr.sh · scripts/check-estudo.sh · scripts/check-experiencia.sh · scripts/check-arquitetura.sh · scripts/trace-prd.sh · scripts/trace-backlog.sh · scripts/trace-arquitetura.sh |
 | RF-12 | E5 | scripts/eval.sh · scripts/test-check-estudo.sh · scripts/test-check-experiencia.sh · scripts/fixtures/ · docs/guias/avaliacao-harness.md |
 | RF-13 | E5 | scripts/check-canon.sh · CLAUDE.md · docs/prd.md · docs/architecture.md |
 | RF-14 | E6 | .claude-plugin/ · README.md |
@@ -170,3 +171,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-18 | C2 | `RF-17` alterado: próximo passo do estudo roteado por persona (interno × distribuído) | o dev do harness usa a mesma skill internamente, onde o downstream é SDD leve, não discovery | ADR-013 · skills/zion-prd-estudo · docs/architecture.md §6 |
 | 2026-07-18 | C2 | `RF-17` alterado: reabrir um estudo pelo slug para revisar, sem re-digitar o candidato | remover o atrito de re-digitar o candidato só para revisitar um estudo já gravado | skills/zion-prd-estudo (Fase 0) |
 | 2026-07-18 | C2 | Carregador forte de experiência: `RF-01`/`RF-04`/`RF-05`/`RF-11` passam a carregar o marcador `Superfície de uso` e a âncora de experiência (NFR tagueado + coluna no backlog); `check-experiencia.sh` novo | app rico em função e pobre de uso — o sinal de experiência precisa nascer no discovery e sobreviver até o backlog | ADR-014 · scripts/check-experiencia.sh · skills/zion-prd-discovery · skills/zion-prd-write · skills/zion-prd-decompose |
+| 2026-07-18 | C2 | `RF-11` alterado: verificadores de arquitetura do produto na camada mecânica | sustentar por conselho a autoridade do documento de arquitetura distribuído | ADR-015 · scripts/check-arquitetura.sh · scripts/trace-arquitetura.sh |

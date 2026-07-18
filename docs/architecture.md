@@ -61,6 +61,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/check-prd.sh | Verificador das regras decidíveis da PRD e do prompt do specify. |
 | scripts/check-estudo.sh | Verificador das regras decidíveis do documento de estudo (Estágio 0). |
 | scripts/check-experiencia.sh | Verificador do carregador de experiência (marcador `Superfície de uso` + âncora na PRD/backlog). |
+| scripts/check-arquitetura.sh | Verificador advisório do architecture.md do produto (seções, prosa da §1, blocos derivados em dia) + drift do bloco de regras instalado no CLAUDE.md do produto. |
 | scripts/check-adr.sh | Verificador de presença de evidência e supersessão simétrica nos ADRs. |
 | scripts/check-superpowers-contract.sh | Verificador do contrato C1–C3 no superpowers instalado. |
 | scripts/check-canon.sh | Guard de canonização: cruza prd.md/architecture.md com skills/, scripts/, ASSET_MAP e docs/adr/. |
@@ -71,6 +72,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/test-check-prd.sh | Auto-teste do check-prd.sh contra fixtures. |
 | scripts/test-check-estudo.sh | Auto-teste do check-estudo.sh contra fixtures. |
 | scripts/test-check-experiencia.sh | Auto-teste do check-experiencia.sh contra fixtures. |
+| scripts/test-check-arquitetura.sh | Auto-teste do check-arquitetura.sh contra fixtures. |
 | scripts/test-check-adr.sh | Auto-teste do check-adr.sh contra fixtures. |
 | scripts/test-check-superpowers-contract.sh | Auto-teste do check de contrato contra fixtures. |
 | scripts/test-check-canon.sh | Auto-teste do check-canon.sh contra fixtures. |
