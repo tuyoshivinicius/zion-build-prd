@@ -35,7 +35,7 @@ assert_exit "specify sujo sai 1" 1 "$rc"
 assert_contains "specify sujo acha stack" "stack" "$out"
 
 # 4. specify limpo (com o pedido de **RF cobertos:**) via stdin → exit 0
-out="$(printf 'O usuário edita o diagrama e vê a prévia atualizar ao digitar.\nPeça que o spec.md inclua a linha **RF cobertos:** RF-01 com os RF que a fatia cobre.\n' | bash "$CHECK" specify -)"; rc=$?
+out="$(printf 'O usuário edita o diagrama e vê a prévia atualizar ao digitar.\nPeça que o spec.md inclua a linha **RF cobertos:** RF-01 com os RF que a spec cobre.\n' | bash "$CHECK" specify -)"; rc=$?
 assert_exit "specify limpo sai 0" 0 "$rc"
 
 # 5. specify sem o pedido de **RF cobertos:** → exit 1 + rf-cobertos-ausente

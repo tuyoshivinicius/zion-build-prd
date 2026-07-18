@@ -37,7 +37,7 @@ Para a gerente de projetos, que perde tempo consolidando status, o Painel reúne
 - [NEEDS CLARIFICATION] limite de tarefas por projeto.
 
 ## 12. Rastreabilidade
-| RF | Épico | Fatia |
+| RF | Épico | Spec |
 |----|-------|-------|
 | RF-01 | E1 | R0 |
 
@@ -45,4 +45,4 @@ Para a gerente de projetos, que perde tempo consolidando status, o Painel reúne
 | Data | Cenário | Mudança | Motivo | Artefatos afetados |
 |------|---------|---------|--------|--------------------|
 | 2026-08-02 | C3 | exportação passa a ser vetor | motor antigo não gerava vetor | ADR-002 → ADR-005 · restrição §8 atualizada |
-| 2026-08-05 | C1 | RF-04 novo: exportar o quadro em vetor | pedido recorrente | RF-04 no épico E2 · fatia nova |
+| 2026-08-05 | C1 | RF-04 novo: exportar o quadro em vetor | pedido recorrente | RF-04 no épico E2 · spec nova |

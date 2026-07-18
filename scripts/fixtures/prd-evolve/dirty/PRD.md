@@ -18,7 +18,7 @@ Para a gerente de projetos, que perde tempo consolidando status, o Painel reúne
 - Ver docs/adr/ADR-002 para a decisão de exportação.
 
 ## 12. Rastreabilidade
-| RF | Épico | Fatia |
+| RF | Épico | Spec |
 |----|-------|-------|
 | RF-01 | E1 | R0 |
 
@@ -26,4 +26,4 @@ Para a gerente de projetos, que perde tempo consolidando status, o Painel reúne
 | Data | Cenário | Mudança | Motivo | Artefatos afetados |
 |------|---------|---------|--------|--------------------|
 | 2026-08-02 | C2 | RF-99 alterado: exportar em vetor | feedback | ADR-404 novo |
-| 2026-08-05 | X | RF-03 alterado | ajuste | fatia S2 |
+| 2026-08-05 | X | RF-03 alterado | ajuste | spec S2 |
