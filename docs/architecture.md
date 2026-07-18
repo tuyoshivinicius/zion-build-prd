@@ -66,6 +66,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/check-canon.sh | Guard de canonização: cruza prd.md/architecture.md com skills/, scripts/, ASSET_MAP e docs/adr/. |
 | scripts/trace-prd.sh | Semeia/reconcilia a §12 da PRD a partir das specs. |
 | scripts/trace-backlog.sh | Semeia/reconcilia o backlog de specs. |
+| scripts/trace-arquitetura.sh | Semeia/reconcilia os blocos derivados (índice de ADRs, visão do backlog) do architecture.md do produto. |
 | scripts/eval.sh | Runner único da camada mecânica (auto-testes abaixo). |
 | scripts/test-check-prd.sh | Auto-teste do check-prd.sh contra fixtures. |
 | scripts/test-check-estudo.sh | Auto-teste do check-estudo.sh contra fixtures. |
@@ -75,6 +76,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/test-check-canon.sh | Auto-teste do check-canon.sh contra fixtures. |
 | scripts/test-trace-prd.sh | Auto-teste do trace-prd.sh contra fixtures. |
 | scripts/test-trace-backlog.sh | Auto-teste do trace-backlog.sh contra fixtures. |
+| scripts/test-trace-arquitetura.sh | Auto-teste do trace-arquitetura.sh contra fixtures. |
 | scripts/setup-hooks.sh | Ativa os git hooks versionados (core.hooksPath). |
 | scripts/dev-claude.sh | Abre uma sessão do Claude Code servindo o working tree via `--plugin-dir` (dogfooding local das skills). |
 
