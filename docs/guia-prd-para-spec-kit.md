@@ -24,8 +24,8 @@ O processo tem **seis estágios**. Cada um vira um ou mais passos numerados adia
    registrá-las **antes** de fechar a PRD.
 3. **PRD enxuta** — visão/escopo, `RF-xx` por épico (uma frase cada), NFRs com números, restrições,
    questões abertas. Sem comportamento detalhado.
-4. **Decomposição** — PRD → épicos → story map → fatias verticais validadas por INVEST/SPIDR;
-   walking skeleton como fatia zero.
+4. **Decomposição** — PRD → épicos → story map → specs verticais validadas por INVEST/SPIDR;
+   walking skeleton como spec zero.
 5. **Spec Kit por feature** — bootstrap (`constitution`) e o ciclo
    `specify → clarify → plan → checklist → tasks → analyze → implement → converge`.
 6. **Rastreabilidade & "pronto para codar"** — tabela `RF-xx ↔ specs/###-nome` e checklist final.
@@ -34,7 +34,7 @@ O processo tem **seis estágios**. Cada um vira um ou mais passos numerados adia
 flowchart TD
     D["1. Descoberta"] --> S["2. Spikes + ADRs"]
     S --> P["3. PRD enxuta<br/>RF-xx por épico"]
-    P --> E["4. Decomposição<br/>épicos → story map → fatias verticais"]
+    P --> E["4. Decomposição<br/>épicos → story map → specs verticais"]
     E -->|handoff| B["5a. constitution"]
     subgraph ciclo ["5b. Ciclo do Spec Kit por feature"]
       direction TB
@@ -50,8 +50,8 @@ flowchart TD
     CV --> R["6. Rastreabilidade<br/>RF-xx ↔ specs/###"]
 ```
 
-**Handoff (linha divisória):** o estágio 4 termina quando existe um **backlog de fatias verticais
-priorizadas**. Cada fatia, uma a uma, entra no estágio 5 via `/speckit.specify`. A partir daí o
+**Handoff (linha divisória):** o estágio 4 termina quando existe um **backlog de specs verticais
+priorizadas**. Cada spec, uma a uma, entra no estágio 5 via `/speckit.specify`. A partir daí o
 Spec Kit é dono do ciclo daquela feature.
 
 **Gates de qualidade** (marcados como losangos no diagrama): `/speckit.clarify` (antes de planejar),
@@ -147,9 +147,9 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 
 ---
 
-## Passo 4 — Decomposição: PRD → épicos → story map → fatias verticais
+## Passo 4 — Decomposição: PRD → épicos → story map → specs verticais
 
-- **Objetivo:** transformar os `RF-xx` da PRD em um **backlog de fatias verticais priorizadas**,
+- **Objetivo:** transformar os `RF-xx` da PRD em um **backlog de specs verticais priorizadas**,
   cada uma passível de uma demo ponta-a-ponta. É o que alimenta o Spec Kit.
 - **Skill(s):**
   - `superpowers:brainstorming` (real) — extrair épicos, montar o story map e fatiar verticalmente.
@@ -158,21 +158,21 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   # Agrupar RF-xx em épicos e ordenar a jornada do usuário:
   Use superpowers:brainstorming para: (1) agrupar os RF-xx de docs/PRD.md em épicos;
   (2) montar um story map (backbone da jornada); (3) cortar linhas de release R0..Rn;
-  (4) fatiar cada épico em fatias verticais e validar cada uma com INVEST.
+  (4) fatiar cada épico em specs verticais e validar cada uma com INVEST.
   ```
-- **Checklists textuais a aplicar em cada fatia (não são comandos):**
+- **Checklists textuais a aplicar em cada spec (não são comandos):**
   - **INVEST** — Independente, Negociável, Valiosa, Estimável, Small, Testável. Teste rápido: *"esta
-    fatia, sozinha, permite uma demo ponta-a-ponta?"* Se a resposta é "só a UI" ou "só o back", a
-    fatia é horizontal → refatie.
-  - **SPIDR** — para quebrar fatias grandes por caminhos alternativos, interfaces, dados ou regras.
-  - **Walking skeleton** — a **fatia zero** (R0) prova o pipeline inteiro com o mínimo de funcionalidade.
+    spec, sozinha, permite uma demo ponta-a-ponta?"* Se a resposta é "só a UI" ou "só o back", a
+    spec é horizontal → refatie.
+  - **SPIDR** — para quebrar specs grandes por caminhos alternativos, interfaces, dados ou regras.
+  - **Walking skeleton** — a **spec zero** (R0) prova o pipeline inteiro com o mínimo de funcionalidade.
 - **Entradas:** `docs/PRD.md` (seção de `RF-xx` por épico).
-- **Saídas / artefatos:** lista de épicos, story map, **backlog de fatias verticais** com linhas de
-  release em `docs/backlog.md` (slug/demo/RFs por fatia; Spec/Status semeados por `trace-backlog.sh`), e a
+- **Saídas / artefatos:** lista de épicos, story map, **backlog de specs verticais** com linhas de
+  release em `docs/backlog.md` (slug/demo/RFs por spec; Pasta/Status semeados por `trace-backlog.sh`), e a
   **tabela de rastreabilidade semeada por máquina** (`trace-prd.sh` em bootstrap: tudo ☐ pendente; ver
-  modelo abaixo). Depois, `/zion-prd-trace` reconcilia **os dois** a cada fatia.
-- **Critério de conclusão:** existe uma fila priorizada de fatias verticais, cada uma passando no teste
-  INVEST, com o walking skeleton na frente. **Handoff:** a próxima fatia da fila entra no Passo 5.
+  modelo abaixo). Depois, `/zion-prd-trace` reconcilia **os dois** a cada spec.
+- **Critério de conclusão:** existe uma fila priorizada de specs verticais, cada uma passando no teste
+  INVEST, com o walking skeleton na frente. **Handoff:** a próxima spec da fila entra no Passo 5.
 
 ---
 
@@ -198,14 +198,14 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 
 ## Passo 5b — Ciclo do Spec Kit por feature
 
-> Todos os comandos abaixo são **exemplos de referência**. Cada fatia vertical do Passo 4 percorre este
+> Todos os comandos abaixo são **exemplos de referência**. Cada spec vertical do Passo 4 percorre este
 > ciclo **na sua própria branch** (o `/speckit.specify` já cria a branch e o `spec.md` em `specs/###-nome/`).
 
 > **Correspondência com o `como-usar.md`:** lá as três pontes aparecem como comandos numerados 5a/5b/5c
 > (uma por ponte); aqui a `constitution` é o bootstrap (Passo 5a) e as pontes `specify` e `plan` vivem
 > **dentro** deste ciclo 5b, cada uma no seu passo do Spec Kit.
 
-- **Objetivo:** levar **uma** fatia vertical de "o-quê/por-quê" até implementação, com os gates de
+- **Objetivo:** levar **uma** spec vertical de "o-quê/por-quê" até implementação, com os gates de
   qualidade no caminho.
 - **Skill(s):**
   - `/zion-prd-specify-prompt` (real) — **ponte deste passo**: o input do `/speckit.specify` é
@@ -217,7 +217,7 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
     - **declara o resultado observável** antes de rodar — justamente o que o gate `/speckit.clarify`
       vai cobrar em seguida, então você já antecipa o gate.
   - `/zion-prd-plan-prompt` (real) — **ponte do passo PLAN**: depois de `specify`+`clarify`, lê o
-    `spec.md` da fatia, cruza com `docs/adr/`, propõe os ADRs relevantes para você confirmar e monta,
+    `spec.md` da spec, cruza com `docs/adr/`, propõe os ADRs relevantes para você confirmar e monta,
     em prosa, o `/speckit.plan` que **honra cada ADR** (não re-decide o que o spike já provou); entrega
     o comando pronto e **para**.
   - Spec Kit (real) — os comandos `/speckit.*`.
@@ -254,8 +254,8 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   #    tarefas para lacunas restantes.
   /speckit.converge
   ```
-- **Entradas:** a próxima fatia vertical da fila (Passo 4, resolvida contra `docs/backlog.md` pela ponte
-  `specify`, que instrui o Spec Kit a usar o **slug** da fatia como nome curto → `specs/###-<slug>`);
+- **Entradas:** a próxima spec vertical da fila (Passo 4, resolvida contra `docs/backlog.md` pela ponte
+  `specify`, que instrui o Spec Kit a usar o **slug** da spec como nome curto → `specs/###-<slug>`);
   `constitution`; `docs/PRD.md`; ADRs.
 - **Saídas / artefatos:** `specs/###-nome/spec.md`, `plan.md`, `tasks.md` e o código implementado, na
   branch da feature.
@@ -276,7 +276,7 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 - **Skill(s):**
   - `zion-prd-trace` (real) — reconcilia a seção 12 da PRD **e** o backlog `docs/backlog.md` a partir das
     `specs/*/spec.md` (status ☐/◐/● derivado do `tasks.md`); rodável a qualquer momento. Rodá-lo após
-    `/speckit.implement`/`converge` é o **ritual de fim de fatia** — fecha a fatia e ecoa o quadro
+    `/speckit.implement`/`converge` é o **ritual de fim de spec** — fecha a spec e ecoa o quadro
     `● / ◐ / ☐` com a próxima da fila.
   - `git-commit` (real) — versionar os artefatos-guia (PRD, ADRs, specs).
 - **Invocação (exemplo)** — *você executaria assim:*
@@ -308,7 +308,7 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
   - **C1 — RF novo:** um requisito que não existia. Entra na §6 (no épico certo ou num épico novo), vira
     linha no changelog (§13), dispara re-decomposição **parcial** do épico e reconciliação da tabela.
   - **C2 — RF alterado ou removido:** um requisito muda de significado ou sai de escopo. Toca a §6, o
-    changelog e as fatias do épico afetado; se a fatia já tem `spec.md`, a ponte monta um prompt de
+    changelog e as specs do épico afetado; se a spec já tem `spec.md`, a ponte monta um prompt de
     **re-specify** (revê a spec contra a mudança) em vez de especificar do zero.
   - **C3 — Decisão revertida:** uma decisão estruturante caiu. Nasce um ADR novo que **substitui** o
     antigo (referência cruzada simétrica: `Substitui:` / `Status: Substituído por`), a restrição da §8 é
@@ -334,7 +334,7 @@ Para cada skill usada no processo: **gatilho** (como invocar) e **papel** no pas
 
 | Skill | Gatilho | Papel no processo |
 |-------|---------|-------------------|
-| `superpowers:brainstorming` | Skill tool / pedido "vamos explorar / desenhar X" | Descoberta (P1), **redação da PRD sobre o template, seção a seção (P3)** e decomposição em épicos/fatias (P4). |
+| `superpowers:brainstorming` | Skill tool / pedido "vamos explorar / desenhar X" | Descoberta (P1), **redação da PRD sobre o template, seção a seção (P3)** e decomposição em épicos/specs (P4). |
 | `deep-research` | `/deep-research <pergunta>` | Trade-offs de spikes (P2). |
 | `zion-adr-new` | `/zion-adr-new "<título>"` | Registrar decisões estruturantes como ADR em `docs/adr/` (P2). |
 | `/zion-prd-constitution-prompt`, `/zion-prd-specify-prompt`, `/zion-prd-plan-prompt` | Skill tool ou o comando homônimo | **Pontes para o Spec Kit (P5)** — cada uma monta, em prosa, o prompt do seu `/speckit.*`: guarda a decidibilidade+rastreabilidade dos princípios (constitution), a fronteira "sem stack" (specify) e o honrar-ADRs (plan); entrega o comando pronto e para. |
@@ -398,8 +398,8 @@ que a máquina cobra, do mesmo jeito que `check-assets.yml` protege os assets de
       abertas listadas — e **sem** critérios de aceite / stack (fronteira o-quê/por-quê respeitada).
 - [ ] ADRs das decisões estruturantes escritas (`docs/adr/ADR-00x`), sustentadas por spikes reais.
 - [ ] Story map com backbone e cortes de release definidos.
-- [ ] Backlog de **fatias verticais** priorizadas; cada fatia passa no teste INVEST; walking skeleton
-      é a fatia zero.
+- [ ] Backlog de **specs verticais** priorizadas; cada spec passa no teste INVEST; walking skeleton
+      é a spec zero.
 - [ ] `constitution` escrita, derivada dos NFRs/restrições da PRD.
 - [ ] Primeira feature: `spec.md` sem `[NEEDS CLARIFICATION]`, `plan.md` e `tasks.md` revisados,
       `/speckit.analyze` sem itens críticos.

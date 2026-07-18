@@ -37,9 +37,9 @@ Isso instala as 10 skills em `.claude/skills/` do seu projeto. Instale o **Spec 
 | `/zion-prd-discovery` | 1 · Descoberta | *(nada)* | `docs/discovery.md` | `superpowers:brainstorming` |
 | `/zion-prd-spike` | 2 · Spikes + ADRs | `docs/discovery.md` | `docs/adr/ADR-00x-*.md` | `deep-research` → `zion-adr-new` |
 | `/zion-prd-write` | 3 · PRD enxuta | `docs/discovery.md` + `docs/adr/` | `docs/PRD.md` | `superpowers:brainstorming` |
-| `/zion-prd-decompose` | 4 · Decomposição | `docs/PRD.md` (com `RF-xx`) | fatias + `docs/backlog.md` + tabela na PRD | `superpowers:brainstorming` |
+| `/zion-prd-decompose` | 4 · Decomposição | `docs/PRD.md` (com `RF-xx`) | specs + `docs/backlog.md` + tabela na PRD | `superpowers:brainstorming` |
 | `/zion-prd-constitution-prompt` | Ponte p/ 5a (bootstrap, 1×) | `docs/PRD.md` (NFRs+ADRs) | prompt do `/speckit.constitution` | *(monta em prosa; sem delegação)* |
-| `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de fatias | prompt do `/speckit.specify` | *(monta em prosa; zero-stack verificado por `check-prd.sh`)* |
+| `/zion-prd-specify-prompt` | Ponte p/ 5b | backlog de specs | prompt do `/speckit.specify` | *(monta em prosa; zero-stack verificado por `check-prd.sh`)* |
 | `/zion-prd-plan-prompt` | Ponte p/ 5c | `spec.md` da feature + `docs/adr/` | prompt do `/speckit.plan` | *(monta em prosa; sem delegação)* |
 | `/zion-prd-trace` | 6 · Rastreabilidade | `docs/PRD.md` (§6+§12) + `docs/backlog.md` + `specs/` | §12 + backlog reconciliados | `scripts/trace-prd.sh` + `trace-backlog.sh` |
 | `/zion-prd-evolve` | 7 · Dia 2 (pós-release) | `docs/PRD.md` + a mudança | §13 + edições roteadas | `/zion-adr-new`, `/zion-prd-decompose`, `/zion-prd-trace`, `/zion-prd-specify-prompt` |
@@ -205,12 +205,12 @@ tela vazando em prosa) fica com o LLM. Se uma linha vazar, aponta a linha exata 
 /zion-prd-decompose
 ```
 
-Delega a `brainstorming`: agrupa `RF-xx` em épicos → story map → cortes de release → **fatias
-verticais**. Cada fatia é validada pelo **INVEST** (teste-relâmpago: *"esta fatia, sozinha, dá uma
+Delega a `brainstorming`: agrupa `RF-xx` em épicos → story map → cortes de release → **specs
+verticais**. Cada spec é validada pelo **INVEST** (teste-relâmpago: *"esta spec, sozinha, dá uma
 demo ponta-a-ponta?"*). Para o Zion:
 
 - **R0 (walking skeleton):** *digitar mermaid → ver prévia → recarregar e continuar.* Corta E1+E3 no
-  mínimo e prova o pipeline texto→render→persistência inteiro. É a fatia zero.
+  mínimo e prova o pipeline texto→render→persistência inteiro. É a spec zero.
 - **R1:** apontar erro de sintaxe (`RF-02`); exportar imagem (`RF-06`).
 - **R2:** editar no canvas — arrastar nó (`RF-03`), adicionar nó (`RF-04`).
 
@@ -224,14 +224,20 @@ E **injeta a tabela** de `assets/templates/traceability-table.md` na **seção 1
 | RF-02 | Erro de sintaxe apontado | E1 | `specs/002-erros-sintaxe` | R1 | ☐ pendente |
 ```
 
-E **semeia o backlog** `docs/backlog.md` (fila de fatias; slug/demo/RFs humanos, Spec/Status por máquina):
+E **semeia o backlog** `docs/backlog.md` (fila de specs; slug/demo/RFs humanos, Pasta/Status por máquina):
 
 ```markdown
-| Fatia (slug) | Demo (1 frase) | RFs | Release | Spec | Status |
-|--------------|----------------|-----|---------|------|--------|
+| Spec (slug) | Demo (1 frase) | RFs | Release | Pasta | Status |
+|-------------|----------------|-----|---------|-------|--------|
 | preview-ao-vivo | Digitar mermaid, ver prévia, recarregar e continuar | RF-01, RF-05 | R0 | — | ☐ pendente |
 | erros-sintaxe | Erro de sintaxe apontado sem perder a prévia | RF-02 | R1 | — | ☐ pendente |
 ```
+
+> **Migrando um backlog antigo (formato "fatia"):** o `trace-backlog.sh` só aceita o formato novo, sem
+> retrocompatibilidade. Num `docs/backlog.md` já existente, renomeie na linha de cabeçalho os dois
+> rótulos — `Fatia (slug)` → **`Spec (slug)`** e a coluna de máquina `Spec` → **`Pasta`** — e, na
+> legenda, `◐ em spec` → **`◐ em especificação`**. É uma edição de uma linha (mais a legenda); depois
+> rode `/zion-prd-trace` normalmente.
 
 ### Ponte (bootstrap, 1×) — `/zion-prd-constitution-prompt`
 
@@ -257,10 +263,10 @@ genéricos como 'código limpo' ou 'boa cobertura'."
 
 ### Ponte — `/zion-prd-specify-prompt`
 
-Aponte **qual** fatia da fila. Para o walking skeleton:
+Aponte **qual** spec da fila. Para o walking skeleton:
 
 ```text
-/zion-prd-specify-prompt A fatia R0: digitar mermaid, ver a prévia, recarregar e o diagrama continuar.
+/zion-prd-specify-prompt A spec R0: digitar mermaid, ver a prévia, recarregar e o diagrama continuar.
 ```
 
 Monta o prompt em **prosa** seguindo `#anatomia-specify` e **entrega o comando pronto** (não dispara
@@ -277,13 +283,13 @@ framework ou bibliotecas — a stack fica no plan."
 
 ### Ponte — `/zion-prd-plan-prompt`
 
-Depois do `specify`+`clarify` da fatia, leve a feature ao `plan` honrando o que o spike provou:
+Depois do `specify`+`clarify` da spec, leve a feature ao `plan` honrando o que o spike provou:
 
 ```text
 /zion-prd-plan-prompt A feature R0 (prévia ao digitar + persistência): honre os ADRs de render e de persistência local.
 ```
 
-Lê o `spec.md` da fatia, cruza com `docs/adr/`, propõe os ADRs relevantes para você confirmar, e
+Lê o `spec.md` da spec, cruza com `docs/adr/`, propõe os ADRs relevantes para você confirmar, e
 monta o prompt em **prosa** seguindo `#anatomia-plan`. **Entrega o comando pronto** (não
 dispara nada):
 
@@ -313,7 +319,7 @@ mostra o **plano de toque**:
 > 2. §6/§8 — eu edito o RF de exportação e a restrição. *(inline)*
 > 3. Supersessão do ADR do motor → `/zion-adr-new "Motor de exportação vetorial" --substitui ADR-002`. *(gate)*
 > 4. Re-fatiar o épico de exportação → `/zion-prd-decompose --epico E3`. *(gate)*
-> 5. Fatia já especificada → `/zion-prd-specify-prompt` em modo re-specify. *(gate)*
+> 5. Spec já especificada → `/zion-prd-specify-prompt` em modo re-specify. *(gate)*
 > 6. Reconciliar a tabela → `/zion-prd-trace`. *(gate)*
 > 7. O ADR alimentava a constitution? Aconselho rodar `/zion-prd-constitution-prompt` de novo. *(aviso)*
 
@@ -356,16 +362,16 @@ existente**: entra em **modo retomar/revisar** (preserva o que está sólido, pr
 Se já houver downstream (`docs/adr/` ou `docs/PRD.md`), avisa para considerar `/zion-prd-evolve` na
 mudança estrutural. Uma **nova sessão de discovery** é só rodar o comando de novo.
 
-### 4. INVEST reprova fatia horizontal
-Dar ao `/zion-prd-decompose` uma fatia "só o canvas visual, sem ligar ao texto":
+### 4. INVEST reprova spec horizontal
+Dar ao `/zion-prd-decompose` uma spec "só o canvas visual, sem ligar ao texto":
 
-> ⚠ Fatia horizontal: é "só a UI" — não passa no teste "dá uma demo sozinha?". Sugiro refatiar pelos
+> ⚠ Spec horizontal: é "só a UI" — não passa no teste "dá uma demo sozinha?". Sugiro refatiar pelos
 > eixos do **SPIDR** (ex.: começar pela **I**nterface mínima que já lê e escreve o texto).
 
 ### 5. Handoff termina o território
 As pontes **entregam** o texto e **param** — nunca disparam um `/speckit.*`.
 `/zion-prd-constitution-prompt` entrega o `/speckit.constitution` (bootstrap, 1×),
-`/zion-prd-specify-prompt` entrega o `/speckit.specify` (por fatia) e `/zion-prd-plan-prompt`
+`/zion-prd-specify-prompt` entrega o `/speckit.specify` (por spec) e `/zion-prd-plan-prompt`
 entrega o `/speckit.plan` (por feature, honrando os ADRs). O ciclo do Spec Kit é seu.
 
 ---
@@ -391,7 +397,7 @@ de qualidade é editar um arquivo só.
 1. `/zion-prd-discovery <ideia>` → `docs/discovery.md` (visão, persona, faz/não-faz).
 2. `/zion-prd-spike [2–3 decisões]` → `docs/adr/` — traga-as ou deixe a IA propor do discovery; aqui stack pode aparecer.
 3. `/zion-prd-write` → `docs/PRD.md` (RF-xx por épico, **sem stack**).
-4. `/zion-prd-decompose` → fatias verticais + tabela na PRD; R0 = walking skeleton.
+4. `/zion-prd-decompose` → specs verticais + tabela na PRD; R0 = walking skeleton.
 5. `/zion-prd-constitution-prompt` (1×) → `/speckit.constitution "..."` pronto → **você** dispara o bootstrap.
-6. `/zion-prd-specify-prompt <fatia>` → `/speckit.specify "..."` pronto → **você** dispara o Spec Kit.
+6. `/zion-prd-specify-prompt <spec>` → `/speckit.specify "..."` pronto → **você** dispara o Spec Kit.
 7. `/zion-prd-plan-prompt <feature>` → `/speckit.plan "..."` pronto (honra os ADRs) → **você** dispara o plan.
