@@ -14,13 +14,18 @@ Prepara o input do `/speckit.specify` de UMA fatia vertical. Encerra o territór
 o prompt pronto e para — o ciclo `/speckit.*` é seu. Regras em `references/quality-rules.md`.
 
 ## Fase 0 — Pré-requisito (aconselha)
-Deve existir um backlog de fatias verticais (saída de `/zion-prd-decompose`). O usuário aponta **qual**
+Deve existir o **backlog** `docs/backlog.md` (saída de `/zion-prd-decompose`). O usuário aponta **qual**
 fatia. Se não houver backlog, avise ("recomendo `/zion-prd-decompose` antes") e pergunte se segue.
 
 ## Fase 1 — Validar entrada bruta (aconselha)
 A fatia deve ter um **resultado observável** (o que o usuário consegue fazer/ver ao final). Se o
 usuário descreve a fatia citando **biblioteca/framework/stack**, avise: "isso é do `plan`, não do
 `specify`" (veja `quality-rules.md` `#fronteira`). Não bloqueie.
+
+**Resolva a fatia contra o backlog** `docs/backlog.md`: o usuário pode apontá-la em prosa ("a fatia do
+preview"); localize a linha na tabela canônica e confirme **slug / demo / RFs**. Fatia fora do backlog →
+avise ("registre no backlog via `/zion-prd-decompose` ou adicione a linha") e pergunte se segue — não
+bloqueie.
 
 ## Fase 2/3 — Montar o prompt (você mesmo)
 Monte, no mesmo turno, o prompt do `specify` em **linguagem natural (prosa)**, seguindo
@@ -34,6 +39,13 @@ dite as seções do artefato — o `/speckit.specify` já tem o próprio templat
   os RF que esta fatia cobre — é o elo legível por máquina que o `/zion-prd-trace` grepa para
   reconciliar a rastreabilidade. Declarar *quais* RF a fatia cobre é o-quê/rastreabilidade, não stack:
   não fere a fronteira sem-stack.
+- **Nome da feature = slug:** peça explicitamente que a feature/branch use `<slug>` como nome curto — a
+  spec nasce `specs/###-<slug>`, fechando o elo fatia↔spec por construção (o `trace-backlog.sh` casa por
+  sufixo).
+- Preencha a linha **`**RF cobertos:**`** com **os RF-xx da linha da fatia** no backlog — fechando o elo
+  de escopo dos dois lados. Como hoje, instruímos via prompt e parseamos o que aterrissa: se o Spec Kit
+  batizar diferente do slug, o `trace-backlog.sh` acusa **spec órfã** + **fatia sem spec** e o humano
+  renomeia.
 
 **Modo re-specify (dia 2):** quando a fatia apontada **já** tem `specs/<n>-*/spec.md` (invocado pelo
 `/zion-prd-evolve` no C2), monte o prompt como **revisão** — "revise a spec existente contra a mudança X"
