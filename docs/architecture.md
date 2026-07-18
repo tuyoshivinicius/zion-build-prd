@@ -71,6 +71,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/test-trace-prd.sh | Auto-teste do trace-prd.sh contra fixtures. |
 | scripts/test-trace-backlog.sh | Auto-teste do trace-backlog.sh contra fixtures. |
 | scripts/setup-hooks.sh | Ativa os git hooks versionados (core.hooksPath). |
+| scripts/dev-claude.sh | Abre uma sessão do Claude Code servindo o working tree via `--plugin-dir` (dogfooding local das skills). |
 
 ## 4. Fonte única e derivados
 
