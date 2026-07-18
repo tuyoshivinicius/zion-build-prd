@@ -56,6 +56,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/sync-assets.sh | Regenera `skills/*/references/` a partir da fonte única. |
 | scripts/check-assets.sh | Guard de drift dos derivados (pre-commit via sync + CI). |
 | scripts/check-prd.sh | Verificador das regras decidíveis da PRD e do prompt do specify. |
+| scripts/check-estudo.sh | Verificador das regras decidíveis do documento de estudo (Estágio 0). |
 | scripts/check-adr.sh | Verificador de presença de evidência e supersessão simétrica nos ADRs. |
 | scripts/check-superpowers-contract.sh | Verificador do contrato C1–C3 no superpowers instalado. |
 | scripts/check-canon.sh | Guard de canonização: cruza prd.md/architecture.md com skills/, scripts/, ASSET_MAP e docs/adr/. |
@@ -63,6 +64,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/trace-backlog.sh | Semeia/reconcilia o backlog de specs. |
 | scripts/eval.sh | Runner único da camada mecânica (auto-testes abaixo). |
 | scripts/test-check-prd.sh | Auto-teste do check-prd.sh contra fixtures. |
+| scripts/test-check-estudo.sh | Auto-teste do check-estudo.sh contra fixtures. |
 | scripts/test-check-adr.sh | Auto-teste do check-adr.sh contra fixtures. |
 | scripts/test-check-superpowers-contract.sh | Auto-teste do check de contrato contra fixtures. |
 | scripts/test-check-canon.sh | Auto-teste do check-canon.sh contra fixtures. |
@@ -82,7 +84,8 @@ Fontes mapeadas no `ASSET_MAP` (`check-canon.sh` acusa fonte `assets/` fora dest
 - assets/templates/backlog.md — template do backlog de specs.
 
 Também distribuídos como references executáveis: `scripts/check-prd.sh`, `scripts/check-adr.sh`,
-`scripts/trace-prd.sh`, `scripts/trace-backlog.sh` (cobertos pela tabela da §3).
+`scripts/check-estudo.sh`, `scripts/trace-prd.sh`, `scripts/trace-backlog.sh` (cobertos pela
+tabela da §3).
 
 ## 5. Canonização — o que muda ⇒ onde reflete
 

@@ -4,7 +4,7 @@
 # agregado. Exit 0 = todos verdes; exit 1 = qualquer um falhou; exit 2 = uso.
 #
 # Uso:
-#   eval.sh              # roda todos, na ordem prd → adr → trace → contract
+#   eval.sh              # roda todos, na ordem prd → estudo → adr → trace → contract
 #   eval.sh prd          # roda só um (conveniência de dev)
 #   eval.sh adr
 #   eval.sh trace
@@ -15,19 +15,20 @@ cd "$ROOT"
 
 declare -A TESTS=(
   [prd]="scripts/test-check-prd.sh"
+  [estudo]="scripts/test-check-estudo.sh"
   [adr]="scripts/test-check-adr.sh"
   [trace]="scripts/test-trace-prd.sh"
   [backlog]="scripts/test-trace-backlog.sh"
   [contract]="scripts/test-check-superpowers-contract.sh"
   [canon]="scripts/test-check-canon.sh"
 )
-ORDER=(prd adr trace backlog contract canon)
+ORDER=(prd estudo adr trace backlog contract canon)
 
 sel="${1:-}"
 if [ -n "$sel" ]; then
   case "$sel" in
-    prd|adr|trace|backlog|contract|canon) ORDER=("$sel") ;;
-    *) echo "uso: eval.sh [prd|adr|trace|backlog|contract|canon]" >&2; exit 2 ;;
+    prd|estudo|adr|trace|backlog|contract|canon) ORDER=("$sel") ;;
+    *) echo "uso: eval.sh [prd|estudo|adr|trace|backlog|contract|canon]" >&2; exit 2 ;;
   esac
 fi
 

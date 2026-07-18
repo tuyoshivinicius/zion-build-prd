@@ -140,8 +140,8 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-08 | E2 | skills/zion-prd-plan-prompt |
 | RF-09 | E3 | skills/zion-prd-trace |
 | RF-10 | E4 | skills/zion-prd-evolve |
-| RF-11 | E5 | scripts/check-prd.sh · scripts/check-adr.sh · scripts/trace-prd.sh · scripts/trace-backlog.sh |
-| RF-12 | E5 | scripts/eval.sh · scripts/fixtures/ · docs/guias/avaliacao-harness.md |
+| RF-11 | E5 | scripts/check-prd.sh · scripts/check-adr.sh · scripts/check-estudo.sh · scripts/trace-prd.sh · scripts/trace-backlog.sh |
+| RF-12 | E5 | scripts/eval.sh · scripts/test-check-estudo.sh · scripts/fixtures/ · docs/guias/avaliacao-harness.md |
 | RF-13 | E5 | scripts/check-canon.sh · CLAUDE.md · docs/prd.md · docs/architecture.md |
 | RF-14 | E6 | .claude-plugin/ · README.md |
 | RF-15 | E6 | scripts/sync-assets.sh · scripts/asset-map.sh · assets/ |
