@@ -32,6 +32,7 @@ assert_contains "dirty acha spike-dir-ausente"    "spike-dir-ausente" "$out"
 assert_contains "dirty acha spike-dir-vazio"      "spike-dir-vazio" "$out"
 assert_contains "dirty acha spike-sem-readme"     "spike-sem-readme" "$out"
 assert_contains "dirty acha evidencia-sem-lastro" "evidencia-sem-lastro" "$out"
+assert_contains "dirty acha decisao-dada-sem-racional" "decisao-dada-sem-racional" "$out"
 
 # 3. Erro de uso: dir inexistente → exit 2
 out="$(bash "$CHECK" "$FIX/nao-existe" 2>&1)"; rc=$?
