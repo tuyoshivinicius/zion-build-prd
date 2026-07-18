@@ -59,9 +59,16 @@ Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
 | decompose | `fatia-horizontal` | `backlog.md` | fatia só-back ("montar todos os endpoints") | reprova |
 | decompose | `skeleton-nao-r0` | `backlog.md` | walking skeleton fora da fatia zero (R0) | reprova |
 | decompose | `limpa` | `backlog.md` | — (backlog vertical + skeleton em R0) | aprova |
+| evolve | `parece-c2-mas-c3` | `mudanca.md` | decisão revertida disfarçada de RF alterado | classifica C3 |
+| evolve | `limpa` | `mudanca.md` | — (RF alterado genuíno) | classifica C2 |
 
 Cada skill tem ao menos um par **defeito/`limpa`** — a suíte pega falso-negativo (não acusou o defeito)
 e falso-positivo (reprovou o que estava bom).
+
+> As fixtures do `evolve` testam a **classificação da Fase 1** (não um veredito aprova/reprova de um
+> artefato): o campo `veredito` do `esperado.md` carrega a **classe esperada** (C1/C2/C3). O acerto é
+> classificar na classe certa — o par `parece-c2-mas-c3`/`limpa` pega tanto o falso-negativo (não viu o
+> C3 disfarçado) quanto o falso-positivo (inventou um C3 onde só havia C2).
 
 ## 5. Interpretação
 
