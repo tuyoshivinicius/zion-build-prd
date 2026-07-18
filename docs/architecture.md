@@ -92,6 +92,8 @@ Fontes mapeadas no `ASSET_MAP` (`check-canon.sh` acusa fonte `assets/` fora dest
 - assets/templates/prd-skeleton.md — esqueleto da PRD (dogfoodado por `docs/prd.md`).
 - assets/templates/traceability-table.md — template da tabela §12.
 - assets/templates/backlog.md — template do backlog de specs.
+- assets/templates/regras-speckit.md — bloco versionado de regras da integração com o Spec Kit, gravado no CLAUDE.md do produto pela instalação.
+- assets/templates/architecture-skeleton.md — esqueleto do docs/architecture.md do produto (análogo ao prd-skeleton).
 
 Também distribuídos como references executáveis: `scripts/check-prd.sh`, `scripts/check-adr.sh`,
 `scripts/check-estudo.sh`, `scripts/check-experiencia.sh`, `scripts/trace-prd.sh`,
