@@ -97,7 +97,8 @@ Mapeamento asset → skills: `scripts/asset-map.sh` (sourced por sync e check).
 
 O CI roda `./scripts/check-assets.sh` como guard de drift (backstop para `--no-verify`
 ou quem não rodou o `setup-hooks.sh`) e os auto-testes `test-check-prd.sh`, `test-trace-prd.sh`,
-`test-trace-backlog.sh` e `test-check-adr.sh` dos verificadores. Para checar/sincronizar/testar à mão:
+`test-trace-backlog.sh`, `test-check-adr.sh` e `test-check-canon.sh` dos verificadores. Para
+checar/sincronizar/testar à mão:
 
 ```bash
 ./scripts/sync-assets.sh        # regenera references/ a partir de assets/
@@ -105,6 +106,12 @@ ou quem não rodou o `setup-hooks.sh`) e os auto-testes `test-check-prd.sh`, `te
 bash scripts/test-check-prd.sh  # auto-teste do check-prd.sh contra as fixtures
 bash scripts/test-check-adr.sh  # auto-teste do check-adr.sh contra as fixtures
 ```
+
+O repo **governa a si mesmo**: `docs/prd.md` (requisitos) e `docs/architecture.md` (arquitetura)
+são fontes da verdade — as regras para agents estão em `CLAUDE.md` (dever de **canonização**:
+toda mudança de comportamento reflete nesses docs no mesmo commit). O guard
+`scripts/check-canon.sh` cruza os docs com `skills/`, `scripts/`, o `ASSET_MAP` e `docs/adr/`;
+roda no pre-commit (bloqueia) e no CI (backstop). Os guias de uso vivem em `docs/guias/`.
 
 As Fases 4 de `/zion-prd-write` e `/zion-prd-specify-prompt` rodam `scripts/check-prd.sh` (sincronizado
 para o `references/` de cada uma) para verificar mecanicamente as regras decidíveis (zero-stack,
