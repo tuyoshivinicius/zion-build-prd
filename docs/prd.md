@@ -78,7 +78,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   perder o que ele escreveu.
 - **Épico E3 — Rastreabilidade:** `RF-09` O autor reconcilia a qualquer momento a tabela de
   rastreabilidade e o backlog a partir das specs existentes, vendo RF órfão, spec intraçável e RF
-  descoberto.
+  descoberto — e reconcilia junto os blocos derivados do documento de arquitetura do produto
+  (índice de decisões e visão do backlog).
 - **Épico E4 — Dia 2:** `RF-10` O autor classifica uma mudança pós-release nos cenários canônicos
   e é roteado aos comandos donos de cada artefato afetado, com o histórico registrado na PRD.
 - **Épico E5 — Qualidade mecânica:** `RF-11` O harness verifica por máquina as regras decidíveis
@@ -177,3 +178,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-18 | C2 | Carregador forte de experiência: `RF-01`/`RF-04`/`RF-05`/`RF-11` passam a carregar o marcador `Superfície de uso` e a âncora de experiência (NFR tagueado + coluna no backlog); `check-experiencia.sh` novo | app rico em função e pobre de uso — o sinal de experiência precisa nascer no discovery e sobreviver até o backlog | ADR-014 · scripts/check-experiencia.sh · skills/zion-prd-discovery · skills/zion-prd-write · skills/zion-prd-decompose |
 | 2026-07-18 | C2 | `RF-11` alterado: verificadores de arquitetura do produto na camada mecânica | sustentar por conselho a autoridade do documento de arquitetura distribuído | ADR-015 · scripts/check-arquitetura.sh · scripts/trace-arquitetura.sh |
 | 2026-07-18 | C1 | `RF-18` novo: instalação da integração com o Spec Kit no repositório do produto | o canon chegava ao Spec Kit só pelas pontes manuais; clarify e implement rodavam sem canon | ADR-015 · skills/zion-speckit-install · assets/templates/regras-speckit.md · assets/templates/architecture-skeleton.md |
+| 2026-07-18 | C2 | `RF-09` alterado: o trace reconcilia também os blocos derivados do documento de arquitetura do produto | artefato derivado se reconcilia por máquina, nunca à mão (RN-04) | ADR-015 · skills/zion-prd-trace · scripts/trace-arquitetura.sh |

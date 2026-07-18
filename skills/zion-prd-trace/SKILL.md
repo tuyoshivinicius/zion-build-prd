@@ -41,6 +41,15 @@ Ele recomputa as colunas de máquina (Pasta, Status) do backlog casando `specs/#
 sufixo, **preserva** as colunas humanas e a ordem das linhas, e imprime as transições de status, os avisos
 e o **quadro de specs**.
 
+Se `docs/architecture.md` existir no repo do produto, rode também o reconciliador dos blocos
+derivados da arquitetura (ADR-015):
+
+    bash references/trace-arquitetura.sh docs/architecture.md docs/adr docs/backlog.md
+
+Ele regenera **só** o conteúdo dos blocos `zion:adr-index` (§3) e `zion:backlog-view` (§4); a
+prosa do Autor nunca é tocada. `docs/architecture.md` ausente → aconselhe `/zion-speckit-install`
+(informativo; não impede o resto do ritual).
+
 ## Fase 4 — Validar saída (aconselha)
 Ecoe o resumo e os avisos **com autoridade**, em tom advisório — não reverta:
 - **RF órfão** — uma spec declara um `RF-xx` que não existe na §6: corrija o typo na spec ou registre
@@ -59,12 +68,23 @@ Do lado do backlog, ecoe com o mesmo tom:
 
 Ecoe o **quadro de specs** (`● / ◐ / ☐` + a próxima spec ☐ da fila) — a visibilidade num comando só.
 
+Do lado da arquitetura (quando `docs/architecture.md` existe), ecoe também o veredito advisório de:
+
+    bash references/check-arquitetura.sh .
+
+- **Marcador ausente** — o documento perdeu os marcadores `zion:adr-index`/`zion:backlog-view`:
+  restaure as §3/§4 do esqueleto para os blocos voltarem a reconciliar.
+- **regras-ausentes / regras-defasadas** — o bloco do `CLAUDE.md` nunca foi instalado ou ficou
+  velho após upgrade: rode/re-rode `/zion-speckit-install`.
+- **visao-vazia / secao-ausente** — prosa e estrutura do documento são do Autor; aconselhe, não
+  corrija por ele.
+
 Aponte a próxima ação: rode `/zion-prd-trace` de novo após a próxima spec (ou use
 `bash references/trace-prd.sh docs/PRD.md specs --check` em Fases 4 de outras skills / no CI para uma
 leitura read-only que sai 1 se houver drift/avisos).
 
 ## Saída
-A seção 12 de `docs/PRD.md` **e** `docs/backlog.md` reconciliados + os resumos/avisos e o quadro de specs
-ecoados. Rodar `/zion-prd-trace` após `/speckit.implement`/`converge` é o **ritual de fim de spec**.
+A seção 12 de `docs/PRD.md`, `docs/backlog.md` **e os blocos derivados de `docs/architecture.md`**
+reconciliados + os resumos/avisos e o quadro de specs ecoados. Rodar `/zion-prd-trace` após `/speckit.implement`/`converge` é o **ritual de fim de spec**.
 **Handoff:** commit dos artefatos (`/git-commit`), e a próxima spec ☐ da fila segue para
 `/zion-prd-specify-prompt`.
