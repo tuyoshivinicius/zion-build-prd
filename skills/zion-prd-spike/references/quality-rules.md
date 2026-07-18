@@ -49,11 +49,11 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
   NFRs com número ∧ **zero** stack / critério de aceite / tela. As três regras decidíveis
   (zero-stack, NFR-com-número, RF-por-épico) são verificadas por `check-prd.sh` — a Fase 4 roda o
   script e ecoa o veredito.
-- **decompose**: existe backlog de fatias verticais priorizadas ∧ cada fatia passa no INVEST ∧
-  walking skeleton é a fatia zero (R0) ∧ a tabela de rastreabilidade (§12) foi **semeada por
+- **decompose**: existe backlog de specs verticais priorizadas ∧ cada spec passa no INVEST ∧
+  walking skeleton é a spec zero (R0) ∧ a tabela de rastreabilidade (§12) foi **semeada por
   `trace-prd.sh`** (não à mão) com uma linha por `RF-xx` in-scope ∧ o **backlog** `docs/backlog.md` foi
-  semeado por `trace-backlog.sh` (colunas humanas — Fatia/slug, Demo, RFs, Release — preenchidas;
-  colunas Spec/Status por máquina). Ambos são artefatos **derivados**, reconciliados a qualquer momento
+  semeado por `trace-backlog.sh` (colunas humanas — Spec/slug, Demo, RFs, Release — preenchidas;
+  colunas Pasta/Status por máquina). Ambos são artefatos **derivados**, reconciliados a qualquer momento
   por `/zion-prd-trace`; não são mantidos à mão.
 - **specify-prompt**: o prompt gerado declara resultado observável ∧ não cita stack ∧ RF-xx/ADR
   entram como contexto (referência), não como requisito. O zero-stack é verificado por
@@ -87,16 +87,16 @@ por `check-adr.sh` — o script confere presença, o humano decide qualidade.
 
 ## INVEST e SPIDR {#invest}
 
-**INVEST** — cada fatia vertical deve ser: **I**ndependente, **N**egociável, **V**aliosa,
+**INVEST** — cada spec vertical deve ser: **I**ndependente, **N**egociável, **V**aliosa,
 **E**stimável, **S**mall, **T**estável.
 
-**Teste-relâmpago:** *"esta fatia, sozinha, permite uma demo ponta-a-ponta?"* Se a resposta é "só a
-UI" ou "só o back", a fatia é **horizontal** → refatie.
+**Teste-relâmpago:** *"esta spec, sozinha, permite uma demo ponta-a-ponta?"* Se a resposta é "só a
+UI" ou "só o back", a spec é **horizontal** → refatie.
 
-**SPIDR** — eixos para quebrar uma fatia grande: **S**pike, **P**ath (caminhos alternativos),
-**I**nterface, **D**ata, **R**ules. Use quando uma fatia não passa no "Small" do INVEST.
+**SPIDR** — eixos para quebrar uma spec grande: **S**pike, **P**ath (caminhos alternativos),
+**I**nterface, **D**ata, **R**ules. Use quando uma spec não passa no "Small" do INVEST.
 
-**Walking skeleton:** a fatia zero (R0) prova o pipeline inteiro com o mínimo de funcionalidade.
+**Walking skeleton:** a spec zero (R0) prova o pipeline inteiro com o mínimo de funcionalidade.
 
 ## Anatomia do prompt do specify {#anatomia-specify}
 
@@ -104,20 +104,20 @@ O input do `/speckit.specify` é um prompt em **linguagem natural (prosa)**. O c
 próprio template e só preenche placeholders — então o prompt é **conteúdo, não formato**: nada de
 tags XML, nada de ditar cabeçalhos/seções do `spec.md`. Em prosa, o prompt deve cobrir:
 
-- **O resultado observável** — o que o usuário consegue fazer/ver ao final da fatia (o o-quê/por-quê).
+- **O resultado observável** — o que o usuário consegue fazer/ver ao final da spec (o o-quê/por-quê).
   É o que o gate `/speckit.clarify` vai cobrar em seguida, então já o declara.
 - **A guarda da fronteira, em prosa** — escreva explícito "não citar linguagem, framework ou
   bibliotecas; a stack fica no `plan`". Impede o "como" de vazar para o `specify`.
 - **`RF-xx` e ADRs como contexto** — cite-os como referência ("Contexto: RF-01…"), não como
   requisitos a copiar.
 - **A linha `**RF cobertos:**`** — peça que o `spec.md` inclua uma linha rotulada
-  `**RF cobertos:** RF-xx, ...` com os RF que a fatia cobre. É o elo forward RF↔spec legível por
+  `**RF cobertos:** RF-xx, ...` com os RF que a spec cobre. É o elo forward RF↔spec legível por
   máquina. O `check-prd.sh specify` verifica por máquina que o prompt **pede** essa linha (achado
   `rf-cobertos-ausente` quando falta); o `/zion-prd-trace` depois confere que o `spec.md` resultante a
-  **tem** (aviso "Spec intraçável"). Declarar *quais* RF a fatia cobre é o-quê/rastreabilidade, não
+  **tem** (aviso "Spec intraçável"). Declarar *quais* RF a spec cobre é o-quê/rastreabilidade, não
   stack — não fere a fronteira sem-stack.
-- **O slug como nome da feature** — peça que a feature/branch use o `<slug>` da fatia (do
-  `docs/backlog.md`) como nome curto: a spec nasce `specs/###-<slug>`, fechando o elo fatia↔spec por
+- **O slug como nome da feature** — peça que a feature/branch use o `<slug>` da spec (do
+  `docs/backlog.md`) como nome curto: a spec nasce `specs/###-<slug>`, fechando o elo spec↔pasta por
   construção que o `trace-backlog.sh` casa por sufixo. Declarar o slug é o-quê/rastreabilidade, não stack.
 
 ## Anatomia do prompt do constitution {#anatomia-constitution}
@@ -199,7 +199,7 @@ ou mais **cenários canônicos** (pode combinar mais de um):
 - **C1 — RF novo:** requisito que não existia. Toca a §6 (RF no épico certo ou num épico novo), o
   changelog (§13), o re-fatiamento **parcial** do épico e a tabela (§12 via trace).
 - **C2 — RF alterado ou removido:** requisito muda de significado ou sai de escopo. Toca a §6, o §13, as
-  fatias do épico afetado e a tabela; fatia já com `spec.md` → prompt de **re-specify** pela ponte.
+  specs do épico afetado e a tabela; spec já com `spec.md` → prompt de **re-specify** pela ponte.
 - **C3 — Decisão revertida:** decisão estruturante caiu. Nasce um ADR que **substitui** o antigo
   (referência simétrica) + §8 (restrições) + §13 + aviso de revisar a `constitution`.
 
@@ -213,7 +213,7 @@ A §13 "Histórico de mudanças" é uma tabela, **uma linha por mudança**, escr
 
 | Data | Cenário | Mudança | Motivo | Artefatos afetados |
 |------|---------|---------|--------|--------------------|
-| 2026-08-02 | C2 | `RF-07` alterado: exportar SVG em vez de PNG | feedback de usuários | ADR-002 → ADR-005 · fatia S4 re-especificada |
+| 2026-08-02 | C2 | `RF-07` alterado: exportar SVG em vez de PNG | feedback de usuários | ADR-002 → ADR-005 · spec S4 re-especificada |
 
 Regras que o `check-prd.sh` verifica sobre a §13 (a §13 é **opcional** — PRD sem ela, dia 1 ou pré-R8,
 não dispara estes checks):

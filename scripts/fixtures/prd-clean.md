@@ -37,6 +37,6 @@ Para a gerente de projetos, que perde tempo consolidando status, o Painel reúne
 - [NEEDS CLARIFICATION] limite de tarefas por projeto.
 
 ## 12. Rastreabilidade
-| RF | Épico | Fatia |
+| RF | Épico | Spec |
 |----|-------|-------|
 | RF-01 | E1 | R0 |

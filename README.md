@@ -34,11 +34,11 @@ Alternativa (Claude Code plugin marketplace):
 | `/zion-prd-discovery` | Descoberta enxuta → `docs/discovery.md` |
 | `/zion-prd-spike` | Pesquisa de trade-offs + ADRs |
 | `/zion-prd-write` | Preenche a PRD a partir do esqueleto |
-| `/zion-prd-decompose` | Épicos, story map, fatias verticais, backlog (`docs/backlog.md`), rastreabilidade |
+| `/zion-prd-decompose` | Épicos, story map, specs verticais, backlog (`docs/backlog.md`), rastreabilidade |
 | `/zion-prd-constitution-prompt` | Ponte → `/speckit.constitution` |
 | `/zion-prd-specify-prompt` | Ponte → `/speckit.specify` |
 | `/zion-prd-plan-prompt` | Ponte → `/speckit.plan` |
-| `/zion-prd-trace` | Reconcilia a rastreabilidade (§12) e o backlog de fatias a partir das specs |
+| `/zion-prd-trace` | Reconcilia a rastreabilidade (§12) e o backlog de specs a partir das specs |
 | `/zion-adr-new` | Cria um ADR em `docs/adr/` |
 | `/zion-prd-evolve` | Dia 2 — mudança pós-release (RF novo/alterado, decisão revertida) |
 

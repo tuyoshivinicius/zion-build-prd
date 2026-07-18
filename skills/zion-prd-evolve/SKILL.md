@@ -20,7 +20,7 @@ comandos donos de cada artefato **parando em cada gate**, e termina nas pontes �
 - **C1 — RF novo:** requisito que não existia. Toca §6 (RF no épico certo ou épico novo) + §13 +
   re-decomposição parcial do épico + tabela (§12 via trace).
 - **C2 — RF alterado ou removido:** requisito muda de significado ou sai de escopo. Toca §6 + §13 +
-  fatias do épico afetado + tabela; fatia já com spec → contexto de re-specify montado pela ponte.
+  specs do épico afetado + tabela; spec já com `spec.md` → contexto de re-specify montado pela ponte.
 - **C3 — Decisão revertida:** decisão estruturante caiu. Toca ADR novo que substitui o antigo
   (referência cruzada simétrica) + §8 (restrições) + §13 + aviso de revisar a `constitution`.
 
@@ -51,9 +51,9 @@ gate por vez** — não encadeie tudo num turno só.
 - **Supersessão de decisão (C3)** → `/zion-adr-new "<título>" --substitui ADR-<n>`: cria o ADR novo com
   `Substitui: ADR-<n>` e marca o antigo `Status: Substituído por ADR-<m>` (referência simétrica).
 - **Re-fatiamento do épico afetado (C1/C2)** → `/zion-prd-decompose --epico E<k>`: re-fatia **apenas** o
-  épico indicado; fatias já implementadas são intocáveis.
+  épico indicado; specs já implementadas são intocáveis.
 - **Reconciliação da tabela (§12)** → `/zion-prd-trace`: dono único da tabela.
-- **Fatia já especificada (C2)** → `/zion-prd-specify-prompt` em enquadramento **re-specify**: revê a
+- **Spec já especificada (C2)** → `/zion-prd-specify-prompt` em enquadramento **re-specify**: revê a
   spec existente contra a mudança, com a linha da §13 como contexto.
 - **ADR substituído alimentava a `constitution` (C3)** → aconselhe rodar `/zion-prd-constitution-prompt`
   de novo (não edita a `constitution`).
@@ -71,5 +71,5 @@ em prosa contra `#dia-2`, com aviso — como as demais skills.
 
 ## Saída
 A PRD versionada (§13), os artefatos afetados atualizados pelos comandos donos e — quando a mudança toca
-uma fatia já especificada — o prompt de re-specify pronto para o usuário disparar. **PARE nas pontes:** o
+uma spec já especificada — o prompt de re-specify pronto para o usuário disparar. **PARE nas pontes:** o
 ciclo `/speckit.*` é do usuário.

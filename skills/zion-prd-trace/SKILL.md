@@ -1,6 +1,6 @@
 ---
 name: zion-prd-trace
-description: Reconcilia a rastreabilidade da PRD (§12) e o backlog de fatias (docs/backlog.md) a partir das specs/*/spec.md — RF↔spec, fatia↔spec e status ☐/◐/● derivados por máquina. É o ritual de fim de fatia. Use para "atualizar a rastreabilidade", "reconciliar a tabela/o backlog" ou depois de fatiar/implementar uma fatia. Rodável a qualquer momento.
+description: Reconcilia a rastreabilidade da PRD (§12) e o backlog de specs (docs/backlog.md) a partir das specs/*/spec.md — RF↔spec, spec↔pasta e status ☐/◐/● derivados por máquina. É o ritual de fim de spec. Use para "atualizar a rastreabilidade", "reconciliar a tabela/o backlog" ou depois de fatiar/implementar uma spec. Rodável a qualquer momento.
 argument-hint: "(sem argumento — trabalha sobre docs/PRD.md e specs/)"
 metadata:
   author: zion-build-prd
@@ -37,34 +37,34 @@ Rode também o reconciliador do backlog:
 
     bash references/trace-backlog.sh docs/backlog.md specs
 
-Ele recomputa as colunas de máquina (Spec, Status) do backlog casando `specs/###-<slug>` ⇔ slug por
+Ele recomputa as colunas de máquina (Pasta, Status) do backlog casando `specs/###-<slug>` ⇔ slug por
 sufixo, **preserva** as colunas humanas e a ordem das linhas, e imprime as transições de status, os avisos
-e o **quadro de fatias**.
+e o **quadro de specs**.
 
 ## Fase 4 — Validar saída (aconselha)
 Ecoe o resumo e os avisos **com autoridade**, em tom advisório — não reverta:
 - **RF órfão** — uma spec declara um `RF-xx` que não existe na §6: corrija o typo na spec ou registre
   a decisão perdida na PRD.
-- **Spec intraçável** — um `spec.md` sem a linha `**RF cobertos:**`: adicione-a para a fatia entrar na
+- **Spec intraçável** — um `spec.md` sem a linha `**RF cobertos:**`: adicione-a para a spec entrar na
   cadeia (a ponte `/zion-prd-specify-prompt` já pede essa linha no prompt do specify).
 - **RF descoberto** — um `RF-xx` in-scope ainda sem spec: permanece ☐ pendente (informativo).
 
 Do lado do backlog, ecoe com o mesmo tom:
-- **Fatia sem spec** — a fatia ainda não tem `specs/###-<slug>` (permanece ☐; informativo).
+- **Spec sem pasta** — a spec ainda não tem `specs/###-<slug>` (permanece ☐; informativo).
 - **Spec órfã** — um diretório `specs/###-nome` que não casa nenhum slug: o slug divergiu (typo) ou a
-  spec nasceu fora do backlog → registre a fatia ou renomeie.
-- **Divergência de escopo** — os RFs da linha da fatia ≠ a linha `**RF cobertos:**` da spec casada:
+  spec nasceu fora do backlog → registre a spec ou renomeie.
+- **Divergência de escopo** — os RFs da linha da spec ≠ a linha `**RF cobertos:**` da spec casada:
   corrija a spec ou o backlog (o humano decide).
 - **Slug duplicado / Colisão de casamento** — a primeira linha / o menor prefixo numérico vence, com aviso.
 
-Ecoe o **quadro de fatias** (`● / ◐ / ☐` + a próxima fatia ☐ da fila) — a visibilidade num comando só.
+Ecoe o **quadro de specs** (`● / ◐ / ☐` + a próxima spec ☐ da fila) — a visibilidade num comando só.
 
-Aponte a próxima ação: rode `/zion-prd-trace` de novo após a próxima fatia (ou use
+Aponte a próxima ação: rode `/zion-prd-trace` de novo após a próxima spec (ou use
 `bash references/trace-prd.sh docs/PRD.md specs --check` em Fases 4 de outras skills / no CI para uma
 leitura read-only que sai 1 se houver drift/avisos).
 
 ## Saída
-A seção 12 de `docs/PRD.md` **e** `docs/backlog.md` reconciliados + os resumos/avisos e o quadro de fatias
-ecoados. Rodar `/zion-prd-trace` após `/speckit.implement`/`converge` é o **ritual de fim de fatia**.
-**Handoff:** commit dos artefatos (`/git-commit`), e a próxima fatia ☐ da fila segue para
+A seção 12 de `docs/PRD.md` **e** `docs/backlog.md` reconciliados + os resumos/avisos e o quadro de specs
+ecoados. Rodar `/zion-prd-trace` após `/speckit.implement`/`converge` é o **ritual de fim de spec**.
+**Handoff:** commit dos artefatos (`/git-commit`), e a próxima spec ☐ da fila segue para
 `/zion-prd-specify-prompt`.
