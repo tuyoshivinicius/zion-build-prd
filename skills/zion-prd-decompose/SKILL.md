@@ -1,6 +1,6 @@
 ---
 name: zion-prd-decompose
-description: Estágio 4 do harness Zion Build PRD — transforma os RF-xx da PRD em épicos, story map e fatias verticais validadas por INVEST, e injeta a tabela de rastreabilidade. Use para "decompor a PRD", "fatiar em histórias/épicos" ou "montar o backlog vertical" depois que a PRD estiver escrita.
+description: Estágio 4 do harness Zion Build PRD — transforma os RF-xx da PRD em épicos, story map e specs verticais validadas por INVEST, e injeta a tabela de rastreabilidade. Use para "decompor a PRD", "fatiar em histórias/épicos" ou "montar o backlog vertical" depois que a PRD estiver escrita.
 argument-hint: "(sem argumento = modo integral; --epico E<k> = re-fatiar só um épico no dia 2)"
 metadata:
   author: zion-build-prd
@@ -30,24 +30,24 @@ marketplace está registrado.)
 
 Invoque `superpowers:brainstorming` no mesmo turno para: (1) agrupar os `RF-xx` em épicos;
 (2) montar o story map (backbone da jornada); (3) cortar linhas de release R0..Rn; (4) fatiar cada
-épico em fatias verticais. Para cada fatia, **cunhe um slug kebab-case** (curto, estável — ele vira o
+épico em specs verticais. Para cada spec, **cunhe um slug kebab-case** (curto, estável — ele vira o
 nome da spec e da branch no Spec Kit), junto da **demo de 1 frase** (o teste INVEST) e dos **RF-xx
 cobertos**. Esses três campos são as colunas humanas do backlog (Fase 4).
 
 **Modo parcial (dia 2) — `--epico E<k>`:** re-fatia **apenas** o épico indicado (invocado à mão ou pelo
 `/zion-prd-evolve` com o épico afetado). Invoque `superpowers:brainstorming` com escopo naquele épico,
-aplicando INVEST/SPIDR como no modo integral. **Fatias já implementadas do épico são intocáveis** — viram
-**restrição** do re-fatiamento (as novas fatias partem do que já existe). Não mexa na §12 à mão: ao final,
+aplicando INVEST/SPIDR como no modo integral. **Specs já implementadas do épico são intocáveis** — viram
+**restrição** do re-fatiamento (as novas specs partem do que já existe). Não mexa na §12 à mão: ao final,
 mande rodar `/zion-prd-trace` (dono único da §12 **e** do backlog), que reconcilia sem duplicar.
-Fatias já implementadas (`●`) permanecem **intocáveis** no re-fatiamento. O **modo integral**
+Specs já implementadas (`●`) permanecem **intocáveis** no re-fatiamento. O **modo integral**
 continua o default; se a PRD **já** tem backlog decomposto, prefira o modo parcial (`--epico E<k>`).
 
 ## Fase 4 — Validar saída (aconselha)
 Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-conclusao`:
-- Cada fatia passa no **INVEST** (`#invest`) — aplique o teste-relâmpago "esta fatia, sozinha, dá uma
-  demo ponta-a-ponta?". Se a resposta é "só a UI" ou "só o back", a fatia é **horizontal** → aponte e
+- Cada spec passa no **INVEST** (`#invest`) — aplique o teste-relâmpago "esta spec, sozinha, dá uma
+  demo ponta-a-ponta?". Se a resposta é "só a UI" ou "só o back", a spec é **horizontal** → aponte e
   sugira refatiar pelos eixos do **SPIDR**.
-- O **walking skeleton** é a fatia zero (R0).
+- O **walking skeleton** é a spec zero (R0).
 - Semeie a tabela de rastreabilidade **por máquina** (não à mão): rode
 
       bash references/trace-prd.sh docs/PRD.md specs
@@ -55,9 +55,9 @@ Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-co
   Ainda não há specs neste ponto → o bootstrap produz a tabela semente na **seção 12** (RF/Descrição/
   Épico da §6, Feature/Spec em branco, tudo ☐ pendente). `trace-prd.sh` é o **dono único** da tabela;
   rodá-lo de novo depois reconcilia em vez de duplicar. A coluna **Release** é preenchida por você/
-  brainstorming após o bootstrap. Reconciliar após cada fatia é trabalho de `/zion-prd-trace`.
-- Semeie o **backlog de fatias** `docs/backlog.md` a partir de `references/backlog.md` (template),
-  preenchendo as **colunas humanas** (Fatia/slug, Demo, RFs, Release) com o resultado do fatiamento; então
+  brainstorming após o bootstrap. Reconciliar após cada spec é trabalho de `/zion-prd-trace`.
+- Semeie o **backlog de specs** `docs/backlog.md` a partir de `references/backlog.md` (template),
+  preenchendo as **colunas humanas** (Spec/slug, Demo, RFs, Release) com o resultado do fatiamento; então
   reconcilie as colunas de máquina por bootstrap:
 
       bash references/trace-backlog.sh docs/backlog.md specs
@@ -69,7 +69,7 @@ Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-co
 Emita veredito por item. Não reverta — aconselhe.
 
 ## Saída
-Lista de épicos, story map, backlog de **fatias verticais** priorizadas com linhas de release, o
-arquivo **`docs/backlog.md`** semeado por `trace-backlog.sh` (slug/demo/RFs por fatia; Spec/Status por
-máquina), e a tabela de rastreabilidade **semeada por `trace-prd.sh`** dentro da PRD. **Handoff:** a próxima fatia da
-fila entra em `/zion-prd-specify-prompt`; após cada fatia, `/zion-prd-trace` reconcilia a tabela.
+Lista de épicos, story map, backlog de **specs verticais** priorizadas com linhas de release, o
+arquivo **`docs/backlog.md`** semeado por `trace-backlog.sh` (slug/demo/RFs por spec; Pasta/Status por
+máquina), e a tabela de rastreabilidade **semeada por `trace-prd.sh`** dentro da PRD. **Handoff:** a próxima spec da
+fila entra em `/zion-prd-specify-prompt`; após cada spec, `/zion-prd-trace` reconcilia a tabela.

@@ -22,9 +22,9 @@ rodados no Spec Kit). Sem ADR aceito → avise "sem ADR aceito não há o que ho
 antes". Não bloqueie; pergunte se segue mesmo assim.
 
 ## Fase 1 — Levantar e confirmar os ADRs relevantes
-1. Leia o `spec.md` da fatia e cruze com `docs/adr/`.
+1. Leia o `spec.md` da spec e cruze com `docs/adr/`.
 2. Proponha os ADRs relevantes àquela feature, cada um com uma linha de justificativa
-   (ex.: "ADR-001 (Postgres) → a fatia persiste pedidos").
+   (ex.: "ADR-001 (Postgres) → a spec persiste pedidos").
 3. Peça ao usuário para **confirmar / adicionar / remover**. A lista confirmada por ele é a que vale.
 
 **Guarda de suficiência (aconselha).** Se o `spec.md` for vago demais para inferir relevância, aponte
