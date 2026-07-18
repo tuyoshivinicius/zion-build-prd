@@ -265,7 +265,9 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 ## Passo 6 — Rastreabilidade & "pronto para codar"
 
 - **Objetivo:** manter a ponte `RF-xx ↔ specs/###-nome` **viva por máquina** e confirmar, via checklist,
-  que a feature está pronta para implementação. "Viva" aqui significa *"viva enquanto você roda
+  que a feature está pronta para implementação — incluindo **o executor dos gates** (o CI que roda os
+  testes dos princípios decidíveis e barra o merge em regressão), não só que o checklist está marcado.
+  "Viva" aqui significa *"viva enquanto você roda
   `/zion-prd-trace`"*: a tabela é um artefato **derivado**, reconciliado por comando a partir da §6 da
   PRD e das `specs/`, não mantido à mão.
 - **Skill(s):**
@@ -284,7 +286,9 @@ começa com `[NEEDS CLARIFICATION]` em aberto.
 - **Saídas / artefatos:** seção 12 da PRD reconciliada por `/zion-prd-trace` + checklist "pronto para
   codar" confirmado.
 - **Critério de conclusão:** `/zion-prd-trace` roda limpo (ou os avisos — RF órfão / spec intraçável —
-  estão justificados), todo `RF-xx` in-scope tem sua linha na tabela, e o checklist final está marcado.
+  estão justificados), todo `RF-xx` in-scope tem sua linha na tabela, e o checklist final está marcado —
+  inclusive o item do **CI mínimo** que executa os testes dos princípios decidíveis e falha o merge em
+  regressão.
 
 ---
 
@@ -330,6 +334,25 @@ qualquer momento a partir da §6 e das `specs/`. O template em `assets/templates
 
 ---
 
+## Do princípio decidível ao gate que trava o merge
+
+Cada princípio **decidível** da constitution (aquele com validador, limiar numérico ou
+teste — a decidibilidade que `/zion-prd-constitution-prompt` já exige) só vira gate de
+verdade quando algo o executa a cada mudança. Sem executor, "bloqueia o merge" é
+aspiração. Antes da primeira branch de implementação, monte o executor mínimo:
+
+1. **Liste os princípios decidíveis** da constitution — cada um já nasceu com critério
+   objetivo.
+2. **Ligue cada um a um comando de teste** que falha quando o princípio regride (o teste
+   de contrato/perf/roundtrip que a própria constitution induz).
+3. **Rode todos num CI a cada PR** e configure a branch para **barrar o merge** se algum
+   quebrar. Um único job que roda a suíte já cumpre o mínimo.
+
+O objetivo não é cobertura — é o *executor*: transformar cada princípio decidível num gate
+que a máquina cobra, do mesmo jeito que `check-assets.yml` protege os assets deste harness.
+
+---
+
 ## Checklist final "pronto para codar"
 
 > Confirme antes de abrir a primeira branch de implementação. (Genérico — adapte os nomes ao seu produto.)
@@ -344,6 +367,9 @@ qualquer momento a partir da §6 e das `specs/`. O template em `assets/templates
 - [ ] Primeira feature: `spec.md` sem `[NEEDS CLARIFICATION]`, `plan.md` e `tasks.md` revisados,
       `/speckit.analyze` sem itens críticos.
 - [ ] Definition of Done acordada (testes do componente crítico, lint, deploy de preview por feature).
+- [ ] **CI mínimo em cada PR** roda os testes dos princípios **decidíveis** da constitution
+      e **falha o merge** em regressão — o executor que a promessa "regressão bloqueia o
+      merge" pressupõe (veja *"Do princípio decidível ao gate que trava o merge"*).
 - [ ] Tabela de rastreabilidade `RF-xx ↔ specs/###` criada na PRD.
 
 ---
