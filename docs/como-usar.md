@@ -110,6 +110,12 @@ prévia, o Zion é um editor visual que atualiza a prévia ao digitar e deixa ed
 
 **Fase 4 (veredito):** `✓ visão em 1 frase · ✓ persona nomeada (Ana) · ✓ "não faz" explícito`.
 
+> **Nova sessão / retomar:** rodar `/zion-prd-discovery` de novo com `docs/discovery.md` já
+> existente **não** recomeça do zero — entra em **modo retomar/revisar** (preserva o sólido,
+> pressiona o incompleto). Passe o que quer rever como argumento (ex.: "quero rever a persona");
+> sem argumento, ele varre os blocos fracos. Se já houver ADRs/PRD, avisa para considerar
+> `/zion-prd-evolve`.
+
 ### Estágio 2 — `/zion-prd-spike`
 
 As **2–3 decisões estruturantes** são as que mudam a PRD inteira (não dúvidas pequenas). O argumento
@@ -319,8 +325,12 @@ Se a seção 6 da PRD tiver:
 > texto mermaid"* (veja `quality-rules.md` `#fronteira`).
 
 ### 3. Idempotência — modo revisar
-Rodar `/zion-prd-write` com `docs/PRD.md` **já existente**: ele **não sobrescreve** — entra em modo
-*pressionar seção a seção*, apontando o que está fraco na PRD atual.
+Vale para os estágios que mantêm um artefato vivo. Rodar `/zion-prd-write` com `docs/PRD.md` **já
+existente**: ele **não sobrescreve** — entra em modo *pressionar seção a seção*, apontando o que
+está fraco na PRD atual. O mesmo vale para `/zion-prd-discovery` com `docs/discovery.md` **já
+existente**: entra em **modo retomar/revisar** (preserva o que está sólido, pressiona o incompleto).
+Se já houver downstream (`docs/adr/` ou `docs/PRD.md`), avisa para considerar `/zion-prd-evolve` na
+mudança estrutural. Uma **nova sessão de discovery** é só rodar o comando de novo.
 
 ### 4. INVEST reprova fatia horizontal
 Dar ao `/zion-prd-decompose` uma fatia "só o canvas visual, sem ligar ao texto":
