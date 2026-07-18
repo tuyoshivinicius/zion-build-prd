@@ -42,8 +42,9 @@ Lidos pelas Fases 0 (pré-requisito) e 4 (validar saída) dos comandos.
   "não faz" explícito no quadro faz/não-faz.
 - **spike** (`docs/adr/ADR-00x-*.md`): cada decisão estruturante tem um ADR com Contexto/Decisão/
   Consequências ∧ o ADR carrega **evidência do tipo certo para seu risco** (spike de código para
-  risco de execução; fonte de pesquisa para risco de conhecimento — ver `#risco-do-spike`). A
-  presença da evidência é verificada por `check-adr.sh` — a Fase 4 roda o script e ecoa o veredito.
+  risco de execução; fonte de pesquisa para risco de conhecimento; racional escrito para decisão
+  dada — ver `#risco-do-spike`). A presença da evidência é verificada por `check-adr.sh` — a Fase 4
+  roda o script e ecoa o veredito.
 - **prd** (`docs/PRD.md`): escopo in/out explícito ∧ `RF-xx` agrupados por épico (1 frase cada) ∧
   NFRs com número ∧ **zero** stack / critério de aceite / tela. As três regras decidíveis
   (zero-stack, NFR-com-número, RF-por-épico) são verificadas por `check-prd.sh` — a Fase 4 roda o
@@ -72,9 +73,14 @@ risco, e o risco escolhe o **meio da evidência**.
   `docs/adr/spikes/ADR-00x-<slug>/` (dir com `README.md` + artefatos descartáveis).
 - **Risco de conhecimento** — trade-off **documentável sem rodar**: maturidade, licença, custo de
   manutenção, ecossistema, aderência conceitual. **Meio: pesquisa (deep-research) com fonte citada.**
+- **Decisão dada** — a escolha **já chegou batida de fora** (política da org, restrição externa,
+  padrão já estabelecido); não há dúvida a resolver rodando nem lendo. **Meio: racional escrito no
+  próprio ADR** — quem/que autoridade decidiu e por quê.
 
 Regra prática: se você decide lendo docs/benchmarks de terceiros, é **conhecimento**; se precisa do
-*seu* caso rodando para confiar, é **execução**. A presença da evidência do tipo certo é verificada
+*seu* caso rodando para confiar, é **execução**; se não há dúvida a provar — a decisão vem batida —
+é **decisão dada**, e o lastro é registrar a autoridade, não prová-la. A presença da evidência do
+tipo certo é verificada
 por `check-adr.sh` — o script confere presença, o humano decide qualidade.
 
 ## INVEST e SPIDR {#invest}
