@@ -178,3 +178,48 @@ d3
 three.js
 typescript
 ```
+
+## Dia 2 — evolução pós-release {#dia-2}
+
+Depois da release 1, requisitos mudam. O ponto de entrada único é `/zion-prd-evolve`, que versiona a PRD
+e roteia para os comandos donos de cada artefato, parando em cada gate. Uma mudança se classifica em um
+ou mais **cenários canônicos** (pode combinar mais de um):
+
+- **C1 — RF novo:** requisito que não existia. Toca a §6 (RF no épico certo ou num épico novo), o
+  changelog (§13), o re-fatiamento **parcial** do épico e a tabela (§12 via trace).
+- **C2 — RF alterado ou removido:** requisito muda de significado ou sai de escopo. Toca a §6, o §13, as
+  fatias do épico afetado e a tabela; fatia já com `spec.md` → prompt de **re-specify** pela ponte.
+- **C3 — Decisão revertida:** decisão estruturante caiu. Nasce um ADR que **substitui** o antigo
+  (referência simétrica) + §8 (restrições) + §13 + aviso de revisar a `constitution`.
+
+> Cuidado com a decisão que cai **disfarçada de requisito**: se uma mudança que parece só um RF alterado
+> (C2) só se resolve trocando uma decisão já registrada num ADR, é **C3**.
+
+### Changelog da PRD (§13) — regras decidíveis
+
+A §13 "Histórico de mudanças" é uma tabela, **uma linha por mudança**, escrita por `/zion-prd-evolve`
+(edição manual continua possível):
+
+| Data | Cenário | Mudança | Motivo | Artefatos afetados |
+|------|---------|---------|--------|--------------------|
+| 2026-08-02 | C2 | `RF-07` alterado: exportar SVG em vez de PNG | feedback de usuários | ADR-002 → ADR-005 · fatia S4 re-especificada |
+
+Regras que o `check-prd.sh` verifica sobre a §13 (a §13 é **opcional** — PRD sem ela, dia 1 ou pré-R8,
+não dispara estes checks):
+
+- Todo `RF-xx` citado no changelog **existe na §6** — ou a própria linha o declara **"removido"**.
+- Todo `ADR-xxx` citado **existe em `docs/adr/`**.
+- A coluna **Cenário** usa só **C1**, **C2** ou **C3**.
+- Check cruzado sobre a §8: uma restrição apontando um ADR com `Status: Substituído por` é uma
+  **restrição morta** → o script acusa.
+
+### Supersessão de ADR — referência simétrica
+
+Quando uma decisão cai (C3), `/zion-adr-new "<título>" --substitui ADR-<n>` cria o ADR novo e edita o
+antigo, deixando uma referência **cruzada e simétrica**:
+
+- No ADR novo (ADR-`<m>`): campo de cabeçalho `- **Substitui:** ADR-<n>`.
+- No ADR antigo (ADR-`<n>`): cabeçalho `- **Status:** Substituído por ADR-<m>`.
+
+O `check-adr.sh` verifica a **simetria**: `Status: Substituído por ADR-<m>` exige que ADR-`<m>` exista e
+declare `Substitui: ADR-<n>`, e vice-versa. Referência quebrada ou unilateral → o script acusa.

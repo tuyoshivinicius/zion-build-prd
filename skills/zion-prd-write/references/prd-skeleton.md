@@ -42,3 +42,10 @@ Riscos de produto/técnicos e mitigação prevista.
 
 ## 12. Rastreabilidade
 Tabela de rastreabilidade RF → épico → fatia, injetada por `/zion-prd-decompose` e mantida dentro desta PRD.
+
+## 13. Histórico de mudanças
+> Vazia no dia 1. Preenchida por `/zion-prd-evolve` a partir da primeira mudança pós-release — uma linha
+> por mudança. Regras do formato em `quality-rules.md` `#dia-2`; edição manual continua possível.
+
+| Data | Cenário | Mudança | Motivo | Artefatos afetados |
+|------|---------|---------|--------|--------------------|
