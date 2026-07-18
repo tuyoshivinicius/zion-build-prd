@@ -34,6 +34,11 @@ Invoque `superpowers:brainstorming` no mesmo turno para: (1) agrupar os `RF-xx` 
 nome da spec e da branch no Spec Kit), junto da **demo de 1 frase** (o teste INVEST) e dos **RF-xx
 cobertos**. Esses três campos são as colunas humanas do backlog (Fase 4).
 
+**Âncora de experiência:** quando a PRD tem `Superfície de uso: sim`, preencha a coluna `Âncora de
+experiência` na(s) spec(s) que **tocam** a superfície — **≥1, não toda spec** — em prosa de o-quê
+("o usuário conclui a tarefa-núcleo em ≤N passos"). Spec puramente de backend deixa a âncora em
+branco (evita o falso-positivo de exigir âncora onde não há superfície).
+
 **Modo parcial (dia 2) — `--epico E<k>`:** re-fatia **apenas** o épico indicado (invocado à mão ou pelo
 `/zion-prd-evolve` com o épico afetado). Invoque `superpowers:brainstorming` com escopo naquele épico,
 aplicando INVEST/SPIDR como no modo integral. **Specs já implementadas do épico são intocáveis** — viram
@@ -46,7 +51,8 @@ continua o default; se a PRD **já** tem backlog decomposto, prefira o modo parc
 Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-conclusao`:
 - Cada spec passa no **INVEST** (`#invest`) — aplique o teste-relâmpago "esta spec, sozinha, dá uma
   demo ponta-a-ponta?". Se a resposta é "só a UI" ou "só o back", a spec é **horizontal** → aponte e
-  sugira refatiar pelos eixos do **SPIDR**.
+  sugira refatiar pelos eixos do **SPIDR**. **Braço de experiência (surface=sim, advisório):** "esta
+  spec, onde toca a superfície, demonstra a experiência — ou só a função?".
 - O **walking skeleton** é a spec zero (R0).
 - Semeie a tabela de rastreabilidade **por máquina** (não à mão): rode
 
@@ -66,6 +72,13 @@ Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-co
   `trace-backlog.sh` é o **dono único** das colunas Pasta/Status. **Backlog já existente → não
   sobrescreva:** atualize as linhas humanas por conversa e deixe a reconciliação com o script
   (idempotência, como nos demais estágios).
+- **Âncora de experiência (advisório).** Quando a PRD tem `Superfície de uso: sim`, rode:
+
+      bash references/check-experiencia.sh docs/PRD.md docs/backlog.md
+
+  Avalia os dois limbs: **limb-PRD** (nenhum NFR tagueado `(experiência)` na PRD) e **limb-backlog**
+  (nenhuma spec com a coluna `Âncora de experiência` preenchida) → ⚠ *"produto com superfície mas
+  nenhuma spec ancora a experiência"*. Ecoe o veredito; não reverta (`RN-01`).
 Emita veredito por item. Não reverta — aconselhe.
 
 ## Saída

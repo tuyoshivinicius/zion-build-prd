@@ -62,7 +62,7 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   marcador de superfície para os NFRs e aterrissando ≥1 NFR de experiência mensurável quando há
   superfície de uso. `RF-05` O autor
   decompõe a PRD em épicos, story map e specs verticais priorizadas, com o walking skeleton como
-  spec zero.
+  spec zero, ancorando a experiência em ≥1 spec que toca a superfície de uso quando ela existe.
   `RF-17` O autor estuda um candidato antes da descoberta — edge cases, alternativas comparadas
   (sempre incluindo "não fazer") com ROI justificado e recomendação não vinculante — e recebe o
   estudo gravado, com o próximo passo sugerido roteado conforme o contexto detectado, para escolher
