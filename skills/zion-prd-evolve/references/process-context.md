@@ -8,6 +8,8 @@
 O harness conduz a autoria da PRD em estágios encadeados, cada um alimentando o próximo:
 
 1. **Descoberta** (`/zion-prd-discovery`) — visão, persona, quadro faz/não-faz → `docs/discovery.md`.
+   Idempotente: rodar de novo sobre um `docs/discovery.md` existente **retoma/revisa** (não
+   sobrescreve) — permite descoberta em várias sessões.
 2. **Spikes + ADRs** (`/zion-prd-spike`, `/zion-adr-new`) — provar as 2–3 decisões estruturantes com
    código descartável e registrá-las como ADRs em `docs/adr/` **antes** de fechar a PRD.
 3. **PRD enxuta** (`/zion-prd-write`) — visão/escopo, `RF-xx` por épico (1 frase cada), NFRs com
