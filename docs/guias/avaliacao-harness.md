@@ -11,7 +11,7 @@ narra as camadas, indexa todas as fixtures e diz como rodá-las. A **fonte da ve
 ## 1. As duas camadas e quando cada uma roda
 
 - **Camada mecânica (determinística).** Os verificadores de script (`check-prd.sh`, `check-adr.sh`,
-  `trace-prd.sh`, `check-superpowers-contract.sh`, `check-canon.sh`) contra fixtures `clean`/`dirty`,
+  `check-delegacao.sh`, `trace-prd.sh`, `check-superpowers-contract.sh`, `check-canon.sh`) contra fixtures `clean`/`dirty`,
   consolidados em `scripts/eval.sh`. Roda **no CI a cada push** (passo "Avaliação da camada mecânica"). Verde/vermelho
   binário. O check de contrato **degrada gracioso**: sem o superpowers instalado ele sai 0
   ("não verificável"), então quem garante a lógica no CI é o auto-teste contra fixtures.
@@ -66,6 +66,8 @@ Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
 | `check-superpowers-contract.sh` | `fixtures/superpowers/drift-c2/` | marcador de C2 (gravar doc sob docs/) removido | drift, cita C2 (exit 1) |
 | `check-canon.sh` | `fixtures/canon/clean/` | — | limpo (exit 0) |
 | `check-canon.sh` | `fixtures/canon/dirty/` | skill órfã/fantasma, script/asset sem doc, ADR fora do índice, regra raiz incompleta, stack na PRD | achados (exit 1) |
+| `check-delegacao.sh` | `fixtures/delegacao-clean.md` | — (distinção + rubrica presentes) | limpo (exit 0) |
+| `check-delegacao.sh` | `fixtures/delegacao-dirty.md` | tensões como pergunta diagnóstica, sem a rubrica | achados (exit 1) |
 
 ### LLM (camada de julgamento — sob demanda)
 

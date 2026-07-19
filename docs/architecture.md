@@ -62,6 +62,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/check-prd.sh | Verificador das regras decidíveis da PRD e do prompt do specify. |
 | scripts/check-estudo.sh | Verificador das regras decidíveis do documento de estudo (Estágio 0). |
 | scripts/check-experiencia.sh | Verificador do carregador de experiência (marcador `Superfície de uso` + âncora na PRD/backlog). |
+| scripts/check-delegacao.sh | Verificador do bloco de delegação criativa montado (distinção diagnóstica×propositiva, dois previews, condução); lido pela fase de delegação, que aconselha. |
 | scripts/check-arquitetura.sh | Verificador advisório do architecture.md do produto (seções, prosa da §1, blocos derivados em dia) + drift do bloco de regras instalado no CLAUDE.md do produto. |
 | scripts/check-adr.sh | Verificador de presença de evidência e supersessão simétrica nos ADRs. |
 | scripts/check-superpowers-contract.sh | Verificador do contrato C1–C3 no superpowers instalado. |
@@ -73,6 +74,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/test-check-prd.sh | Auto-teste do check-prd.sh contra fixtures. |
 | scripts/test-check-estudo.sh | Auto-teste do check-estudo.sh contra fixtures. |
 | scripts/test-check-experiencia.sh | Auto-teste do check-experiencia.sh contra fixtures. |
+| scripts/test-check-delegacao.sh | Auto-teste do check-delegacao.sh contra fixtures. |
 | scripts/test-check-arquitetura.sh | Auto-teste do check-arquitetura.sh contra fixtures. |
 | scripts/test-check-adr.sh | Auto-teste do check-adr.sh contra fixtures. |
 | scripts/test-check-superpowers-contract.sh | Auto-teste do check de contrato contra fixtures. |
@@ -99,9 +101,9 @@ Fontes mapeadas no `ASSET_MAP` (`check-canon.sh` acusa fonte `assets/` fora dest
 - assets/templates/architecture-skeleton.md — esqueleto do docs/architecture.md do produto (análogo ao prd-skeleton).
 
 Também distribuídos como references executáveis: `scripts/check-prd.sh`, `scripts/check-adr.sh`,
-`scripts/check-estudo.sh`, `scripts/check-experiencia.sh`, `scripts/check-arquitetura.sh`,
-`scripts/trace-prd.sh`, `scripts/trace-backlog.sh`, `scripts/trace-arquitetura.sh` (cobertos pela
-tabela da §3).
+`scripts/check-estudo.sh`, `scripts/check-experiencia.sh`, `scripts/check-delegacao.sh`,
+`scripts/check-arquitetura.sh`, `scripts/trace-prd.sh`, `scripts/trace-backlog.sh`,
+`scripts/trace-arquitetura.sh` (cobertos pela tabela da §3).
 
 ## 5. Canonização — o que muda ⇒ onde reflete
 
