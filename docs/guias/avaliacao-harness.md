@@ -75,6 +75,7 @@ Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
 |---|---|---|---|---|
 | discovery | `falta-nao-faz` | `discovery.md` | quadro faz/não-faz sem nenhum "não faz" | reprova |
 | discovery | `limpa` | `discovery.md` | — (visão + persona + "não faz") | aprova |
+| discovery | `revisar-propositiva` | `discovery.md` | modo revisar propenso a pergunta diagnóstica sem recomendação nem preview | carrega a distinção |
 | write | `vazamento-tela-aceite` | `PRD.md` | tela/critério de aceite em prosa (fora da denylist) | reprova |
 | write | `limpa` | `PRD.md` | — | aprova |
 | decompose | `fatia-horizontal` | `backlog.md` | fatia só-back ("montar todos os endpoints") | reprova |
@@ -92,6 +93,11 @@ e falso-positivo (reprovou o que estava bom).
 > artefato): o campo `veredito` do `esperado.md` carrega a **classe esperada** (C1/C2/C3). O acerto é
 > classificar na classe certa — o par `parece-c2-mas-c3`/`limpa` pega tanto o falso-negativo (não viu o
 > C3 disfarçado) quanto o falso-positivo (inventou um C3 onde só havia C2).
+
+> A fixture `revisar-propositiva` testa a **fase de delegação** (Fase 2/3), não a Fase 4: a lente é
+> o fluxo enumerar → classificar → montar o bloco de `references/delegacao-criativa.md`, e o acerto
+> é o bloco carregar a distinção diagnóstica×propositiva (o `check-delegacao.sh` sai limpo sobre ele).
+> O campo `fase` do `esperado.md` é `2/3` e `veredito` carrega "carrega a distinção".
 
 ## 5. Interpretação
 
