@@ -7,6 +7,7 @@
 # O destino da cópia é: skills/<skill>/references/<basename do canônico>.
 ASSET_MAP=(
   "assets/quality-rules.md                zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-prd-constitution-prompt zion-prd-specify-prompt zion-prd-plan-prompt zion-prd-evolve zion-prd-estudo"
+  "assets/delegacao-criativa.md          zion-prd-discovery zion-prd-write zion-prd-decompose"
   "assets/templates/prd-skeleton.md       zion-prd-write"
   "assets/templates/traceability-table.md zion-prd-decompose"
   "assets/process-context.md              zion-prd-discovery zion-prd-spike zion-prd-write zion-prd-decompose zion-adr-new zion-prd-evolve zion-prd-estudo zion-prd-ajuda"
