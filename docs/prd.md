@@ -67,7 +67,9 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   (sempre incluindo "não fazer") com ROI justificado e recomendação não vinculante — e recebe o
   estudo gravado, com o próximo passo sugerido roteado conforme o contexto detectado, para escolher
   a direção. Pode reabrir um estudo já gravado pelo seu slug para revisá-lo, sem re-digitar o
-  candidato.
+  candidato. `RF-20` Nos estágios que delegam a clarificação, a tensão que admite desenho vira 2–3
+  abordagens com recomendação e preview que ilustra a escolha, não pergunta diagnóstica; o prompt de
+  delegação montado é verificado por máquina.
 - **Épico E2 — Pontes e integração com o Spec Kit:** `RF-06` O autor recebe pronto o prompt da constitution,
   derivado dos NFRs e restrições da PRD, com princípios decidíveis. `RF-07` O autor recebe pronto
   o prompt do specify de uma spec, blindado contra vazamento de fronteira e com o elo de
@@ -118,7 +120,8 @@ As decisões estruturantes deste repo estão registradas como ADRs em `docs/adr/
 `docs/architecture.md`. Em especial: fonte única com cópias derivadas (ADR-001), distribuição em
 dois canais com autocontenção (ADR-002), verificação mecânica que aconselha no projeto-alvo
 (ADR-004), o contrato de capacidades com o executor externo de brainstorming (ADR-007) e a skill de
-estudo workflow-adaptativa por persona (ADR-013).
+estudo workflow-adaptativa por persona (ADR-013), e a classificação diagnóstica×propositiva na
+delegação criativa ao brainstorming (ADR-017).
 
 ## 9. Glossário
 
@@ -158,6 +161,7 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-04 | E1 | skills/zion-prd-write |
 | RF-05 | E1 | skills/zion-prd-decompose |
 | RF-17 | E1 | skills/zion-prd-estudo |
+| RF-20 | E1 | assets/delegacao-criativa.md |
 | RF-06 | E2 | skills/zion-prd-constitution-prompt |
 | RF-07 | E2 | skills/zion-prd-specify-prompt |
 | RF-08 | E2 | skills/zion-prd-plan-prompt |
@@ -188,3 +192,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-18 | C2 | `RF-09` alterado: o trace reconcilia também os blocos derivados do documento de arquitetura do produto | artefato derivado se reconcilia por máquina, nunca à mão (RN-04) | ADR-015 · skills/zion-prd-trace · scripts/trace-arquitetura.sh |
 | 2026-07-19 | C1 | `RF-19` novo: skill de ajuda de bolso do harness (épico E7 novo) | a ajuda ao iniciante vivia num prompt one-shot colado à mão: não viajava com a instalação e não era descobrível | ADR-016 · skills/zion-prd-ajuda · assets/speckit-map.md · scripts/check-canon.sh (C8) |
 | 2026-07-18 | C2 | `RF-08` alterado: o prompt do plan injeta também a prosa estrutural do documento de arquitetura do produto | o plan é o único passo do Spec Kit que lê o como estrutural (recorte por passo) | ADR-015 · skills/zion-prd-plan-prompt |
+| 2026-07-19 | C1 | `RF-20` novo: delegação criativa classifica a tensão (diagnóstica/propositiva) e gateia o prompt montado | no modo revisar a clarificação degradava para pergunta diagnóstica sem recomendação nem preview | ADR-017 · assets/delegacao-criativa.md · scripts/check-delegacao.sh · skills/zion-prd-discovery · skills/zion-prd-write · skills/zion-prd-decompose |

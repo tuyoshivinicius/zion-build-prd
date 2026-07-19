@@ -49,6 +49,7 @@ do próprio ADR (campo **Evidência**, que aponta o design doc de origem), não 
 | [ADR-014](adr/ADR-014-experiencia-nfr-carregado.md) | Qualidade de experiência é NFR carregado por marcador machine-legível (`Superfície de uso` + tag `(experiência)`), com verificador que aconselha até o backlog. |
 | [ADR-015](adr/ADR-015-integracao-speckit-instalavel.md) | Integração instalável com o Spec Kit: regras versionadas no `CLAUDE.md` do produto, `architecture.md` distribuído (prosa do Autor + blocos derivados) e autoridade advisória com guard opt-in. |
 | [ADR-016](adr/ADR-016-skill-ajuda-grounding-vivo.md) | Skill de ajuda conversacional com grounding vivo nas `SKILL.md` irmãs, sem artefato gravado, avaliada só na camada de julgamento, com o envelhecimento das citações cobrado por C8 no `check-canon.sh`. |
+| [ADR-017](adr/ADR-017-delegacao-criativa-classificada.md) | A delegação criativa classifica cada tensão (diagnóstica/propositiva) numa rubrica de fonte única e gateia o prompt montado por `check-delegacao.sh`, sem tocar o contrato externo C1–C3. |
 
 ## 3. Scripts
 
