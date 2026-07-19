@@ -41,6 +41,7 @@ Alternativa (Claude Code plugin marketplace):
 | `/zion-prd-trace` | Reconcilia a rastreabilidade (§12) e o backlog de specs a partir das specs |
 | `/zion-adr-new` | Cria um ADR em `docs/adr/` |
 | `/zion-prd-evolve` | Dia 2 — mudança pós-release (RF novo/alterado, decisão revertida) |
+| `/zion-prd-ajuda` | Ajuda de bolso — dúvidas sobre estágios, comandos e a costura com o Spec Kit |
 
 ## Dependências
 

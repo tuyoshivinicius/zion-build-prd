@@ -90,6 +90,7 @@ Fontes mapeadas no `ASSET_MAP` (`check-canon.sh` acusa fonte `assets/` fora dest
 - assets/quality-rules.md — regras de qualidade e denylist de stack.
 - assets/process-context.md — bloco invariante de contexto da jornada.
 - assets/superpowers-contract.md — capacidades C1–C3 exigidas do executor externo.
+- assets/speckit-map.md — o ciclo `/speckit.*` (o que cada passo faz, entrada e saída) e as fronteiras do harness com ele; lido pela skill de ajuda.
 - assets/templates/prd-skeleton.md — esqueleto da PRD (dogfoodado por `docs/prd.md`).
 - assets/templates/traceability-table.md — template da tabela §12.
 - assets/templates/backlog.md — template do backlog de specs.

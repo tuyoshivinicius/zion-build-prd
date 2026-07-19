@@ -94,6 +94,11 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   dos dois canais suportados. `RF-15` Cada skill é autocontida: carrega consigo as regras e
   templates de que precisa, gerados da fonte única. `RF-16` Uma skill que depende de capacidade
   externa ausente avisa com o comando de instalação e para graciosamente.
+- **Épico E7 — Ajuda e orientação:** `RF-19` O autor tira dúvidas sobre o harness e sobre a costura
+  com o Spec Kit em conversa, e recebe onde a dúvida cai na jornada, o comando que a resolve — sempre
+  da lista de comandos daquela instalação —, a armadilha daquele ponto e a fonte de cada afirmação;
+  dúvida que é tarefa disfarçada é roteada ao comando dono, e o que não está nas fontes vira "não
+  sei". A ajuda não lê o projeto do autor nem grava artefato.
 
 ## 7. NFRs (com números)
 
@@ -165,6 +170,7 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-14 | E6 | .claude-plugin/ · README.md |
 | RF-15 | E6 | scripts/sync-assets.sh · scripts/asset-map.sh · assets/ |
 | RF-16 | E6 | preflight nas SKILL.md das skills dependentes |
+| RF-19 | E7 | skills/zion-prd-ajuda |
 
 ## 13. Histórico de mudanças
 
@@ -180,4 +186,5 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-18 | C2 | `RF-11` alterado: verificadores de arquitetura do produto na camada mecânica | sustentar por conselho a autoridade do documento de arquitetura distribuído | ADR-015 · scripts/check-arquitetura.sh · scripts/trace-arquitetura.sh |
 | 2026-07-18 | C1 | `RF-18` novo: instalação da integração com o Spec Kit no repositório do produto | o canon chegava ao Spec Kit só pelas pontes manuais; clarify e implement rodavam sem canon | ADR-015 · skills/zion-speckit-install · assets/templates/regras-speckit.md · assets/templates/architecture-skeleton.md |
 | 2026-07-18 | C2 | `RF-09` alterado: o trace reconcilia também os blocos derivados do documento de arquitetura do produto | artefato derivado se reconcilia por máquina, nunca à mão (RN-04) | ADR-015 · skills/zion-prd-trace · scripts/trace-arquitetura.sh |
+| 2026-07-19 | C1 | `RF-19` novo: skill de ajuda de bolso do harness (épico E7 novo) | a ajuda ao iniciante vivia num prompt one-shot colado à mão: não viajava com a instalação e não era descobrível | ADR-016 · skills/zion-prd-ajuda · assets/speckit-map.md · scripts/check-canon.sh (C8) |
 | 2026-07-18 | C2 | `RF-08` alterado: o prompt do plan injeta também a prosa estrutural do documento de arquitetura do produto | o plan é o único passo do Spec Kit que lê o como estrutural (recorte por passo) | ADR-015 · skills/zion-prd-plan-prompt |
