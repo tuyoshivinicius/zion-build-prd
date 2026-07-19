@@ -41,7 +41,9 @@ Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
 
 1. Abra o `esperado.md` e leia o frontmatter (`skill`, `fase`, `regra`, `veredito`, `achado_esperado`).
 2. Invoque a **skill alvo** (`zion-prd-<skill>`) rodando a **lente da Fase 4 dela** sobre o artefato de
-   entrada (`discovery.md` / `PRD.md` / `backlog.md`) da pasta.
+   entrada (`discovery.md` / `PRD.md` / `backlog.md`) da pasta. Na `ajuda`, a entrada é a
+   `pergunta.md` e a lente é o molde de 4 blocos da **Fase 2** (a skill não tem Fase 4 — não há saída
+   a validar).
 3. Compare a resposta da skill ao `achado_esperado` (casado por **semântica**, não literal) e ao
    `veredito` (reprova/aprova).
 4. Marque **acerto** (a skill produziu o veredito esperado e cobriu os achados) ou **erro**.
@@ -78,6 +80,8 @@ Para cada pasta em `scripts/fixtures/skills/<skill>/<caso>/`:
 | decompose | `limpa` | `backlog.md` | — (backlog vertical + skeleton em R0) | aprova |
 | evolve | `parece-c2-mas-c3` | `mudanca.md` | decisão revertida disfarçada de RF alterado | classifica C3 |
 | evolve | `limpa` | `mudanca.md` | — (RF alterado genuíno) | classifica C2 |
+| ajuda | `limpa` | `pergunta.md` | — (dúvida de estágio genuína) | aprova |
+| ajuda | `tarefa-disfarcada` | `pergunta.md` | pedido de execução embrulhado em dúvida | reprova |
 
 Cada skill tem ao menos um par **defeito/`limpa`** — a suíte pega falso-negativo (não acusou o defeito)
 e falso-positivo (reprovou o que estava bom).
