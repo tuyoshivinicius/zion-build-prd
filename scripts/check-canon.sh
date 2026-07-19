@@ -109,6 +109,25 @@ check_prd_dogfood() {
   return 0
 }
 
+# C8: a skill de ajuda cita todas as irmãs, e todo comando /zion-* que ela cita existe.
+# Ajuda não instalada → silencioso (mesma tolerância de C5 com docs/adr/ ausente).
+check_ajuda_citacoes() {
+  local ajuda="$ROOT/skills/zion-prd-ajuda/SKILL.md"
+  [ -f "$ajuda" ] || return 0
+  local d name cmd
+  for d in "$ROOT"/skills/*/; do
+    [ -d "$d" ] || continue
+    name="$(basename "$d")"
+    [ "$name" = "zion-prd-ajuda" ] && continue
+    grep -qF "$name" "$ajuda" \
+      || printf 'skills/zion-prd-ajuda: skill-sem-ajuda — "%s" não é citada na skill de ajuda (dê uma linha no mapa de rotas)\n' "$name"
+  done
+  grep -oE '/zion-[a-z0-9-]+' "$ajuda" | sed 's|^/||' | sort -u | while read -r cmd; do
+    [ -d "$ROOT/skills/$cmd" ] \
+      || printf 'skills/zion-prd-ajuda: ajuda-cita-fantasma — comando "/%s" citado mas não existe em skills/\n' "$cmd"
+  done
+}
+
 findings="$(
   check_docs_exist
   check_skills_prd
@@ -118,6 +137,7 @@ findings="$(
   check_adr_index
   check_root_rules
   check_prd_dogfood
+  check_ajuda_citacoes
 )"
 
 if [ -n "$findings" ]; then

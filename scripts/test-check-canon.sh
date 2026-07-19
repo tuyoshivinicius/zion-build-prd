@@ -30,7 +30,18 @@ assert_contains "acha script-sem-doc"     "script-sem-doc"     "$out"
 assert_contains "acha asset-sem-doc"      "asset-sem-doc"      "$out"
 assert_contains "acha adr-sem-indice"     "adr-sem-indice"     "$out"
 assert_contains "acha regra-raiz-sem-sot" "regra-raiz-sem-sot" "$out"
+assert_contains "acha skill-sem-ajuda"     "skill-sem-ajuda"     "$out"
+assert_contains "acha ajuda-cita-fantasma" "ajuda-cita-fantasma" "$out"
 assert_contains "dogfood acha stack (via check-prd)" "stack" "$out"
+
+# 2b. Ajuda ausente → C8 silencioso (tolerância, como C5 com docs/adr/ ausente)
+tmp="$(mktemp -d)"
+cp -R "$FIX/clean/." "$tmp/"
+rm -rf "$tmp/skills/zion-prd-ajuda"
+grep -v 'zion-prd-ajuda' "$FIX/clean/docs/prd.md" > "$tmp/docs/prd.md"
+out="$(bash "$CHECK" "$tmp")"; rc=$?
+assert_exit "ajuda ausente sai 0 (C8 tolerante)" 0 "$rc"
+rm -rf "$tmp"
 
 # 3. ROOT inexistente → exit 2
 out="$(bash "$CHECK" /caminho/que/nao/existe 2>&1)"; rc=$?
