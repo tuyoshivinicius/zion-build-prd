@@ -48,6 +48,7 @@ do próprio ADR (campo **Evidência**, que aponta o design doc de origem), não 
 | [ADR-013](adr/ADR-013-estudo-workflow-adaptativo.md) | Skill de estudo (Estágio 0) roteia o "Próximo passo sugerido" por marcador do repo-harness: modo interno (SDD leve) × distribuído (discovery), numa única `SKILL.md` gated. |
 | [ADR-014](adr/ADR-014-experiencia-nfr-carregado.md) | Qualidade de experiência é NFR carregado por marcador machine-legível (`Superfície de uso` + tag `(experiência)`), com verificador que aconselha até o backlog. |
 | [ADR-015](adr/ADR-015-integracao-speckit-instalavel.md) | Integração instalável com o Spec Kit: regras versionadas no `CLAUDE.md` do produto, `architecture.md` distribuído (prosa do Autor + blocos derivados) e autoridade advisória com guard opt-in. |
+| [ADR-016](adr/ADR-016-skill-ajuda-grounding-vivo.md) | Skill de ajuda conversacional com grounding vivo nas `SKILL.md` irmãs, sem artefato gravado, avaliada só na camada de julgamento, com o envelhecimento das citações cobrado por C8 no `check-canon.sh`. |
 
 ## 3. Scripts
 
