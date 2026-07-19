@@ -43,6 +43,15 @@ obra/superpowers-marketplace` e `/plugin install superpowers@superpowers-marketp
 novo." (No formato plugin ela é declarada como dependência e instala automaticamente quando o
 marketplace está registrado.)
 
+**Delegação classificada (guiada por `references/delegacao-criativa.md`).** Antes de invocar, no
+mesmo turno: (1) leia `docs/discovery.md` e **enumere as tensões como observações** suas — nunca já
+redigidas como pergunta; (2) **classifique cada tensão** diagnóstica/propositiva pela rubrica;
+(3) **monte o bloco de delegação** = as observações classificadas + a rubrica (distinção, dois
+previews, condução); (4) **autoverifique** o bloco montado —
+`printf '%s' "<bloco>" | bash references/check-delegacao.sh -` — e ecoe o veredito (aconselha,
+`RN-01`); marcador ausente → corrija o bloco antes de delegar; (5) passe o bloco como `args` na
+invocação abaixo.
+
 Invoque `superpowers:brainstorming` no mesmo turno. O enquadramento ramifica pelo modo detectado
 na Fase 0:
 
@@ -51,7 +60,7 @@ na Fase 0:
   `docs/discovery.md`." **Quando surface=sim,** acrescente um 4º item de captura — a camada de
   experiência, em **prosa**, ancorada na persona nomeada: contexto de uso, expectativas, e a
   qualidade de experiência que o produto precisa transmitir — sempre no nível de o-quê ("o usuário
-  percebe X"), nunca "tela Y". Grave em `docs/discovery.md` a **linha bare** `Superfície de uso: sim`
+  percebe X"). Para previews, siga a regra dos dois previews de `references/delegacao-criativa.md` — ilustrar a escolha é liberado, desenhar tela fica no `plan.md`. Grave em `docs/discovery.md` a **linha bare** `Superfície de uso: sim`
   e um bloco `## Experiência` com essa prosa.
 - **Modo retomar/revisar:** "Aqui está o `docs/discovery.md` atual: «<conteúdo do arquivo>».
   Preserve visão/persona/faz-não-faz que já estão sólidos; pressione o que está incompleto ou o

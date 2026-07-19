@@ -28,6 +28,15 @@ obra/superpowers-marketplace` e `/plugin install superpowers@superpowers-marketp
 novo." (No formato plugin ela é declarada como dependência e instala automaticamente quando o
 marketplace está registrado.)
 
+**Delegação classificada (guiada por `references/delegacao-criativa.md`).** Antes de invocar, no
+mesmo turno: (1) leia `docs/PRD.md` e **enumere as tensões como observações** suas — nunca já
+redigidas como pergunta; (2) **classifique cada tensão** diagnóstica/propositiva pela rubrica;
+(3) **monte o bloco de delegação** = as observações classificadas + a rubrica (distinção, dois
+previews, condução); (4) **autoverifique** o bloco montado —
+`printf '%s' "<bloco>" | bash references/check-delegacao.sh -` — e ecoe o veredito (aconselha,
+`RN-01`); marcador ausente → corrija o bloco antes de delegar; (5) passe o bloco como `args` na
+invocação abaixo.
+
 Invoque `superpowers:brainstorming` no mesmo turno para: (1) agrupar os `RF-xx` em épicos;
 (2) montar o story map (backbone da jornada); (3) cortar linhas de release R0..Rn; (4) fatiar cada
 épico em specs verticais. Para cada spec, **cunhe um slug kebab-case** (curto, estável — ele vira o
