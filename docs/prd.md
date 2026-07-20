@@ -82,8 +82,9 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   perder o que ele escreveu.
 - **Épico E3 — Rastreabilidade:** `RF-09` O autor reconcilia a qualquer momento a tabela de
   rastreabilidade e o backlog a partir das specs existentes, vendo RF órfão, spec intraçável e RF
-  descoberto — e reconcilia junto os blocos derivados do documento de arquitetura do produto
-  (índice de decisões e visão do backlog).
+  descoberto — e reconcilia junto os blocos derivados do documento de arquitetura do produto: o
+  mapa de decisões vigentes agrupado por área, com o que cada uma fixou e as specs que a exercitam,
+  a visão do backlog e os avisos de defasagem da narrativa estrutural.
 - **Épico E4 — Dia 2:** `RF-10` O autor classifica uma mudança pós-release nos cenários canônicos
   e é roteado aos comandos donos de cada artefato afetado, com o histórico registrado na PRD.
 - **Épico E5 — Qualidade mecânica:** `RF-11` O harness verifica por máquina as regras decidíveis
@@ -197,3 +198,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-19 | C1 | `RF-20` novo: delegação criativa classifica a tensão (diagnóstica/propositiva) e gateia o prompt montado | no modo revisar a clarificação degradava para pergunta diagnóstica sem recomendação nem preview | ADR-017 · assets/delegacao-criativa.md · scripts/check-delegacao.sh · skills/zion-prd-discovery · skills/zion-prd-write · skills/zion-prd-decompose |
 | 2026-07-20 | C3 | Decisão revertida: o `architecture.md` do produto deixa de ser prosa "nunca tocada por máquina" e passa a nascer sob ditado com âncora nos ADRs | o placeholder do esqueleto atravessou uma jornada inteira intacto e a ponte do plan injetava vazio | ADR-018 substitui ADR-015 · docs/architecture.md §2 · docs/prd.md §8 |
 | 2026-07-20 | C2 | `RF-03` alterado: todo ADR carrega uma **área**, que agrupa o mapa de decisões da §3 do documento de arquitetura | o índice plano não respondia "o que foi decidido sobre este assunto" na reorientação meses depois | ADR-018 · skills/zion-adr-new · scripts/check-adr.sh |
+| 2026-07-20 | C2 | `RF-09` alterado: o índice de decisões vira **mapa** por área (o que fixou + specs que exercitam), sem as substituídas | reorientação meses depois pergunta "o que foi decidido sobre isto e onde vive no código" — o índice plano não respondia | ADR-018 · scripts/trace-arquitetura.sh · scripts/check-arquitetura.sh |

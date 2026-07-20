@@ -27,13 +27,19 @@ fresh() {  # copia a fixture $1 para um temp e ecoa o caminho
   local t; t="$(mktemp)"; cp "$1" "$t"; printf '%s' "$t"
 }
 
-# 1. Reconciliação: blocos regenerados, prosa intacta.
+# 1. Reconciliação: mapa agrupado por área, prosa intacta.
 arch="$(fresh "$FIX/architecture.md")"
-out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md")"; rc=$?
+out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs")"; rc=$?
 assert_exit "reconciliação sai 0" 0 "$rc"
-assert_file_re "índice ganha ADR-001" "$arch" 'ADR-001-banco-unico\.md'
-assert_file_re "índice ganha ADR-002" "$arch" 'ADR-002-fila-simples\.md'
-assert_file_re "índice usa o título do ADR" "$arch" 'Banco único'
+assert_file_re "mapa abre o grupo da área do ADR-001" "$arch" '^### Persistência$'
+assert_file_re "mapa abre o grupo da área do ADR-002" "$arch" '^### Fluxo$'
+assert_file_re "mapa tem o grupo Sem área" "$arch" '^### Sem área$'
+assert_file_re "mapa linka o ADR-001 em negrito" "$arch" '^- \*\*\[ADR-001 — Banco único\]\(adr/ADR-001-banco-unico\.md\)\*\*$'
+assert_file_re "mapa traz o que o ADR-001 fixou" "$arch" '^  fixou: Um banco único\.'
+assert_file_re "mapa traz as specs do ADR-001" "$arch" 'specs: `001-walking-skeleton`, `002-historico`'
+assert_file_re "mapa traz as specs do ADR-002" "$arch" 'specs: `002-historico`'
+assert_file_not_re "ADR substituído sai do mapa" "$arch" 'ADR-004-motor-antigo\.md'
+assert_file_re "rodapé conta as substituídas" "$arch" '1 decisão\(ões\) substituída\(s\)'
 assert_file_re "visão ganha walking-skeleton com status" "$arch" 'walking-skeleton.*implementada'
 assert_file_re "visão ganha historico pendente" "$arch" 'historico.*pendente'
 assert_file_re "prosa do Autor preservada" "$arch" 'Prosa que o reconciliador nunca toca'
@@ -41,19 +47,19 @@ assert_file_not_re "conteúdo velho dos blocos substituído" "$arch" 'conteúdo 
 
 # 2. Idempotência: rodar de novo não muda o arquivo.
 cp "$arch" "$arch.bak"
-bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" >/dev/null 2>&1
+bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs" >/dev/null 2>&1
 if diff -q "$arch" "$arch.bak" >/dev/null 2>&1; then echo "ok: reconciliação idempotente"
 else echo "FALHOU: reconciliação não é idempotente"; fail=1; fi
 
 # 3. --check em dia após reconciliar.
-out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" --check)"; rc=$?
+out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs" --check)"; rc=$?
 assert_exit "--check em dia sai 0" 0 "$rc"
 assert_contains "--check diz em dia" "em dia" "$out"
 rm -f "$arch" "$arch.bak"
 
 # 4. --check com drift é read-only e sai 1.
 arch="$(fresh "$FIX/architecture.md")"; cp "$arch" "$arch.bak"
-out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" --check)"; rc=$?
+out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs" --check)"; rc=$?
 assert_exit "--check com drift sai 1" 1 "$rc"
 if diff -q "$arch" "$arch.bak" >/dev/null 2>&1; then echo "ok: --check não escreve"
 else echo "FALHOU: --check escreveu no arquivo"; fail=1; fi
@@ -88,5 +94,23 @@ assert_exit "arquitetura inexistente sai 2" 2 "$rc"
 # 9. Sem argumentos → exit 2.
 out="$(bash "$TRACE" 2>/dev/null)"; rc=$?
 assert_exit "sem argumentos sai 2" 2 "$rc"
+
+# 10. Ordem estável das áreas: Persistência (ADR-001) antes de Fluxo (ADR-002); "Sem área" por último.
+arch="$(fresh "$FIX/architecture.md")"
+bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs" >/dev/null 2>&1
+ordem="$(grep -n '^### ' "$arch" | sed 's/:.*### /:/' | tr '\n' ' ')"
+case "$ordem" in
+  *Persistência*Fluxo*Sem\ área*) echo "ok: ordem das áreas estável" ;;
+  *) echo "FALHOU: ordem das áreas inesperada ($ordem)"; fail=1 ;;
+esac
+rm -f "$arch"
+
+# 11. Sem specs-dir → mapa sai sem a parte de specs, e nada quebra.
+arch="$(fresh "$FIX/architecture.md")"
+out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md")"; rc=$?
+assert_exit "sem specs-dir sai 0" 0 "$rc"
+assert_file_re "sem specs-dir ainda traz o fixou" "$arch" '^  fixou: Um banco único\.'
+assert_file_not_re "sem specs-dir não inventa specs" "$arch" 'specs: `'
+rm -f "$arch"
 
 if [ "$fail" -eq 0 ]; then echo "test-trace-arquitetura: tudo verde"; else echo "test-trace-arquitetura: FALHOU"; exit 1; fi

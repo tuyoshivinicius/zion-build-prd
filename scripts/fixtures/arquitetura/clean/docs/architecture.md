@@ -13,7 +13,9 @@ Nenhuma por enquanto.
 ## 3. Decisões estruturantes
 
 <!-- zion:adr-index:start -->
-- [ADR-001 — Banco único](adr/ADR-001-banco-unico.md)
+### Persistência
+- **[ADR-001 — Banco único](adr/ADR-001-banco-unico.md)**
+  fixou: Um banco único.
 <!-- zion:adr-index:end -->
 
 ## 4. Visão do backlog

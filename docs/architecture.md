@@ -71,7 +71,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/check-canon.sh | Guard de canonização: cruza prd.md/architecture.md com skills/, scripts/, ASSET_MAP e docs/adr/. |
 | scripts/trace-prd.sh | Semeia/reconcilia a §12 da PRD a partir das specs. |
 | scripts/trace-backlog.sh | Semeia/reconcilia o backlog de specs. |
-| scripts/trace-arquitetura.sh | Semeia/reconcilia os blocos derivados (índice de ADRs, visão do backlog) do architecture.md do produto. |
+| scripts/trace-arquitetura.sh | Semeia/reconcilia os blocos derivados do architecture.md do produto: o mapa de decisões vigentes por área (com o que cada uma fixou e as specs que a exercitam) e a visão do backlog. |
 | scripts/eval.sh | Runner único da camada mecânica (auto-testes abaixo). |
 | scripts/test-check-prd.sh | Auto-teste do check-prd.sh contra fixtures. |
 | scripts/test-check-estudo.sh | Auto-teste do check-estudo.sh contra fixtures. |

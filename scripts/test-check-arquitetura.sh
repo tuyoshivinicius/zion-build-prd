@@ -58,4 +58,27 @@ assert_exit "docs/adr ausente com citação sai 1" 1 "$rc"
 assert_contains "acusa citado mas ausente sem docs/adr" "citado no bloco mas ausente" "$out"
 rm -rf "$semadr"
 
+# 6. ADR substituído no disco não é cobrado como ausente do bloco (o mapa é o vigente).
+sup="$(mktemp -d)"; mkdir -p "$sup/docs/adr"
+cp "$FIX/clean/CLAUDE.md" "$sup/CLAUDE.md"
+cp "$FIX/clean/docs/architecture.md" "$sup/docs/architecture.md"
+cp "$FIX/clean/docs/backlog.md" "$sup/docs/backlog.md"
+cp "$FIX/clean/docs/adr/ADR-001-banco-unico.md" "$sup/docs/adr/"
+cat > "$sup/docs/adr/ADR-009-aposentado.md" <<'EOF'
+# ADR-009 — Aposentado
+
+- **Status:** Substituído por ADR-001
+- **Área:** Persistência
+- **Data:** 2026-07-20
+- **Evidência:** Decisão dada: racional registrado (fixture).
+
+## Decisão
+
+Decisão aposentada.
+EOF
+out="$(bash "$CHECK" "$sup")"; rc=$?
+assert_exit "ADR substituído fora do bloco não acusa" 0 "$rc"
+assert_not_contains "não acusa o substituído como defasado" "ADR-009" "$out"
+rm -rf "$sup"
+
 if [ "$fail" -eq 0 ]; then echo "test-check-arquitetura: tudo verde"; else echo "test-check-arquitetura: FALHOU"; exit 1; fi

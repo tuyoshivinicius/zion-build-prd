@@ -64,6 +64,7 @@ check_visao_vazia() {
 }
 
 # 3. Índice de ADRs (bloco zion:adr-index) em dia com docs/adr/ — nos dois sentidos.
+#    ADR substituído é ignorado no sentido disco→bloco (o mapa é o vigente — ADR-018).
 #    docs/adr/ ausente não engole o sentido bloco→disco: citação vira fantasma e é acusada.
 check_adr_index() {
   [ -f "$ARCH" ] || return 0
@@ -72,6 +73,8 @@ check_adr_index() {
   for f in "$ADR_DIR"/ADR-*.md; do
     [ -f "$f" ] || continue
     base="$(basename "$f")"
+    # Decisão substituída sai do mapa por decisão (ADR-018): não é fantasma, é histórico.
+    grep -qE '^[[:space:]]*-[[:space:]]*\*\*Status:\*\*.*Substitu[ií]do por' "$f" && continue
     printf '%s' "$blk" | grep -qF "$base" \
       || printf 'docs/architecture.md: adr-index-defasado — %s fora do bloco zion:adr-index (rode /zion-prd-trace)\n' "$base"
   done
