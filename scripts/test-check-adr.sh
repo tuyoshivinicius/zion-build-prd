@@ -20,6 +20,7 @@ assert_contains() {  # desc  agulha  palheiro
 out="$(bash "$CHECK" "$FIX/clean")"; rc=$?
 assert_exit "clean sai 0" 0 "$rc"
 assert_contains "clean reporta limpo" "check-adr: limpo" "$out"
+assert_contains "clean não acusa area-ausente" "check-adr: limpo" "$out"
 
 # 2. Fixture dirty → exit 1 + um achado de cada tipo.
 # spike-dir-vazio precisa de um dir vazio (git não versiona dir vazio) → cria em runtime.
@@ -33,6 +34,7 @@ assert_contains "dirty acha spike-dir-vazio"      "spike-dir-vazio" "$out"
 assert_contains "dirty acha spike-sem-readme"     "spike-sem-readme" "$out"
 assert_contains "dirty acha evidencia-sem-lastro" "evidencia-sem-lastro" "$out"
 assert_contains "dirty acha decisao-dada-sem-racional" "decisao-dada-sem-racional" "$out"
+assert_contains "dirty acha area-ausente"             "area-ausente" "$out"
 
 # 3. Erro de uso: dir inexistente → exit 2
 out="$(bash "$CHECK" "$FIX/nao-existe" 2>&1)"; rc=$?

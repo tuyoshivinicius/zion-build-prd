@@ -57,7 +57,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   opera uma superfície de uso — a qualidade de experiência esperada como marcador que viaja a jusante. `RF-02` O autor prova as
   2–3 decisões estruturantes com evidência proporcional ao risco antes de fechar a PRD. `RF-03` O
   autor registra cada decisão como ADR com contexto, decisão e consequências — inclusive
-  substituindo um ADR anterior com referência simétrica. `RF-04` O autor preenche a PRD seção a
+  substituindo um ADR anterior com referência simétrica —, classificando-a numa área que agrupa o
+  mapa de decisões do produto. `RF-04` O autor preenche a PRD seção a
   seção a partir de um esqueleto, com requisitos de uma frase agrupados por épico, carregando o
   marcador de superfície para os NFRs e aterrissando ≥1 NFR de experiência mensurável quando há
   superfície de uso. `RF-05` O autor
@@ -195,3 +196,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-18 | C2 | `RF-08` alterado: o prompt do plan injeta também a prosa estrutural do documento de arquitetura do produto | o plan é o único passo do Spec Kit que lê o como estrutural (recorte por passo) | ADR-015 · skills/zion-prd-plan-prompt |
 | 2026-07-19 | C1 | `RF-20` novo: delegação criativa classifica a tensão (diagnóstica/propositiva) e gateia o prompt montado | no modo revisar a clarificação degradava para pergunta diagnóstica sem recomendação nem preview | ADR-017 · assets/delegacao-criativa.md · scripts/check-delegacao.sh · skills/zion-prd-discovery · skills/zion-prd-write · skills/zion-prd-decompose |
 | 2026-07-20 | C3 | Decisão revertida: o `architecture.md` do produto deixa de ser prosa "nunca tocada por máquina" e passa a nascer sob ditado com âncora nos ADRs | o placeholder do esqueleto atravessou uma jornada inteira intacto e a ponte do plan injetava vazio | ADR-018 substitui ADR-015 · docs/architecture.md §2 · docs/prd.md §8 |
+| 2026-07-20 | C2 | `RF-03` alterado: todo ADR carrega uma **área**, que agrupa o mapa de decisões da §3 do documento de arquitetura | o índice plano não respondia "o que foi decidido sobre este assunto" na reorientação meses depois | ADR-018 · skills/zion-adr-new · scripts/check-adr.sh |

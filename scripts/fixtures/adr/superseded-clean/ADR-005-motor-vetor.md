@@ -1,6 +1,7 @@
 # ADR-005 — Motor de exportação vetorial
 
 - **Status:** Aceito
+- **Área:** Motor
 - **Data:** 2026-08-02
 - **Decisores:** time
 - **Substitui:** ADR-002

@@ -1,6 +1,7 @@
 # ADR-003 — Provider de nuvem
 
 - **Status:** Aceito
+- **Área:** Motor
 - **Data:** 2026-07-18
 - **Decisores:** time de plataforma
 - **Evidência:** Decisão dada: mandato de infraestrutura da organização — reusar o provider de nuvem já contratado, decidido pelo time de plataforma

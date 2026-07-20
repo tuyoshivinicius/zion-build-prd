@@ -41,7 +41,11 @@ inicial entre aspas é opcional — se vier, a skill parte dele e sonda só os b
    (ex.: `"Escolha de biblioteca"` → `escolha-de-biblioteca`).
 4. **Crie o arquivo** `docs/adr/ADR-<n>-<slug>.md` com o conteúdo do template abaixo,
    substituindo `<n>`, `<slug>` e `<título>` pelos valores reais. Deixe `Status: Proposto`
-   até a decisão ser aceita; então atualize para `Aceito`.
+   até a decisão ser aceita; então atualize para `Aceito`. **Preencha a `Área`** — uma palavra que
+   nomeia o assunto governado pela decisão (reuse uma área já usada por outro ADR do produto quando
+   couber; áreas novas são baratas). É por ela que o mapa da §3 do `docs/architecture.md` agrupa as
+   decisões (ADR-018). Área ausente não trava nada: o ADR cai no grupo `Sem área`, no fim do mapa, e
+   o `check-adr.sh` acusa `area-ausente` como conselho.
 5. **Confirme** ao usuário o caminho do arquivo criado.
 
 ## Template do arquivo gerado
@@ -50,6 +54,7 @@ inicial entre aspas é opcional — se vier, a skill parte dele e sonda só os b
 # ADR-<n> — <título>
 
 - **Status:** Proposto
+- **Área:** <uma palavra: o assunto que a decisão governa — ex.: Persistência, Compilação, Distribuição>
 - **Data:** <preencher>
 - **Decisores:** <preencher>
 - **Substitui:** <só no modo substituir: ADR-<n>; no modo normal, omita esta linha>

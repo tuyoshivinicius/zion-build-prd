@@ -1,6 +1,7 @@
 # ADR-001 — Motor de renderização do diagrama
 
 - **Status:** Aceito
+- **Área:** Motor
 - **Data:** 2026-07-17
 - **Decisores:** time
 - **Evidência:** docs/adr/spikes/ADR-001-motor/

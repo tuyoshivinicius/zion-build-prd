@@ -1,6 +1,7 @@
 # ADR-002 — Persistência local entre sessões
 
 - **Status:** Aceito
+- **Área:** Motor
 - **Data:** 2026-07-17
 - **Decisores:** time
 - **Evidência:** https://exemplo.org/comparativo-persistencia (licença MIT, ecossistema maduro)

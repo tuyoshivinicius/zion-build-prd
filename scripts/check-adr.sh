@@ -16,6 +16,7 @@
 #        <dir>/spikes/<seg> vazio          → spike-dir-vazio
 #        <dir>/spikes/<seg> sem README.md  → spike-sem-readme
 #   4. Evidência de conhecimento sem URL nem caminho → evidencia-sem-lastro
+#   5. sem linha **Área:** preenchida → area-ausente (advisório; agrupa o mapa da §3 do produto)
 set -u
 
 usage() { echo "uso: check-adr.sh <dir-de-adrs>" >&2; exit 2; }
@@ -29,6 +30,12 @@ case "$DIR" in -*) usage ;; esac
 # (a acentuação de "Evidência" é UTF-8 fixa no template e nas fixtures).
 evidence_value() {  # $1 arquivo
   sed -n 's/^[[:space:]]*-[[:space:]]*\*\*Evidência:\*\*[[:space:]]*//p' "$1" | head -1
+}
+
+# Valor da primeira linha `- **Área:**`, sem o rótulo (ADR-018). A área agrupa o mapa da §3 do
+# architecture.md do produto; ausente, o ADR cai no grupo "Sem área" — o achado é conselho.
+area_value() {  # $1 arquivo
+  sed -n 's/^[[:space:]]*-[[:space:]]*\*\*Área:\*\*[[:space:]]*//p' "$1" | head -1 | sed 's/[[:space:]]*$//'
 }
 
 # --- R8: supersessão (referência simétrica Substitui / Status: Substituído por) ---
@@ -58,6 +65,12 @@ for f in "$DIR"/ADR-*.md; do
   label="$(basename "$f")"
   ev="$(evidence_value "$f")"
   ev="$(printf '%s' "$ev" | sed 's/[[:space:]]*$//')"   # trim à direita
+
+  # Área ausente/placeholder → advisório: o ADR ainda entra no mapa, no grupo "Sem área".
+  ar="$(area_value "$f")"
+  if [ -z "$ar" ] || printf '%s' "$ar" | grep -qE '^<.*>$'; then
+    add "$label: area-ausente — sem linha **Área:** (o ADR cai no grupo \"Sem área\" do mapa da §3; conselho, não trava)"
+  fi
 
   # Vazia ou placeholder <…> → sem evidência.
   if [ -z "$ev" ] || printf '%s' "$ev" | grep -qE '^<.*>$'; then

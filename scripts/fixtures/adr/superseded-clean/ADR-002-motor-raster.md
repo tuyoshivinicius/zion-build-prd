@@ -1,6 +1,7 @@
 # ADR-002 — Motor de exportação raster
 
 - **Status:** Substituído por ADR-005
+- **Área:** Motor
 - **Data:** 2026-07-17
 - **Decisores:** time
 - **Evidência:** https://exemplo.org/comparativo-exportacao (licença MIT)
