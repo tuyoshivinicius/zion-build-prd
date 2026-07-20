@@ -102,7 +102,10 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
 - **Épico E6 — Distribuição:** `RF-14` O autor instala as skills por um comando, em qualquer um
   dos dois canais suportados. `RF-15` Cada skill é autocontida: carrega consigo as regras e
   templates de que precisa, gerados da fonte única. `RF-16` Uma skill que depende de capacidade
-  externa ausente avisa com o comando de instalação e para graciosamente.
+  externa ausente avisa com o comando de instalação e para graciosamente. `RF-21` As releases do
+  harness são distribuídas via CI/CD por impacto: cada merge na main atualiza um release-PR que
+  acumula o changelog derivado dos commits e o bump SemVer calculado; mergear o release-PR cria a
+  tag única e publica os dois canais no mesmo número.
 - **Épico E7 — Ajuda e orientação:** `RF-19` O autor tira dúvidas sobre o harness e sobre a costura
   com o Spec Kit em conversa, e recebe onde a dúvida cai na jornada, o comando que a resolve — sempre
   da lista de comandos daquela instalação —, a armadilha daquele ponto e a fonte de cada afirmação;
@@ -128,8 +131,8 @@ As decisões estruturantes deste repo estão registradas como ADRs em `docs/adr/
 dois canais com autocontenção (ADR-002), verificação mecânica que aconselha no projeto-alvo
 (ADR-004), o contrato de capacidades com o executor externo de brainstorming (ADR-007) e a skill de
 estudo workflow-adaptativa por persona (ADR-013), a classificação diagnóstica×propositiva na
-delegação criativa ao brainstorming (ADR-017) e o documento de arquitetura do produto gerado sob
-ditado e reconciliado (ADR-018).
+delegação criativa ao brainstorming (ADR-017), o documento de arquitetura do produto gerado sob
+ditado e reconciliado (ADR-018), e as releases por impacto via release-PR automatizado (ADR-019).
 
 ## 9. Glossário
 
@@ -182,6 +185,7 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-14 | E6 | .claude-plugin/ · README.md |
 | RF-15 | E6 | scripts/sync-assets.sh · scripts/asset-map.sh · assets/ |
 | RF-16 | E6 | preflight nas SKILL.md das skills dependentes |
+| RF-21 | E6 | .github/workflows/release.yml · release-please-config.json |
 | RF-19 | E7 | skills/zion-prd-ajuda |
 
 ## 13. Histórico de mudanças
@@ -207,3 +211,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-20 | C2 | `RF-11` alterado: sai `visao-vazia`, entram narrativa ausente/sem âncora e integrações não declaradas; bloco de regras sobe para `v2` com a regra de corte §1 × plan | mais aviso isolado não movia o Autor: o achado agora aponta o comando que o cura e a fronteira fica instalada no repo do produto | ADR-018 · scripts/check-arquitetura.sh · assets/templates/architecture-skeleton.md · assets/templates/regras-speckit.md |
 | 2026-07-20 | C2 | `RF-05` alterado: a decomposição termina ditando a narrativa estrutural da §1–§2 do documento de arquitetura, com âncora nas decisões usadas | o documento era semeado e o placeholder atravessava a jornada inteira; agora nasce onde o material finalmente existe | ADR-018 · skills/zion-prd-decompose (Fase 5 e `--narrativa`) |
 | 2026-07-20 | C2 | `RF-10` alterado: o dia 2 ganha a rota da narrativa defasada; a ponte do plan passa a extrair a narrativa pelo marcador e a ecoar os avisos | `RF-08` prometia injetar a prosa estrutural e injetava vazio | ADR-018 · skills/zion-prd-evolve · skills/zion-prd-plan-prompt |
+| 2026-07-20 | C1 | `RF-21` novo: releases por impacto via release-PR automatizado (CI/CD) | governar a distribuição de releases que era manual (bump à mão, sem changelog nem PR) | ADR-019 · .github/workflows/release.yml · scripts/check-commit.sh |

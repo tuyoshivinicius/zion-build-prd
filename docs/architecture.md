@@ -51,6 +51,7 @@ do próprio ADR (campo **Evidência**, que aponta o design doc de origem), não 
 | [ADR-016](adr/ADR-016-skill-ajuda-grounding-vivo.md) | Skill de ajuda conversacional com grounding vivo nas `SKILL.md` irmãs, sem artefato gravado, avaliada só na camada de julgamento, com o envelhecimento das citações cobrado por C8 no `check-canon.sh`. |
 | [ADR-017](adr/ADR-017-delegacao-criativa-classificada.md) | A delegação criativa classifica cada tensão (diagnóstica/propositiva) numa rubrica de fonte única e gateia o prompt montado por `check-delegacao.sh`, sem tocar o contrato externo C1–C3. |
 | [ADR-018](adr/ADR-018-architecture-gerado-do-produto.md) | O `architecture.md` do produto é gerado sob ditado (§1–§2 na fase final do decompose, com âncora nos ADRs) e reconciliado (§3 vira mapa por área; avisos de defasagem em bloco adjacente); substitui o ADR-015. |
+| [ADR-019](adr/ADR-019-releases-por-impacto.md) | Releases por impacto via release-PR automatizado (release-please): Conventional Commits → bump SemVer, CHANGELOG no root, um número para os dois canais; commit-lint bloqueante. |
 
 ## 3. Scripts
 
