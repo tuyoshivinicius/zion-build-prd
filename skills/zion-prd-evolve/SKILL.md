@@ -22,7 +22,8 @@ comandos donos de cada artefato **parando em cada gate**, e termina nas pontes �
 - **C2 — RF alterado ou removido:** requisito muda de significado ou sai de escopo. Toca §6 + §13 +
   specs do épico afetado + tabela; spec já com `spec.md` → contexto de re-specify montado pela ponte.
 - **C3 — Decisão revertida:** decisão estruturante caiu. Toca ADR novo que substitui o antigo
-  (referência cruzada simétrica) + §8 (restrições) + §13 + aviso de revisar a `constitution`.
+  (referência cruzada simétrica) + §8 (restrições) + §13 + aviso de revisar a `constitution` + a
+  narrativa da §1 quando a decisão caída a sustentava (o bloco de avisos acusa).
 
 ## Fase 0 — Pré-requisito (aconselha)
 `docs/PRD.md` deve existir — o dia 2 pressupõe o dia 1. Faltando → avise ("recomendo `/zion-prd-write`
@@ -52,6 +53,10 @@ gate por vez** — não encadeie tudo num turno só.
   `Substitui: ADR-<n>` e marca o antigo `Status: Substituído por ADR-<m>` (referência simétrica).
 - **Re-fatiamento do épico afetado (C1/C2)** → `/zion-prd-decompose --epico E<k>`: re-fatia **apenas** o
   épico indicado; specs já implementadas são intocáveis.
+- **Narrativa estrutural defasada (C1/C2/C3)** → `/zion-prd-decompose --narrativa`: quando a mudança
+  cria/derruba componente ou contrato de topo, ou quando o bloco `zion:narrativa-avisos` do
+  `docs/architecture.md` acusa `narrativa-superseded`/`narrativa-defasada`. Revisa **só** a §1–§2,
+  sem re-fatiar nada, e nunca sobrescreve a prosa do Autor sem confirmação (ADR-018).
 - **Reconciliação da tabela (§12)** → `/zion-prd-trace`: dono único da tabela.
 - **Spec já especificada (C2)** → `/zion-prd-specify-prompt` em enquadramento **re-specify**: revê a
   spec existente contra a mudança, com a linha da §13 como contexto.

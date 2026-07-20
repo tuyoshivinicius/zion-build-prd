@@ -89,7 +89,8 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   mapa de decisões vigentes agrupado por área, com o que cada uma fixou e as specs que a exercitam,
   a visão do backlog e os avisos de defasagem da narrativa estrutural.
 - **Épico E4 — Dia 2:** `RF-10` O autor classifica uma mudança pós-release nos cenários canônicos
-  e é roteado aos comandos donos de cada artefato afetado, com o histórico registrado na PRD.
+  e é roteado aos comandos donos de cada artefato afetado — inclusive a narrativa estrutural do
+  produto quando ela fica defasada —, com o histórico registrado na PRD.
 - **Épico E5 — Qualidade mecânica:** `RF-11` O harness verifica por máquina as regras decidíveis
   dos artefatos (fronteira sem stack, NFR com número, RF por épico, evidência presente por risco,
   âncora de experiência presente quando há superfície de uso, narrativa estrutural do produto
@@ -205,3 +206,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-20 | C2 | `RF-09` alterado: o índice de decisões vira **mapa** por área (o que fixou + specs que exercitam), sem as substituídas | reorientação meses depois pergunta "o que foi decidido sobre isto e onde vive no código" — o índice plano não respondia | ADR-018 · scripts/trace-arquitetura.sh · scripts/check-arquitetura.sh |
 | 2026-07-20 | C2 | `RF-11` alterado: sai `visao-vazia`, entram narrativa ausente/sem âncora e integrações não declaradas; bloco de regras sobe para `v2` com a regra de corte §1 × plan | mais aviso isolado não movia o Autor: o achado agora aponta o comando que o cura e a fronteira fica instalada no repo do produto | ADR-018 · scripts/check-arquitetura.sh · assets/templates/architecture-skeleton.md · assets/templates/regras-speckit.md |
 | 2026-07-20 | C2 | `RF-05` alterado: a decomposição termina ditando a narrativa estrutural da §1–§2 do documento de arquitetura, com âncora nas decisões usadas | o documento era semeado e o placeholder atravessava a jornada inteira; agora nasce onde o material finalmente existe | ADR-018 · skills/zion-prd-decompose (Fase 5 e `--narrativa`) |
+| 2026-07-20 | C2 | `RF-10` alterado: o dia 2 ganha a rota da narrativa defasada; a ponte do plan passa a extrair a narrativa pelo marcador e a ecoar os avisos | `RF-08` prometia injetar a prosa estrutural e injetava vazio | ADR-018 · skills/zion-prd-evolve · skills/zion-prd-plan-prompt |

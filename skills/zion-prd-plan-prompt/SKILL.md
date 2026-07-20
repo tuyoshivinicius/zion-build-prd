@@ -25,8 +25,12 @@ antes". Não bloqueie; pergunte se segue mesmo assim.
 (ADR-015); ausente → aconselhe `/zion-speckit-install` (não bloqueie).
 
 ## Fase 1 — Levantar e confirmar os ADRs relevantes
-1. Leia o `spec.md` da spec e cruze com `docs/adr/`; se `docs/architecture.md` existir, leia
-   também a prosa do Autor (§1 Visão geral, §2 Integrações externas).
+1. Leia o `spec.md` da spec e cruze com `docs/adr/`; se `docs/architecture.md` existir, extraia a
+   **narrativa estrutural** pelo marcador — o conteúdo entre `<!-- zion:narrativa:start … -->` e
+   `<!-- zion:narrativa:end -->`, **sem** os marcadores — mais a prosa da §2 (Integrações externas).
+   Não raspe a §1 inteira: o que está fora do bloco é ruído de esqueleto. Bloco ausente ou só com
+   placeholder `_(…)_` → não há narrativa; avise que a §1 nunca foi ditada e aconselhe
+   `/zion-prd-decompose --narrativa` (não bloqueie).
 2. Proponha os ADRs relevantes àquela feature, cada um com uma linha de justificativa
    (ex.: "ADR-001 (Postgres) → a spec persiste pedidos").
 3. Peça ao usuário para **confirmar / adicionar / remover**. A lista confirmada por ele é a que vale.
@@ -35,6 +39,11 @@ antes". Não bloqueie; pergunte se segue mesmo assim.
 qual peça falta e por quê ela trava a inferência — **não fabrique** vínculo para preencher cota.
 Proponha só o que o texto sustenta e peça a peça faltante. Não bloqueie.
 
+**Avisos de defasagem (ecoe, não corrija).** Se o bloco `zion:narrativa-avisos` do
+`docs/architecture.md` trouxer `narrativa-superseded` ou `narrativa-defasada`, ecoe-os antes de
+montar o prompt: a narrativa que você vai injetar pode estar velha em relação aos ADRs. A cura é
+`/zion-prd-decompose --narrativa`; o Autor decide se cura agora ou segue (`RN-01`).
+
 ## Fase 2/3 — Montar o prompt (você mesmo)
 Monte, no mesmo turno, o prompt do `plan` em **linguagem natural (prosa)**, seguindo
 `references/quality-rules.md` `#anatomia-plan`. É **conteúdo, não formato**: não use tags XML nem
@@ -42,10 +51,11 @@ dite as seções do artefato — o `/speckit.plan` já tem o próprio template e
 como fonte (não repita os requisitos). Em prosa, o prompt deve:
 - Listar os **ADRs confirmados** (`ADR-00x: <decisão>`) como decisões fechadas a honrar: "honre cada
   ADR listado; não re-decida o que um ADR já fixou".
-- Injetar a prosa estrutural do `docs/architecture.md` do produto (§1–§2) como restrição a honrar:
-  resuma fiel os componentes e contratos externos descritos — não invente estrutura que o
-  documento não tem. A injeção é seletiva por passo (RN-02): só o plan recebe este documento;
-  specify e clarify nunca.
+- Injetar a **narrativa estrutural** extraída do bloco `zion:narrativa` mais a §2 do
+  `docs/architecture.md` como restrição a honrar: resuma fiel os componentes de topo e os contratos
+  externos — não invente estrutura que o documento não tem. O **interior** de cada componente é o
+  que o `plan` vai decidir; a §1 só fixa a topologia e os contratos. A injeção é seletiva por passo
+  (RN-02): só o plan recebe este documento; specify e clarify nunca.
 - Pedir o plano técnico (stack, arquitetura, restrições) que realiza o resultado observável do
   `spec.md` **dentro** dessas decisões.
 - Blindar o escopo em prosa: "não expanda além do escopo do `spec.md`".
