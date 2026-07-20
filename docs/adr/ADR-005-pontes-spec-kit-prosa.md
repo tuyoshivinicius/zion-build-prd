@@ -1,6 +1,7 @@
 # ADR-005 — Pontes para o Spec Kit montam prompts em prosa
 
 - **Status:** Aceito
+- **Área:** Integração Spec Kit
 - **Data:** 2026-07-13
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-13-pontes-spec-kit-prosa-design.md

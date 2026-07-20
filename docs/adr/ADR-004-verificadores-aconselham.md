@@ -1,6 +1,7 @@
 # ADR-004 — Verificadores aconselham no projeto-alvo
 
 - **Status:** Aceito
+- **Área:** Verificação
 - **Data:** 2026-07-17
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-17-check-prd-verificacao-mecanica-design.md

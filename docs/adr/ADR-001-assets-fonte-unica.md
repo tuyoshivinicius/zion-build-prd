@@ -1,6 +1,7 @@
 # ADR-001 — Fonte única de assets com derivados sincronizados
 
 - **Status:** Aceito
+- **Área:** Distribuição
 - **Data:** 2026-07-12
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-12-auto-sync-assets-design.md

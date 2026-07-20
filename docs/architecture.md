@@ -47,9 +47,10 @@ do próprio ADR (campo **Evidência**, que aponta o design doc de origem), não 
 | [ADR-012](adr/ADR-012-estagio-0-estudo-pre-discovery.md) | Estágio 0 formal e opcional (`/zion-prd-estudo`): estudo pré-discovery que aconselha e não decide, verificado por `check-estudo.sh` no padrão E5. |
 | [ADR-013](adr/ADR-013-estudo-workflow-adaptativo.md) | Skill de estudo (Estágio 0) roteia o "Próximo passo sugerido" por marcador do repo-harness: modo interno (SDD leve) × distribuído (discovery), numa única `SKILL.md` gated. |
 | [ADR-014](adr/ADR-014-experiencia-nfr-carregado.md) | Qualidade de experiência é NFR carregado por marcador machine-legível (`Superfície de uso` + tag `(experiência)`), com verificador que aconselha até o backlog. |
-| [ADR-015](adr/ADR-015-integracao-speckit-instalavel.md) | Integração instalável com o Spec Kit: regras versionadas no `CLAUDE.md` do produto, `architecture.md` distribuído (prosa do Autor + blocos derivados) e autoridade advisória com guard opt-in. |
+| [ADR-015](adr/ADR-015-integracao-speckit-instalavel.md) | _(substituído por ADR-018)_ Integração instalável com o Spec Kit: regras versionadas no `CLAUDE.md` do produto, `architecture.md` distribuído e autoridade advisória com guard opt-in. |
 | [ADR-016](adr/ADR-016-skill-ajuda-grounding-vivo.md) | Skill de ajuda conversacional com grounding vivo nas `SKILL.md` irmãs, sem artefato gravado, avaliada só na camada de julgamento, com o envelhecimento das citações cobrado por C8 no `check-canon.sh`. |
 | [ADR-017](adr/ADR-017-delegacao-criativa-classificada.md) | A delegação criativa classifica cada tensão (diagnóstica/propositiva) numa rubrica de fonte única e gateia o prompt montado por `check-delegacao.sh`, sem tocar o contrato externo C1–C3. |
+| [ADR-018](adr/ADR-018-architecture-gerado-do-produto.md) | O `architecture.md` do produto é gerado sob ditado (§1–§2 na fase final do decompose, com âncora nos ADRs) e reconciliado (§3 vira mapa por área; avisos de defasagem em bloco adjacente); substitui o ADR-015. |
 
 ## 3. Scripts
 

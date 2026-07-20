@@ -1,6 +1,7 @@
 # ADR-006 — Evidência de ADR proporcional ao risco
 
 - **Status:** Aceito
+- **Área:** Governança
 - **Data:** 2026-07-17
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-17-spike-evidencia-por-risco-design.md

@@ -1,6 +1,7 @@
 # ADR-014 — Qualidade de experiência é NFR carregado, com verificador que aconselha
 
 - **Status:** Aceito
+- **Área:** Jornada
 - **Data:** 2026-07-18
 - **Decisores:** autoria do repo
 - **Evidência:** Decisão dada: o Autor escolheu a alternativa A2 no estudo `docs/estudos/discovery-ux-design.md` (ADR-006, evidência por decisão dada); o design que a formaliza é `docs/superpowers/specs/2026-07-18-nfr-experiencia-carrier-design.md`.

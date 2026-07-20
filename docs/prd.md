@@ -120,8 +120,9 @@ As decisões estruturantes deste repo estão registradas como ADRs em `docs/adr/
 `docs/architecture.md`. Em especial: fonte única com cópias derivadas (ADR-001), distribuição em
 dois canais com autocontenção (ADR-002), verificação mecânica que aconselha no projeto-alvo
 (ADR-004), o contrato de capacidades com o executor externo de brainstorming (ADR-007) e a skill de
-estudo workflow-adaptativa por persona (ADR-013), e a classificação diagnóstica×propositiva na
-delegação criativa ao brainstorming (ADR-017).
+estudo workflow-adaptativa por persona (ADR-013), a classificação diagnóstica×propositiva na
+delegação criativa ao brainstorming (ADR-017) e o documento de arquitetura do produto gerado sob
+ditado e reconciliado (ADR-018).
 
 ## 9. Glossário
 
@@ -193,3 +194,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-19 | C1 | `RF-19` novo: skill de ajuda de bolso do harness (épico E7 novo) | a ajuda ao iniciante vivia num prompt one-shot colado à mão: não viajava com a instalação e não era descobrível | ADR-016 · skills/zion-prd-ajuda · assets/speckit-map.md · scripts/check-canon.sh (C8) |
 | 2026-07-18 | C2 | `RF-08` alterado: o prompt do plan injeta também a prosa estrutural do documento de arquitetura do produto | o plan é o único passo do Spec Kit que lê o como estrutural (recorte por passo) | ADR-015 · skills/zion-prd-plan-prompt |
 | 2026-07-19 | C1 | `RF-20` novo: delegação criativa classifica a tensão (diagnóstica/propositiva) e gateia o prompt montado | no modo revisar a clarificação degradava para pergunta diagnóstica sem recomendação nem preview | ADR-017 · assets/delegacao-criativa.md · scripts/check-delegacao.sh · skills/zion-prd-discovery · skills/zion-prd-write · skills/zion-prd-decompose |
+| 2026-07-20 | C3 | Decisão revertida: o `architecture.md` do produto deixa de ser prosa "nunca tocada por máquina" e passa a nascer sob ditado com âncora nos ADRs | o placeholder do esqueleto atravessou uma jornada inteira intacto e a ponte do plan injetava vazio | ADR-018 substitui ADR-015 · docs/architecture.md §2 · docs/prd.md §8 |

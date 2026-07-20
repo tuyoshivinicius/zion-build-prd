@@ -1,6 +1,7 @@
 # ADR-002 — Distribuição dual com autocontenção por cópia
 
 - **Status:** Aceito
+- **Área:** Distribuição
 - **Data:** 2026-07-12
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-12-distribuicao-dual-plugin-deps-design.md

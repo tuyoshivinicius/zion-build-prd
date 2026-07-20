@@ -1,6 +1,7 @@
 # ADR-015 — Integração instalável com o Spec Kit e architecture.md distribuído
 
-- **Status:** Aceito
+- **Status:** Substituído por ADR-018
+- **Área:** Integração Spec Kit
 - **Data:** 2026-07-18
 - **Decisores:** autoria do repo
 - **Evidência:** Decisão dada: o Autor escolheu a alternativa A3 no estudo `docs/estudos/integracao-speckit-fonte-canonica.md` (ADR-006, evidência por decisão dada); o design que a formaliza é `docs/superpowers/specs/2026-07-18-integracao-speckit-instalavel-design.md`.
@@ -52,4 +53,5 @@ multi-agente da regra fica fora de escopo (ampliável depois sem quebrar nada).
 
 ## Status
 
-Aceito.
+Substituído por ADR-018 (o ponto 3 — prosa nunca tocada por máquina — foi redecidido; os pontos 1, 2
+e 4 seguem valendo, reafirmados no ADR-018).

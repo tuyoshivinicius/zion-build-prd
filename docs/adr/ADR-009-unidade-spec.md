@@ -1,6 +1,7 @@
 # ADR-009 — A unidade de trabalho chama-se spec
 
 - **Status:** Aceito
+- **Área:** Governança
 - **Data:** 2026-07-18
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-18-rename-fatia-spec-design.md

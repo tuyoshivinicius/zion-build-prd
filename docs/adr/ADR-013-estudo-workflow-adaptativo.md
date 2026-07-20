@@ -1,6 +1,7 @@
 # ADR-013 — Skill de estudo workflow-adaptativa por marcador do repo (persona dupla)
 
 - **Status:** Aceito
+- **Área:** Jornada
 - **Data:** 2026-07-18
 - **Decisores:** autoria do repo
 - **Evidência:** Decisão dada: o modelo de duas personas (dev do harness × autor externo) foi decidido nesta sessão de design; não há nada a provar rodando nem pesquisando — a direção chega batida. O design que a formaliza é `docs/superpowers/specs/2026-07-18-repo-semantica-estudo-adaptativo-design.md`.

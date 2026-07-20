@@ -1,6 +1,7 @@
 # ADR-008 — Avaliação em duas camadas
 
 - **Status:** Aceito
+- **Área:** Verificação
 - **Data:** 2026-07-17
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-17-r7-fixtures-avaliacao-harness-design.md

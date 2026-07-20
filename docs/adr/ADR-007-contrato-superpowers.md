@@ -1,6 +1,7 @@
 # ADR-007 — Contrato de capacidades C1–C3 com o superpowers
 
 - **Status:** Aceito
+- **Área:** Delegação
 - **Data:** 2026-07-17
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-17-r9-contrato-superpowers-design.md

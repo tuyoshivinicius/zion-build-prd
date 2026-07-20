@@ -1,6 +1,7 @@
 # ADR-012 — Estágio 0 opcional de estudo pré-discovery
 
 - **Status:** Aceito
+- **Área:** Jornada
 - **Data:** 2026-07-18
 - **Decisores:** autoria do repo
 - **Evidência:** Decisão dada: o prompt one-shot de estudo já provou o valor na prática do autor; o design que o formaliza é `docs/superpowers/specs/2026-07-18-zion-prd-estudo-design.md`.

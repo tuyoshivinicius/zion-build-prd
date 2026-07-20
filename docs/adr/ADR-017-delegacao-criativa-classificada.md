@@ -1,6 +1,7 @@
 # ADR-017 — Classificação diagnóstica×propositiva na delegação criativa ao brainstorming
 
 - **Status:** Aceito
+- **Área:** Delegação
 - **Data:** 2026-07-19
 - **Decisores:** autoria do repo
 - **Evidência:** Decisão dada: o dono do harness escolheu a alternativa D (ROI 4.0) no estudo `docs/estudos/discovery-delegacao-brainstorming.md`; o design que a formaliza é `docs/superpowers/specs/2026-07-19-delegacao-criativa-classificada-design.md`.

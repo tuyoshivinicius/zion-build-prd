@@ -1,6 +1,7 @@
 # ADR-003 — Prefixo zion- em todas as skills
 
 - **Status:** Aceito
+- **Área:** Distribuição
 - **Data:** 2026-07-12
 - **Decisores:** autoria do repo
 - **Evidência:** docs/superpowers/specs/2026-07-12-zion-prefixo-skills-design.md

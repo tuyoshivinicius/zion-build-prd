@@ -1,6 +1,7 @@
 # ADR-016 — Skill de ajuda com grounding vivo nas SKILL.md irmãs
 
 - **Status:** Aceito
+- **Área:** Jornada
 - **Data:** 2026-07-19
 - **Decisores:** autoria do repo
 - **Evidência:** Decisão dada: o Autor escolheu a alternativa B (ROI 4.00) no estudo `docs/estudos/skill-de-ajuda.md` (ADR-006, evidência por decisão dada); o design que a formaliza é `docs/superpowers/specs/2026-07-19-skill-de-ajuda-design.md`.

@@ -1,6 +1,7 @@
 # ADR-011 — Promover as decisões consolidadas a ADRs reais
 
 - **Status:** Aceito
+- **Área:** Governança
 - **Data:** 2026-07-18
 - **Decisores:** autoria do repo
 - **Evidência:** Decisão dada: brainstorming 2026-07-18 (revisa a DECIDIR-3 do governanca-canon)
