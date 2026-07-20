@@ -4,13 +4,15 @@
 
 _(prosa do Autor ainda não escrita)_
 
+## 2. Integrações externas
+
+_(prosa do Autor: contratos com o mundo de fora — serviços consumidos, eventos, protocolos)_
+
 ## 3. Decisões estruturantes
 
 <!-- zion:adr-index:start -->
-- [ADR-099 — Fantasma](adr/ADR-099-fantasma.md)
+- **[ADR-099 — Fantasma](adr/ADR-099-fantasma.md)**
 <!-- zion:adr-index:end -->
-
-## 4. Visão do backlog
 
 <!-- zion:backlog-view:start -->
 - `walking-skeleton` — ☐ pendente

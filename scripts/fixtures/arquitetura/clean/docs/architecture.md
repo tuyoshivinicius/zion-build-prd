@@ -4,11 +4,18 @@
 
 ## 1. Visão geral
 
-Um serviço que recebe pedidos e os grava.
+<!-- zion:narrativa-avisos:start -->
+_(narrativa em dia)_
+<!-- zion:narrativa-avisos:end -->
+
+<!-- zion:narrativa:start adrs=ADR-001 -->
+O produto tem um **Recebedor** (entrada de pedidos) e um **Registro** (persistência). O Recebedor
+nunca escreve no disco: entrega o pedido ao Registro, dono único do dado gravado.
+<!-- zion:narrativa:end -->
 
 ## 2. Integrações externas
 
-Nenhuma por enquanto.
+_(nenhuma integração externa)_
 
 ## 3. Decisões estruturantes
 

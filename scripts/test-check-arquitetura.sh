@@ -30,7 +30,8 @@ assert_not_contains "clean não acusa defasado" "defasad" "$out"
 out="$(bash "$CHECK" "$FIX/dirty")"; rc=$?
 assert_exit "dirty sai 1" 1 "$rc"
 assert_contains "acha secao-ausente" "secao-ausente" "$out"
-assert_contains "acha visao-vazia" "visao-vazia" "$out"
+assert_contains "acha narrativa-ausente" "narrativa-ausente" "$out"
+assert_contains "acha integracoes-nao-declaradas" "integracoes-nao-declaradas" "$out"
 assert_contains "acha adr-index-defasado" "adr-index-defasado" "$out"
 assert_contains "acha ADR citado mas ausente do disco" "ADR-099-fantasma.md citado no bloco mas ausente" "$out"
 assert_contains "acha backlog-view-defasada" "backlog-view-defasada" "$out"
@@ -80,5 +81,22 @@ out="$(bash "$CHECK" "$sup")"; rc=$?
 assert_exit "ADR substituído fora do bloco não acusa" 0 "$rc"
 assert_not_contains "não acusa o substituído como defasado" "ADR-009" "$out"
 rm -rf "$sup"
+
+# 7. Narrativa com prosa mas sem adrs= no marcador → ancora-ausente (e nada de narrativa-ausente).
+semanc="$(mktemp -d)"; mkdir -p "$semanc/docs/adr"
+cp "$FIX/clean/CLAUDE.md" "$semanc/CLAUDE.md"
+cp "$FIX/clean/docs/backlog.md" "$semanc/docs/backlog.md"
+cp "$FIX/clean/docs/adr/ADR-001-banco-unico.md" "$semanc/docs/adr/"
+sed 's/<!-- zion:narrativa:start adrs=[^>]*-->/<!-- zion:narrativa:start -->/' \
+  "$FIX/clean/docs/architecture.md" > "$semanc/docs/architecture.md"
+out="$(bash "$CHECK" "$semanc")"; rc=$?
+assert_exit "narrativa sem âncora sai 1" 1 "$rc"
+assert_contains "acha ancora-ausente" "ancora-ausente" "$out"
+assert_not_contains "não confunde com narrativa-ausente" "narrativa-ausente" "$out"
+rm -rf "$semanc"
+
+# 8. visao-vazia foi aposentado (ADR-018) — nunca mais aparece.
+out="$(bash "$CHECK" "$FIX/dirty")"
+assert_not_contains "visao-vazia aposentado" "visao-vazia" "$out"
 
 if [ "$fail" -eq 0 ]; then echo "test-check-arquitetura: tudo verde"; else echo "test-check-arquitetura: FALHOU"; exit 1; fi

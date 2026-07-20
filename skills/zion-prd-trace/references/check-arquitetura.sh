@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check-arquitetura.sh — verificador do architecture.md do PRODUTO + regra instalada (ADR-015).
+# check-arquitetura.sh — verificador do architecture.md do PRODUTO + regra instalada (ADR-015/018).
 # Verifica; NÃO bloqueia (RN-01, ADR-004): a Fase 4 das skills ecoa e o Autor decide. O guard
 # de pre-commit opt-in do /zion-speckit-install usa o exit 1 para bloquear POR ESCOLHA do Autor.
 #
@@ -17,7 +17,7 @@ case "$ROOT" in -*) usage ;; esac
 [ -d "$ROOT" ] || { echo "check-arquitetura: diretório não encontrado: $ROOT" >&2; exit 2; }
 
 # Acompanha a versão dos marcadores de assets/templates/regras-speckit.md — mude os dois juntos.
-EXPECTED_VERSION="v1"
+EXPECTED_VERSION="v2"
 
 ARCH="$ROOT/docs/architecture.md"
 ADR_DIR="$ROOT/docs/adr"
@@ -25,13 +25,20 @@ BACKLOG="$ROOT/docs/backlog.md"
 RULES="$ROOT/CLAUDE.md"
 TAB="$(printf '\t')"
 
-# Conteúdo entre os marcadores de um bloco (vazio se marcadores ausentes).
+# Conteúdo entre os marcadores de um bloco (vazio se marcadores ausentes). O marcador de abertura
+# casa por PREFIXO — o bloco zion:narrativa carrega o atributo adrs= na própria linha (ADR-018).
 block_content() {  # $1 arquivo  $2 nome-do-bloco
-  awk -v start="<!-- zion:$2:start -->" -v end="<!-- zion:$2:end -->" '
-    $0==start { inb=1; next }
+  awk -v start="<!-- zion:$2:start" -v end="<!-- zion:$2:end -->" '
+    index($0, start)==1 { inb=1; next }
     $0==end   { inb=0 }
     inb { print }
   ' "$1"
+}
+
+# Âncora do bloco de narrativa: os ADRs que a máquina usou ao redigir (vazio se ausente).
+narrativa_ancora() {  # $1 arquivo → "ADR-002,ADR-004" ou vazio
+  grep -m1 -oE '<!-- zion:narrativa:start[^>]*-->' "$1" \
+    | grep -oE 'adrs=[^ >]+' | head -1 | sed 's/^adrs=//' | tr -d ' '
 }
 
 # 1. Documento presente + as quatro seções obrigatórias do esqueleto.
@@ -46,21 +53,38 @@ check_secoes() {
   grep -q '^## 4\. Visão do backlog'       "$ARCH" || printf 'docs/architecture.md: secao-ausente — "## 4. Visão do backlog"\n'
 }
 
-# 2. §1 Visão geral com prosa real (não vazio, não blockquote, não placeholder _..._).
-#    A prosa das demais seções é do Autor e não se cobra conteúdo.
-check_visao_vazia() {
+# 2. §1 Visão geral: a narrativa estrutural (bloco zion:narrativa) existe, tem prosa e é ancorada
+#    nos ADRs que a sustentam (ADR-018). A prosa é do Autor; o que se cobra é presença e âncora.
+check_narrativa() {
   [ -f "$ARCH" ] || return 0
-  grep -q '^## 1\. Visão geral' "$ARCH" || return 0
+  if ! grep -q '<!-- zion:narrativa:start' "$ARCH"; then
+    printf 'docs/architecture.md: narrativa-ausente — a §1 não tem o bloco zion:narrativa (rode /zion-prd-decompose --narrativa)\n'
+    return 0
+  fi
+  local prosa ancora
+  prosa="$(block_content "$ARCH" narrativa | grep -vE '^[[:space:]]*$' | grep -vE '^[[:space:]]*_.*_[[:space:]]*$')"
+  if [ -z "$prosa" ]; then
+    printf 'docs/architecture.md: narrativa-ausente — bloco zion:narrativa sem prosa (rode /zion-prd-decompose --narrativa)\n'
+    return 0
+  fi
+  ancora="$(narrativa_ancora "$ARCH")"
+  [ -n "$ancora" ] \
+    || printf 'docs/architecture.md: ancora-ausente — narrativa sem adrs= no marcador de abertura (rode /zion-prd-decompose --narrativa)\n'
+}
+
+# 2b. §2 Integrações externas: placeholder do esqueleto = integrações nunca declaradas. Declarar
+#     "_(nenhuma integração externa)_" é saída válida — a §2 não tem marcadores, por escolha.
+check_integracoes() {
+  [ -f "$ARCH" ] || return 0
+  grep -q '^## 2\. Integrações externas' "$ARCH" || return 0
   awk '
-    /^## 1\. Visão geral/ { insec=1; next }
-    insec && /^## /       { insec=0 }
-    insec {
-      line=$0; gsub(/^[[:space:]]+|[[:space:]]+$/,"",line)
-      if (line=="" || line ~ /^>/ || line ~ /^_.*_$/ || line ~ /^<!--/) next
-      found=1
-    }
+    /^## 2\. Integrações externas/ { insec=1; next }
+    insec && /^## /                { insec=0 }
+    insec && index($0, "prosa do Autor:") { found=1 }
     END { exit(found?0:1) }
-  ' "$ARCH" || printf 'docs/architecture.md: visao-vazia — a §1 Visão geral ainda não tem prosa do Autor\n'
+  ' "$ARCH" \
+    && printf 'docs/architecture.md: integracoes-nao-declaradas — a §2 ainda tem o placeholder do esqueleto (declare as integrações ou "_(nenhuma integração externa)_")\n'
+  return 0
 }
 
 # 3. Índice de ADRs (bloco zion:adr-index) em dia com docs/adr/ — nos dois sentidos.
@@ -126,7 +150,8 @@ check_regras() {
 
 findings="$(
   check_secoes
-  check_visao_vazia
+  check_narrativa
+  check_integracoes
   check_adr_index
   check_backlog_view
   check_regras

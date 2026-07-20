@@ -89,13 +89,15 @@ Rode e ecoe o veredito, em tom advisório — o Autor decide:
 
     bash references/check-arquitetura.sh .
 
-Instalação recém-feita costuma sair com `visao-vazia` — a prosa da §1 é do Autor; aconselhe
-escrevê-la. `regras-defasadas` após upgrade do harness → re-rode `/zion-speckit-install`.
+Instalação recém-feita costuma sair com `narrativa-ausente` e `integracoes-nao-declaradas` — a §1
+nasce na fase final do `/zion-prd-decompose` (ou por `/zion-prd-decompose --narrativa`) e a §2 é do
+Autor, que pode declarar `_(nenhuma integração externa)_`. Aconselhe; não escreva por ele.
+`regras-defasadas` após upgrade do harness → re-rode `/zion-speckit-install`.
 **Handoff:** a jornada segue normal — próxima spec via `/zion-prd-specify-prompt`; fim de
 implementação → `/zion-prd-trace` (o ritual reconcilia também os blocos derivados do
 architecture.md).
 
 ## Saída
 
-`CLAUDE.md` com o bloco de regras v1, `docs/architecture.md` semeado/reconciliado, guard opt-in
+`CLAUDE.md` com o bloco de regras v2, `docs/architecture.md` semeado/reconciliado, guard opt-in
 instalado (se o Autor escolheu) e o veredito do verificador ecoado.

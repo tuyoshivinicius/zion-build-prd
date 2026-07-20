@@ -89,8 +89,9 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   e é roteado aos comandos donos de cada artefato afetado, com o histórico registrado na PRD.
 - **Épico E5 — Qualidade mecânica:** `RF-11` O harness verifica por máquina as regras decidíveis
   dos artefatos (fronteira sem stack, NFR com número, RF por épico, evidência presente por risco,
-  âncora de experiência presente quando há superfície de uso, documento de arquitetura do produto e
-  regra instalada em dia) e ecoa o veredito nos estágios. `RF-12` O harness avalia a si mesmo em duas camadas —
+  âncora de experiência presente quando há superfície de uso, narrativa estrutural do produto
+  presente e ancorada nas decisões que a sustentam, integrações externas declaradas, documento de
+  arquitetura do produto e regra instalada em dia) e ecoa o veredito nos estágios. `RF-12` O harness avalia a si mesmo em duas camadas —
   determinística com fixtures no CI e de julgamento sob demanda. `RF-13` O harness governa a si
   mesmo: requisitos e arquitetura são fontes da verdade versionadas, e o drift entre elas e a
   implementação é acusado por máquina antes do commit.
@@ -199,3 +200,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-20 | C3 | Decisão revertida: o `architecture.md` do produto deixa de ser prosa "nunca tocada por máquina" e passa a nascer sob ditado com âncora nos ADRs | o placeholder do esqueleto atravessou uma jornada inteira intacto e a ponte do plan injetava vazio | ADR-018 substitui ADR-015 · docs/architecture.md §2 · docs/prd.md §8 |
 | 2026-07-20 | C2 | `RF-03` alterado: todo ADR carrega uma **área**, que agrupa o mapa de decisões da §3 do documento de arquitetura | o índice plano não respondia "o que foi decidido sobre este assunto" na reorientação meses depois | ADR-018 · skills/zion-adr-new · scripts/check-adr.sh |
 | 2026-07-20 | C2 | `RF-09` alterado: o índice de decisões vira **mapa** por área (o que fixou + specs que exercitam), sem as substituídas | reorientação meses depois pergunta "o que foi decidido sobre isto e onde vive no código" — o índice plano não respondia | ADR-018 · scripts/trace-arquitetura.sh · scripts/check-arquitetura.sh |
+| 2026-07-20 | C2 | `RF-11` alterado: sai `visao-vazia`, entram narrativa ausente/sem âncora e integrações não declaradas; bloco de regras sobe para `v2` com a regra de corte §1 × plan | mais aviso isolado não movia o Autor: o achado agora aponta o comando que o cura e a fronteira fica instalada no repo do produto | ADR-018 · scripts/check-arquitetura.sh · assets/templates/architecture-skeleton.md · assets/templates/regras-speckit.md |

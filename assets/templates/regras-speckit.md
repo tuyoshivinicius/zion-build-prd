@@ -1,4 +1,4 @@
-<!-- zion:speckit:v1:start -->
+<!-- zion:speckit:v2:start -->
 ## Integração Zion ⇄ Spec Kit (instalado por /zion-speckit-install)
 
 > Bloco versionado — re-rodar `/zion-speckit-install` substitui SÓ o que está entre os marcadores.
@@ -14,8 +14,12 @@ código.
 
 - **Constitution** (Spec Kit) — princípios de repo inteiro (ponte `/zion-prd-constitution-prompt`).
 - **`docs/adr/`** — decisões pontuais de repo inteiro, uma por ADR.
-- **`docs/architecture.md`** — estrutura e prosa do Autor (§1–§2) + índices derivados (§3–§4,
-  reconciliados por `/zion-prd-trace`; não editar à mão).
+- **`docs/architecture.md`** — a **topologia e os contratos** do produto (§1–§2) + índices derivados
+  (§3–§4 e o bloco de avisos, reconciliados por `/zion-prd-trace`; não editar à mão). A §1 nasce sob
+  ditado na fase final do `/zion-prd-decompose` e nunca é sobrescrita sem confirmação; revise-a com
+  `/zion-prd-decompose --narrativa`.
+  **Regra de corte §1 × plan:** *se a frase muda ao trocar UMA feature, é `plan`; se muda só ao
+  trocar o produto, é §1.*
 - **`plan.md`** de cada feature (Spec Kit) — o como daquela feature (ponte `/zion-prd-plan-prompt`).
 
 ### Recorte por passo (fronteira o-quê/como)
@@ -35,4 +39,4 @@ rastreabilidade `**RF cobertos:** RF-xx`. Spec sem essa linha será acusada como
 
 - Implementação de uma spec termina → rode `/zion-prd-trace`.
 - RF novo descoberto no caminho → rode `/zion-prd-evolve`.
-<!-- zion:speckit:v1:end -->
+<!-- zion:speckit:v2:end -->

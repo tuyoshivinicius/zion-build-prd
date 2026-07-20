@@ -2,6 +2,6 @@
 
 Prosa do Autor fora do bloco — nunca tocada pela instalação.
 
-<!-- zion:speckit:v1:start -->
+<!-- zion:speckit:v2:start -->
 Regras instaladas (conteúdo de fixture; a versão no marcador é o que o check compara).
-<!-- zion:speckit:v1:end -->
+<!-- zion:speckit:v2:end -->

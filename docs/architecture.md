@@ -65,7 +65,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/check-estudo.sh | Verificador das regras decidíveis do documento de estudo (Estágio 0). |
 | scripts/check-experiencia.sh | Verificador do carregador de experiência (marcador `Superfície de uso` + âncora na PRD/backlog). |
 | scripts/check-delegacao.sh | Verificador do bloco de delegação criativa montado (distinção diagnóstica×propositiva, dois previews, condução); lido pela fase de delegação, que aconselha. |
-| scripts/check-arquitetura.sh | Verificador advisório do architecture.md do produto (seções, prosa da §1, blocos derivados em dia) + drift do bloco de regras instalado no CLAUDE.md do produto. |
+| scripts/check-arquitetura.sh | Verificador advisório do architecture.md do produto (seções, narrativa da §1 presente e ancorada nos ADRs, integrações da §2 declaradas, blocos derivados em dia) + drift do bloco de regras instalado no CLAUDE.md do produto. |
 | scripts/check-adr.sh | Verificador de presença de evidência e supersessão simétrica nos ADRs. |
 | scripts/check-superpowers-contract.sh | Verificador do contrato C1–C3 no superpowers instalado. |
 | scripts/check-canon.sh | Guard de canonização: cruza prd.md/architecture.md com skills/, scripts/, ASSET_MAP e docs/adr/. |
