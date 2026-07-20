@@ -63,7 +63,10 @@ do Spec Kit, guardando sempre a fronteira o-quê/como.
   marcador de superfície para os NFRs e aterrissando ≥1 NFR de experiência mensurável quando há
   superfície de uso. `RF-05` O autor
   decompõe a PRD em épicos, story map e specs verticais priorizadas, com o walking skeleton como
-  spec zero, ancorando a experiência em ≥1 spec que toca a superfície de uso quando ela existe.
+  spec zero, ancorando a experiência em ≥1 spec que toca a superfície de uso quando ela existe; ao
+  final, dita a narrativa estrutural do produto — os componentes de topo e o contrato entre eles —
+  sobre um rascunho que a máquina propõe apoiada só no que as decisões sustentam, e que nunca é
+  sobrescrito sem a confirmação dele.
   `RF-17` O autor estuda um candidato antes da descoberta — edge cases, alternativas comparadas
   (sempre incluindo "não fazer") com ROI justificado e recomendação não vinculante — e recebe o
   estudo gravado, com o próximo passo sugerido roteado conforme o contexto detectado, para escolher
@@ -201,3 +204,4 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | 2026-07-20 | C2 | `RF-03` alterado: todo ADR carrega uma **área**, que agrupa o mapa de decisões da §3 do documento de arquitetura | o índice plano não respondia "o que foi decidido sobre este assunto" na reorientação meses depois | ADR-018 · skills/zion-adr-new · scripts/check-adr.sh |
 | 2026-07-20 | C2 | `RF-09` alterado: o índice de decisões vira **mapa** por área (o que fixou + specs que exercitam), sem as substituídas | reorientação meses depois pergunta "o que foi decidido sobre isto e onde vive no código" — o índice plano não respondia | ADR-018 · scripts/trace-arquitetura.sh · scripts/check-arquitetura.sh |
 | 2026-07-20 | C2 | `RF-11` alterado: sai `visao-vazia`, entram narrativa ausente/sem âncora e integrações não declaradas; bloco de regras sobe para `v2` com a regra de corte §1 × plan | mais aviso isolado não movia o Autor: o achado agora aponta o comando que o cura e a fronteira fica instalada no repo do produto | ADR-018 · scripts/check-arquitetura.sh · assets/templates/architecture-skeleton.md · assets/templates/regras-speckit.md |
+| 2026-07-20 | C2 | `RF-05` alterado: a decomposição termina ditando a narrativa estrutural da §1–§2 do documento de arquitetura, com âncora nas decisões usadas | o documento era semeado e o placeholder atravessava a jornada inteira; agora nasce onde o material finalmente existe | ADR-018 · skills/zion-prd-decompose (Fase 5 e `--narrativa`) |

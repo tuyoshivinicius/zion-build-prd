@@ -23,6 +23,6 @@ ASSET_MAP=(
   "scripts/check-delegacao.sh             zion-prd-discovery zion-prd-write zion-prd-decompose"
   "assets/templates/regras-speckit.md        zion-speckit-install"
   "assets/templates/architecture-skeleton.md zion-speckit-install"
-  "scripts/check-arquitetura.sh              zion-speckit-install zion-prd-trace"
-  "scripts/trace-arquitetura.sh              zion-speckit-install zion-prd-trace"
+  "scripts/check-arquitetura.sh              zion-speckit-install zion-prd-trace zion-prd-decompose"
+  "scripts/trace-arquitetura.sh              zion-speckit-install zion-prd-trace zion-prd-decompose"
 )

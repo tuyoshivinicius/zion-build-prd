@@ -1,7 +1,7 @@
 ---
 name: zion-prd-decompose
 description: Estágio 4 do harness Zion Build PRD — transforma os RF-xx da PRD em épicos, story map e specs verticais validadas por INVEST, e injeta a tabela de rastreabilidade. Use para "decompor a PRD", "fatiar em histórias/épicos" ou "montar o backlog vertical" depois que a PRD estiver escrita.
-argument-hint: "(sem argumento = modo integral; --epico E<k> = re-fatiar só um épico no dia 2)"
+argument-hint: "(sem argumento = modo integral; --epico E<k> = re-fatiar só um épico no dia 2; --narrativa = revisar só a narrativa estrutural da §1–§2)"
 metadata:
   author: zion-build-prd
 user-invocable: true
@@ -90,8 +90,57 @@ Confira contra o critério **decompose** de `quality-rules.md` `#criterios-de-co
   nenhuma spec ancora a experiência"*. Ecoe o veredito; não reverta (`RN-01`).
 Emita veredito por item. Não reverta — aconselhe.
 
+## Fase 5 — Narrativa estrutural do `docs/architecture.md` (ditado sob lastro)
+
+Roda **depois** da Fase 4, quando ADRs, backlog e §3 já existem — é o momento em que o material
+finalmente existe. Escreve a §1 (Visão geral) e a §2 (Integrações externas) do
+`docs/architecture.md` do produto **sob ditado**: a máquina propõe, o Autor assina (ADR-018).
+`docs/architecture.md` ausente → aconselhe `/zion-speckit-install` e pule a fase (não bloqueie).
+
+**A regra de corte (cite-a ao Autor quando ele hesitar):** a §1 é **topologia + contratos** — os
+componentes de topo e o contrato entre eles (quem chama quem, por qual via, quem é dono de qual
+dado). O interior de cada componente é do `plan`. *Se a frase muda ao trocar UMA feature, é `plan`;
+se muda só ao trocar o produto, é §1.*
+
+**Regra de lastro (dura).** Toda afirmação estrutural do rascunho rastreia a um ADR aceito. O que
+não tem lastro **não vira prosa**: vira **pergunta ao Autor** ("os ADRs não dizem quem persiste esse
+dado — quem é o dono?"), e a resposta dele entra como prosa dele. Não invente arquitetura para
+preencher parágrafo.
+
+1. **Leia** `docs/adr/*.md` aceitos, `docs/backlog.md` e a §3 recém-reconciliada.
+2. **Semeie os marcadores** na §1 quando ausentes (produto instalado antes desta versão do harness):
+   `<!-- zion:narrativa-avisos:start --> _(sem narrativa ainda)_ <!-- zion:narrativa-avisos:end -->`
+   e `<!-- zion:narrativa:start --> … <!-- zion:narrativa:end -->`, nessa ordem, logo abaixo do
+   cabeçalho `## 1. Visão geral`. Nada fora deles é tocado.
+3. **Redija o rascunho** da §1 sob a regra de corte e a regra de lastro. Liste à parte as perguntas
+   sem lastro.
+4. **Apresente** ao Autor: `[aceitar]` · `[editar]` · `[ditar do zero]` · `[pular]`. **Pular é
+   legítimo** — produto de jornada curta, sem material, sai com a §1 vazia e um aviso, nunca com
+   prosa inventada.
+5. **Grave** a prosa entre os marcadores e preencha o atributo `adrs=` do marcador de abertura com
+   os ADRs que você **de fato usou** ao redigir, separados por vírgula e sem espaços:
+   `<!-- zion:narrativa:start adrs=ADR-002,ADR-004 -->`. A âncora é **da máquina** — o Autor nunca a
+   digita; ela some no render.
+6. **Idem a §2** (Integrações externas), em prosa livre e sem marcadores. `_(nenhuma integração
+   externa)_` é **saída válida e declarada** — diferente de esquecer.
+7. **Autoverifique** e ecoe o veredito (aconselha, `RN-01`):
+
+       bash references/check-arquitetura.sh .
+
+**Sem delegação nova.** Esta fase é redação sob ditado, não clarificação — não invoque o
+`superpowers:brainstorming` aqui (`NFR-02` intacto). Tensão de desenho que apareça segue a rubrica de
+`references/delegacao-criativa.md` que esta skill já carrega (`RF-20`).
+
+**Modo revisar — `--narrativa`:** pula as Fases 1–4 (não re-fatia nada) e entra direto nesta fase.
+Mostre lado a lado: a **narrativa vigente**, os **avisos** do bloco `zion:narrativa-avisos` e o
+**rascunho novo**. **Nunca sobrescreva sem confirmação explícita do Autor** — é essa cláusula que
+substitui o "nunca tocada por máquina" do ADR-015. Antes de reconciliar os avisos, rode
+`/zion-prd-trace` (dono único dos blocos derivados) ou o `references/trace-arquitetura.sh` direto.
+
 ## Saída
 Lista de épicos, story map, backlog de **specs verticais** priorizadas com linhas de release, o
 arquivo **`docs/backlog.md`** semeado por `trace-backlog.sh` (slug/demo/RFs por spec; Pasta/Status por
-máquina), e a tabela de rastreabilidade **semeada por `trace-prd.sh`** dentro da PRD. **Handoff:** a próxima spec da
-fila entra em `/zion-prd-specify-prompt`; após cada spec, `/zion-prd-trace` reconcilia a tabela.
+máquina), a tabela de rastreabilidade **semeada por `trace-prd.sh`** dentro da PRD e a **narrativa
+estrutural** da §1–§2 do `docs/architecture.md` gravada sob ditado (ou pulada por escolha do Autor).
+**Handoff:** a próxima spec da fila entra em `/zion-prd-specify-prompt`; após cada spec,
+`/zion-prd-trace` reconcilia a tabela e os blocos derivados da arquitetura.
