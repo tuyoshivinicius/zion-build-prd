@@ -69,6 +69,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/check-arquitetura.sh | Verificador advisório do architecture.md do produto (seções, narrativa da §1 presente e ancorada nos ADRs, integrações da §2 declaradas, blocos derivados em dia) + drift do bloco de regras instalado no CLAUDE.md do produto. |
 | scripts/check-adr.sh | Verificador de presença de evidência e supersessão simétrica nos ADRs. |
 | scripts/check-superpowers-contract.sh | Verificador do contrato C1–C3 no superpowers instalado. |
+| scripts/check-commit.sh | Verificador de Conventional Commits de uma mensagem (guard de governança: hook commit-msg + CI); BLOQUEIA. |
 | scripts/check-canon.sh | Guard de canonização: cruza prd.md/architecture.md com skills/, scripts/, ASSET_MAP e docs/adr/. |
 | scripts/trace-prd.sh | Semeia/reconcilia a §12 da PRD a partir das specs. |
 | scripts/trace-backlog.sh | Semeia/reconcilia o backlog de specs. |
@@ -82,6 +83,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/test-check-adr.sh | Auto-teste do check-adr.sh contra fixtures. |
 | scripts/test-check-superpowers-contract.sh | Auto-teste do check de contrato contra fixtures. |
 | scripts/test-check-canon.sh | Auto-teste do check-canon.sh contra fixtures. |
+| scripts/test-check-commit.sh | Auto-teste do check-commit.sh contra fixtures. |
 | scripts/test-trace-prd.sh | Auto-teste do trace-prd.sh contra fixtures. |
 | scripts/test-trace-backlog.sh | Auto-teste do trace-backlog.sh contra fixtures. |
 | scripts/test-trace-arquitetura.sh | Auto-teste do trace-arquitetura.sh contra fixtures. |

@@ -185,7 +185,7 @@ cada RF — é o elo que `scripts/check-canon.sh` cruza com o disco.
 | RF-14 | E6 | .claude-plugin/ · README.md |
 | RF-15 | E6 | scripts/sync-assets.sh · scripts/asset-map.sh · assets/ |
 | RF-16 | E6 | preflight nas SKILL.md das skills dependentes |
-| RF-21 | E6 | .github/workflows/release.yml · release-please-config.json |
+| RF-21 | E6 | .github/workflows/release.yml · release-please-config.json · scripts/check-commit.sh · .github/workflows/commit-lint.yml |
 | RF-19 | E7 | skills/zion-prd-ajuda |
 
 ## 13. Histórico de mudanças
