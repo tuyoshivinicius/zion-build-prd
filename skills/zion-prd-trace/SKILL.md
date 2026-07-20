@@ -44,11 +44,15 @@ e o **quadro de specs**.
 Se `docs/architecture.md` existir no repo do produto, rode também o reconciliador dos blocos
 derivados da arquitetura (ADR-015):
 
-    bash references/trace-arquitetura.sh docs/architecture.md docs/adr docs/backlog.md
+    bash references/trace-arquitetura.sh docs/architecture.md docs/adr docs/backlog.md specs
 
-Ele regenera **só** o conteúdo dos blocos `zion:adr-index` (§3) e `zion:backlog-view` (§4); a
-prosa do Autor nunca é tocada. `docs/architecture.md` ausente → aconselhe `/zion-speckit-install`
-(informativo; não impede o resto do ritual).
+Ele regenera **só** o conteúdo dos blocos `zion:adr-index` (§3 — o mapa de decisões vigentes por
+área, com o que cada uma fixou e as specs que a exercitam), `zion:backlog-view` (§4) e
+`zion:narrativa-avisos` (§1 — supersessão e defasagem da âncora). A prosa do Autor entre
+`zion:narrativa` **nunca é tocada** (ADR-018). O argumento `specs` é o que permite derivar as specs
+de cada decisão pela linha `**ADRs honrados:**` do `spec.md`; spec sem essa linha simplesmente não
+aparece no mapa (o dever de origem é advisório). `docs/architecture.md` ausente → aconselhe
+`/zion-speckit-install` (informativo; não impede o resto do ritual).
 
 ## Fase 4 — Validar saída (aconselha)
 Ecoe o resumo e os avisos **com autoridade**, em tom advisório — não reverta:
@@ -78,15 +82,22 @@ Do lado da arquitetura (quando `docs/architecture.md` existe), ecoe também o ve
   reconciliar.
 - **regras-ausentes / regras-defasadas** — o bloco do `CLAUDE.md` nunca foi instalado ou ficou
   velho após upgrade: rode/re-rode `/zion-speckit-install`.
-- **visao-vazia / secao-ausente** — prosa e estrutura do documento são do Autor; aconselhe, não
-  corrija por ele.
+- **narrativa-ausente / ancora-ausente** — a §1 nunca foi ditada, ou a prosa perdeu a âncora nos
+  ADRs: aconselhe `/zion-prd-decompose --narrativa` (a prosa é do Autor; nunca a reescreva por ele).
+- **narrativa-superseded / narrativa-defasada** (no bloco de avisos que você acabou de reconciliar)
+  — a narrativa cita uma decisão substituída, ou decisões aceitas ficaram de fora dela: mesma cura,
+  `/zion-prd-decompose --narrativa`, que mostra o rascunho novo lado a lado e só grava sob confirmação.
+- **integracoes-nao-declaradas / secao-ausente** — a §2 ainda tem o placeholder do esqueleto, ou o
+  documento perdeu uma seção: aconselhe, não corrija por ele (declarar
+  `_(nenhuma integração externa)_` é saída válida).
 
 Aponte a próxima ação: rode `/zion-prd-trace` de novo após a próxima spec (ou use
 `bash references/trace-prd.sh docs/PRD.md specs --check` em Fases 4 de outras skills / no CI para uma
 leitura read-only que sai 1 se houver drift/avisos).
 
 ## Saída
-A seção 12 de `docs/PRD.md`, `docs/backlog.md` **e os blocos derivados de `docs/architecture.md`**
-reconciliados + os resumos/avisos e o quadro de specs ecoados. Rodar `/zion-prd-trace` após `/speckit.implement`/`converge` é o **ritual de fim de spec**.
+A seção 12 de `docs/PRD.md`, `docs/backlog.md` **e os blocos derivados de `docs/architecture.md`
+(mapa de decisões, visão do backlog e avisos de narrativa)** reconciliados + os resumos/avisos e o
+quadro de specs ecoados. Rodar `/zion-prd-trace` após `/speckit.implement`/`converge` é o **ritual de fim de spec**.
 **Handoff:** commit dos artefatos (`/git-commit`), e a próxima spec ☐ da fila segue para
 `/zion-prd-specify-prompt`.

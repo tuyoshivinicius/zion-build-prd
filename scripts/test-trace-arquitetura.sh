@@ -44,6 +44,11 @@ assert_file_re "visão ganha walking-skeleton com status" "$arch" 'walking-skele
 assert_file_re "visão ganha historico pendente" "$arch" 'historico.*pendente'
 assert_file_re "prosa do Autor preservada" "$arch" 'Prosa que o reconciliador nunca toca'
 assert_file_not_re "conteúdo velho dos blocos substituído" "$arch" 'conteúdo velho'
+assert_file_re "avisa supersessão na âncora" "$arch" 'narrativa-superseded: ADR-004'
+assert_file_re "avisa defasagem da âncora" "$arch" 'narrativa-defasada: ADR-002, ADR-003'
+assert_file_re "aviso aponta a cura" "$arch" '/zion-prd-decompose --narrativa'
+assert_file_re "prosa da narrativa intocada" "$arch" 'dono único do dado gravado'
+assert_file_re "âncora intocada" "$arch" '<!-- zion:narrativa:start adrs=ADR-001,ADR-004 -->'
 
 # 2. Idempotência: rodar de novo não muda o arquivo.
 cp "$arch" "$arch.bak"
@@ -111,6 +116,30 @@ out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md")"; rc=$?
 assert_exit "sem specs-dir sai 0" 0 "$rc"
 assert_file_re "sem specs-dir ainda traz o fixou" "$arch" '^  fixou: Um banco único\.'
 assert_file_not_re "sem specs-dir não inventa specs" "$arch" 'specs: `'
+rm -f "$arch"
+
+# 12. Narrativa em dia: âncora com todos os ADRs vigentes aceitos → "_(narrativa em dia)_".
+arch="$(fresh "$FIX/architecture.md")"
+sed -i 's/adrs=ADR-001,ADR-004/adrs=ADR-001,ADR-002,ADR-003/' "$arch"
+bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs" >/dev/null 2>&1
+assert_file_re "âncora completa vira narrativa em dia" "$arch" '_\(narrativa em dia\)_'
+rm -f "$arch"
+
+# 13. Sem prosa na narrativa → "_(sem narrativa ainda)_", sem acusar defasagem.
+arch="$(fresh "$FIX/architecture.md")"
+awk '/<!-- zion:narrativa:start/ { print "<!-- zion:narrativa:start -->"; skip=1; next }
+     /<!-- zion:narrativa:end -->/ { skip=0 }
+     !skip { print }' "$FIX/architecture.md" > "$arch"
+bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs" >/dev/null 2>&1
+assert_file_re "sem prosa vira sem narrativa ainda" "$arch" '_\(sem narrativa ainda\)_'
+assert_file_not_re "sem prosa não acusa defasagem" "$arch" 'narrativa-defasada'
+rm -f "$arch"
+
+# 14. Documento sem o bloco de avisos → aviso com a cura certa, arquivo intacto nesse bloco.
+arch="$(fresh "$FIX/sem-marcadores.md")"
+out="$(bash "$TRACE" "$arch" "$FIX/adr" "$FIX/backlog.md" "$FIX/specs")"; rc=$?
+assert_exit "sem bloco de avisos sai 1" 1 "$rc"
+assert_contains "avisa a ausência do bloco de avisos" "zion:narrativa-avisos" "$out"
 rm -f "$arch"
 
 if [ "$fail" -eq 0 ]; then echo "test-trace-arquitetura: tudo verde"; else echo "test-trace-arquitetura: FALHOU"; exit 1; fi

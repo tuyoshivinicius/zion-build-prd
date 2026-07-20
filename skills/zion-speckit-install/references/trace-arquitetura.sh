@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# trace-arquitetura.sh — reconciliador dos blocos derivados do architecture.md do PRODUTO (ADR-015).
-# Regenera SÓ o conteúdo entre os marcadores zion:adr-index (§3) e zion:backlog-view (§4);
-# a prosa do Autor nunca é tocada. ESCREVE (git é o desfazer); --check é read-only.
+# trace-arquitetura.sh — reconciliador dos blocos derivados do architecture.md do PRODUTO (ADR-018).
+# Regenera SÓ o conteúdo entre os marcadores zion:adr-index (§3, mapa por área), zion:backlog-view
+# (§4) e zion:narrativa-avisos (§1); a prosa do Autor entre zion:narrativa nunca é tocada.
+# ESCREVE (git é o desfazer); --check é read-only.
 #
 # Uso:
 #   trace-arquitetura.sh <arquitetura> <adr-dir> <backlog-file> [<specs-dir>] [--check]
@@ -148,10 +149,60 @@ build_backlog_view() {
   ' "$BACKLOG"
 }
 
+# --- Conteúdo entre os marcadores de um bloco; o de abertura casa por PREFIXO (o bloco
+#     zion:narrativa carrega adrs= na própria linha). ---
+block_content() {  # $1 arquivo  $2 nome-do-bloco
+  awk -v start="<!-- zion:$2:start" -v end="<!-- zion:$2:end -->" '
+    index($0, start)==1 { inb=1; next }
+    $0==end   { inb=0 }
+    inb { print }
+  ' "$1"
+}
+
+narrativa_ancora() {  # $1 arquivo → "ADR-002,ADR-004" ou vazio
+  grep -m1 -oE '<!-- zion:narrativa:start[^>]*-->' "$1" \
+    | grep -oE 'adrs=[^ >]+' | head -1 | sed 's/^adrs=//' | tr -d ' '
+}
+
+# --- Bloco de avisos (§1): acusa supersessão e defasagem da âncora SEM tocar a prosa do Autor
+#     (ADR-018). A cura é sempre /zion-prd-decompose --narrativa, sob confirmação. ---
+build_narrativa_avisos() {
+  local prosa ancora out="" f id fora=""
+  prosa="$(block_content "$ARCH" narrativa | grep -vE '^[[:space:]]*$' | grep -vE '^[[:space:]]*_.*_[[:space:]]*$')"
+  if [ -z "$prosa" ]; then printf -- '_(sem narrativa ainda)_\n'; return 0; fi
+  ancora="$(narrativa_ancora "$ARCH")"
+
+  # 1. ADR citado na âncora que já foi substituído.
+  for id in $(printf '%s' "$ancora" | tr ',' ' '); do
+    f="$(ls "$ADR_DIR/$id-"*.md 2>/dev/null | head -1)"
+    [ -n "$f" ] || continue
+    if adr_superseded "$f"; then
+      out="$out- ⚠ narrativa-superseded: $id foi substituído (rode \`/zion-prd-decompose --narrativa\`)
+"
+    fi
+  done
+
+  # 2. ADR aceito e vigente que a âncora não cita.
+  for f in "$ADR_DIR"/ADR-*.md; do
+    [ -f "$f" ] || continue
+    adr_superseded "$f" && continue
+    adr_field "$f" Status | grep -qiE '^aceito' || continue
+    id="$(basename "$f" | grep -oE '^ADR-[0-9]+')"
+    printf '%s' ",$ancora," | grep -qF ",$id," && continue
+    if [ -z "$fora" ]; then fora="$id"; else fora="$fora, $id"; fi
+  done
+  if [ -n "$fora" ]; then
+    out="$out- ⚠ narrativa-defasada: $fora aceitos fora da âncora (rode \`/zion-prd-decompose --narrativa\`)
+"
+  fi
+
+  if [ -z "$out" ]; then printf -- '_(narrativa em dia)_\n'; else printf '%s' "$out"; fi
+}
+
 # --- Substitui o conteúdo entre os marcadores de UM bloco; o resto passa intacto. ---
 replace_block() {  # $1 arquivo  $2 nome-do-bloco  $3 arquivo-com-conteudo → stdout
-  awk -v start="<!-- zion:$2:start -->" -v end="<!-- zion:$2:end -->" -v cf="$3" '
-    $0==start { print; while ((getline l < cf) > 0) print l; skip=1; next }
+  awk -v start="<!-- zion:$2:start" -v end="<!-- zion:$2:end -->" -v cf="$3" '
+    index($0,start)==1 { print; while ((getline l < cf) > 0) print l; close(cf); skip=1; next }
     $0==end   { skip=0 }
     skip { next }
     { print }
@@ -163,19 +214,23 @@ warnings=""
 add_warning() { if [ -z "$warnings" ]; then warnings="$1"; else warnings="$warnings
 $1"; fi; }
 
-TMPA="$(mktemp)"; TMPB="$(mktemp)"; NEW="$(mktemp)"; CUR="$(mktemp)"
-cleanup() { rm -f "$TMPA" "$TMPB" "$NEW" "$CUR" 2>/dev/null; }
+TMPA="$(mktemp)"; TMPB="$(mktemp)"; TMPC="$(mktemp)"; NEW="$(mktemp)"; CUR="$(mktemp)"
+cleanup() { rm -f "$TMPA" "$TMPB" "$TMPC" "$NEW" "$CUR" 2>/dev/null; }
 trap cleanup EXIT
 
-build_adr_index    > "$TMPA"
-build_backlog_view > "$TMPB"
+# build_narrativa_avisos lê $ARCH — roda antes de qualquer escrita.
+build_adr_index        > "$TMPA"
+build_backlog_view     > "$TMPB"
+build_narrativa_avisos > "$TMPC"
 
 cp "$ARCH" "$CUR"
-for pair in "adr-index:$TMPA" "backlog-view:$TMPB"; do
+for pair in "adr-index:$TMPA" "backlog-view:$TMPB" "narrativa-avisos:$TMPC"; do
   name="${pair%%:*}"; cf="${pair#*:}"
   if grep -qF "<!-- zion:$name:start -->" "$CUR" && grep -qF "<!-- zion:$name:end -->" "$CUR"; then
     replace_block "$CUR" "$name" "$cf" > "$NEW"
     cp "$NEW" "$CUR"
+  elif [ "$name" = "narrativa-avisos" ]; then
+    add_warning "Marcador ausente: bloco zion:narrativa-avisos sem <!-- zion:narrativa-avisos:start/end --> em $ARCH (a §1 ainda não foi ditada; rode /zion-prd-decompose --narrativa)"
   else
     add_warning "Marcador ausente: bloco zion:$name sem <!-- zion:$name:start/end --> em $ARCH (bloco não reconciliado; restaure os marcadores do esqueleto)"
   fi
