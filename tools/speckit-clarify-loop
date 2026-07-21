@@ -36,16 +36,23 @@ MAX_YES=5
 ROUND_TIMEOUT=900
 LOG_DIR=/tmp/speckit-clarify-loop
 
+QUIET=0
+MON_PROFILE=plain
+MON_WIDTH=80
+ROUND_LOG=""
+LAST_KIND=""
+
 die() { printf 'speckit-clarify-loop: %s\n' "$1" >&2; exit "${2:-2}"; }
 
 usage() {
   cat >&2 <<'EOF'
-uso: speckit-clarify-loop [--repo DIR] [--max-rounds N] [--allow-dirty] [--dry-run] [--self-test]
+uso: speckit-clarify-loop [--repo DIR] [--max-rounds N] [--allow-dirty] [--dry-run] [--quiet] [--self-test]
 
   --repo DIR       repo alvo (default: cwd)
   --max-rounds N   teto duro de rodadas (default: 10)
   --allow-dirty    dispensa a exigência de working tree limpo
   --dry-run        ensaio sem Edit/Write: para na 1ª pergunta sem responder, sem tocar o spec
+  --quiet          cala a narração no stdout; o round-NN.log e o resumo continuam
   --self-test      roda os testes embutidos da classificação e sai
 EOF
   exit 2
@@ -53,7 +60,9 @@ EOF
 
 need_deps() {
   local missing="" c
-  for c in claude jq git mkfifo awk tail timeout; do
+  # `tput` fica de fora: já tem fallback para 80 e falta em contêiner enxuto —
+  # exigi-lo negaria a ferramenta a quem só quer o perfil plain.
+  for c in claude jq git mkfifo awk tail timeout fold sed; do
     command -v "$c" >/dev/null 2>&1 || missing="$missing $c"
   done
   [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
@@ -282,6 +291,75 @@ render_line() {  # perfil largura clock kind linha
   return 0
 }
 
+# --- Monitor: cola com estado -----------------------------------------------
+# O único lugar do monitor que fala com o mundo: relógio, destinos e a memória
+# do último kind. As três funções acima permanecem puras justamente porque tudo
+# que é impuro está aqui.
+
+mon_setup() {  # decide perfil e largura, uma vez, no arranque
+  if [ -t 1 ]; then
+    MON_PROFILE=tty
+    MON_WIDTH="$(tput cols 2>/dev/null || printf '80')"
+    case "$MON_WIDTH" in ''|*[!0-9]*) MON_WIDTH=80 ;; esac
+    [ "$MON_WIDTH" -le 100 ] || MON_WIDTH=100
+    [ "$MON_WIDTH" -ge 40 ] || MON_WIDTH=40
+  else
+    MON_PROFILE=plain
+    MON_WIDTH=80
+  fi
+  return 0
+}
+
+mon_clock() { printf '%02d:%02d' $(( SECONDS / 60 )) $(( SECONDS % 60 )); }
+
+mon_round_start() {  # caminho do round-NN.log
+  ROUND_LOG="${1:-}"
+  LAST_KIND=""
+  SECONDS=0
+  [ -z "$ROUND_LOG" ] || : > "$ROUND_LOG"
+  return 0
+}
+
+# O log em arquivo recebe SEMPRE perfil plain com largura 80 — daí a prosa ser
+# renderizada duas vezes no TTY. É baratíssimo, e evita ter que arrancar ANSI
+# com sed no caminho de escrita.
+emit_event() {  # linha-jsonl
+  local line="${1:-}" kind clock
+  kind="$(event_kind "$line")"
+  kind="$(dedup_kind "$LAST_KIND" "$kind")"
+  [ "$kind" = nothing ] && return 0
+  LAST_KIND="$kind"
+  clock="$(mon_clock)"
+  [ "$QUIET" -eq 1 ] || render_line "$MON_PROFILE" "$MON_WIDTH" "$clock" "$kind" "$line"
+  [ -z "$ROUND_LOG" ] || render_line plain 80 "$clock" "$kind" "$line" >> "$ROUND_LOG"
+  return 0
+}
+
+# Linhas que nascem no motor, não no stream: o eco do `yes`, o rodapé da
+# rodada, os avisos de aborto.
+emit_note() {  # kind texto
+  local kind="${1:-text}" text="${2:-}" clock color
+  case "$kind" in
+    you)  color=bold ;;
+    warn) color=red ;;
+    *)    color=none ;;
+  esac
+  clock="$(mon_clock)"
+  [ "$QUIET" -eq 1 ] || \
+    mon_head "$clock" "$(mon_marker "$MON_PROFILE" "$kind")" "$(mon_paint "$MON_PROFILE" "$color" "$text")"
+  [ -z "$ROUND_LOG" ] || \
+    mon_head "$clock" "$(mon_marker plain "$kind")" "$text" >> "$ROUND_LOG"
+  return 0
+}
+
+# Estrutura (cabeçalho de rodada): sem relógio, e sobrevive ao --quiet — é o
+# mínimo que diz "ainda estou vivo" quando a narração está calada.
+emit_rule() {  # texto
+  printf '%s\n' "${1:-}"
+  [ -z "$ROUND_LOG" ] || printf '%s\n' "${1:-}" >> "$ROUND_LOG"
+  return 0
+}
+
 # --- Preflight -------------------------------------------------------------
 # Resolve o spec alvo pela MESMA fonte que a skill usa (passo 1), para que
 # script e skill nunca divirjam de arquivo.
@@ -311,7 +389,7 @@ preflight() {
   [ -f "$SPEC" ] || die "spec alvo não existe: $SPEC"
 
   mkdir -p "$LOG_DIR" || die "não consegui criar $LOG_DIR"
-  rm -f "$LOG_DIR"/round-*.jsonl "$LOG_DIR"/round-*.jsonl.err
+  rm -f "$LOG_DIR"/round-*.jsonl "$LOG_DIR"/round-*.jsonl.err "$LOG_DIR"/round-*.log
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/speckit-clarify-loop.XXXXXX")" \
     || die "não consegui criar diretório de trabalho"
 }
@@ -708,6 +786,25 @@ assert_out() {  # descrição  esperado  comando…
 # comando com argumentos.
 mon_fold_str() { printf '%s\n' "$2" | mon_fold "$1"; }
 
+# Irmão do assert_out para as funções COM estado. A diferença é só a captura:
+# `$(...)` roda em subshell, e a atribuição de LAST_KIND dentro de emit_event
+# morreria ali — a supressão de thinking nunca seria exercitada de verdade.
+# Redirecionar para arquivo mantém a chamada no shell corrente.
+assert_emit() {  # descrição  esperado  comando…
+  local desc="$1" want="$2"; shift 2
+  local tmp got
+  tmp="$(mktemp "${TMPDIR:-/tmp}/speckit-clarify-loop-st.XXXXXX")"
+  SECONDS=0
+  "$@" > "$tmp"
+  got="$(cat "$tmp")"; rm -f "$tmp"
+  if [ "$got" = "$want" ]; then
+    printf 'ok: %s\n' "$desc"
+  else
+    printf 'FALHOU: %s\n  esperado: [%s]\n  veio:     [%s]\n' "$desc" "$want" "$got"
+    ST_FAIL=1
+  fi
+}
+
 assert_render() {  # descrição  esperado  kind  linha-jsonl
   local got; got="$(render_line plain 80 '01:23' "$3" "$4")"
   if [ "$got" = "$2" ]; then
@@ -806,8 +903,36 @@ self_test() {
   assert_render "kind nothing não imprime nada"  '' nothing "$FX_SYS_INIT"
   assert_render "linha malformada não imprime nada" '' tool "$FX_BAD"
 
+  # A cola tem estado, então o teste a exercita com destinos controlados:
+  # sem log em arquivo (ROUND_LOG vazio) e com o perfil plain forçado.
+  MON_PROFILE=plain; MON_WIDTH=80; QUIET=0; ROUND_LOG=""; LAST_KIND=""
+  assert_emit "emit_note ecoa a linha do motor" \
+    '  00:00  [você]    yes                    (pergunta 1/5)' \
+    emit_note you 'yes                    (pergunta 1/5)'
+  assert_emit "emit_rule não leva relógio" \
+    '── rodada 01/10 ──' \
+    emit_rule '── rodada 01/10 ──'
+
+  LAST_KIND=""
+  assert_emit "emit_event narra o primeiro thinking" \
+    '  00:00  [...]     pensando…' \
+    emit_event "$FX_THINK"
+  assert_emit "emit_event suprime o thinking seguinte" '' emit_event "$FX_THINK"
+  assert_emit "system entre thinkings não imprime nada" '' emit_event "$FX_SYS_TOK"
+  assert_emit "thinking após ruído continua suprimido"  '' emit_event "$FX_THINK"
+  assert_emit "tool reabre a supressão" \
+    '  00:00  [tool]    Bash     check-prerequisites.sh --json --paths-only' \
+    emit_event "$FX_TOOL_BASH"
+  assert_emit "thinking após tool volta a narrar" \
+    '  00:00  [...]     pensando…' \
+    emit_event "$FX_THINK"
+
+  QUIET=1
+  assert_emit "--quiet cala o stdout" '' emit_event "$FX_TOOL_BASH"
+  QUIET=0
+
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (54 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (63 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
@@ -818,6 +943,7 @@ while [ $# -gt 0 ]; do
     --max-rounds)  [ $# -ge 2 ] || usage; MAX_ROUNDS="$2"; shift 2 ;;
     --allow-dirty) ALLOW_DIRTY=1; shift ;;
     --dry-run)     DRY_RUN=1; shift ;;
+    --quiet)       QUIET=1; shift ;;
     --self-test)   self_test ;;
     -h|--help)     usage ;;
     *) printf 'speckit-clarify-loop: flag desconhecida: %s\n' "$1" >&2; usage ;;
@@ -830,6 +956,7 @@ esac
 [ "$MAX_ROUNDS" -ge 1 ] || die "--max-rounds exige um inteiro positivo (veio: $MAX_ROUNDS)"
 
 need_deps
+mon_setup
 
 preflight
 main_loop
