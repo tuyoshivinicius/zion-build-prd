@@ -33,6 +33,21 @@
 #     e as 63 linhas de narração inteiras preservadas em round-01.log. É o que
 #     faz do --quiet um modo sem perda: cala a tela, não a memória.
 #   Nas três, o spec ficou intocado (delta +0).
+# Fase 0 + Fase 1 verificadas em 2026-07-21 contra claude 2.1.216 e a skill
+# speckit-clarify:
+#   --dry-run em zion-test-build-prd (SPECIFY_FEATURE=006-code-interop) →
+#   sentinela em 1/1 turnos, spec intocado (188 → 188 linhas), US$ 0,57, e um
+#   diretório de log próprio em /tmp/speckit-clarify-loop/20260721-093928.
+#   A linha `sensores ·` sai em toda rodada, inclusive sob --quiet, e NENHUM dos
+#   seus números decide parada nesta fase — a Fase 2 é quem os liga.
+#   Uma rodada paga no mesmo repo (US$ 1,33, 3 yes, +36 linhas), com o spec
+#   adulterado para CITAR a sentinela dentro de uma cerca: sentinela em 4/4
+#   turnos, 3/3 decisões nomeadas no resumo e nenhum falso positivo da guarda de
+#   vazamento — a ocorrência preexistente não é linha nova, que é o ponto inteiro
+#   de casar contra `added_lines` e não contra o spec (D-5).
+#   Nota de uso: o repo alvo precisa estar num branch de feature, ou o
+#   check-prerequisites.sh recusa antes de qualquer chamada paga — daí o
+#   SPECIFY_FEATURE nas duas execuções acima.
 # Reinstalar após editar:  install -m 755 tools/speckit-clarify-loop ~/.local/bin/
 set -u
 
