@@ -917,7 +917,7 @@ run_round() {  # número da rodada em $1
 
 # --- Driver do loop ---------------------------------------------------------
 main_loop() {
-  local round=0 same=0 prev_hash cur_hash
+  local round=0 same=0 prev_hash cur_hash spec_mudou
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
   local total_turns=0 total_sent=0 all_decisions="" dec_block=""
   local start_lines end_lines delta tag rule_pad snap
@@ -965,6 +965,11 @@ main_loop() {
       || all_decisions="${all_decisions}${all_decisions:+$'\n'}$ROUND_DECISIONS"
     yes_log="$yes_log r$tag=$ROUND_YES"
     cur_hash="$(spec_hash)"
+    # "A rodada escreveu no spec" derivado UMA vez. Antes disto a mesma
+    # comparação vivia em três lugares — o ramo de aborto, o bloco do --dry-run
+    # e a estagnação —, e três cópias de uma verdade são três chances de
+    # divergir no dia em que uma delas mudar (S-6).
+    spec_mudou=0; [ "$cur_hash" = "$prev_hash" ] || spec_mudou=1
     emit_note ok "$(printf '%s · %d yes · US$ %s' "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST")"
     narrate_sensors "$snap" "$SPEC" "$ROUND_COST"
 
@@ -972,26 +977,32 @@ main_loop() {
       loop-seco)
         stop_reason="convergiu — a skill declarou não haver ambiguidade crítica"; rc=0; break ;;
       aborto)
-        stop_reason="aborto na rodada $tag — $ROUND_ABORT"; rc=1; break ;;
+        stop_reason="aborto na rodada $tag — $ROUND_ABORT"; rc=1
+        # O rc continua 1: o rc=4 é do R-19, fora do escopo desta entrega. O que
+        # muda é o humano saber. Numa ferramenta pessoal invocada à mão, quem lê
+        # é o resumo na tela, não um script.
+        [ "$spec_mudou" -eq 0 ] \
+          || emit_note warn 'ATENÇÃO: o spec foi alterado numa rodada abortada'
+        break ;;
     esac
 
-    # O --dry-run vive de uma rodada só: a checagem de hash é o que prova que o
-    # ensaio não escreveu nada. Se escreveu, o modo perdeu a razão de existir.
+    # O --dry-run vive de uma rodada só, e a prova de que o ensaio não gravou
+    # nada é agora O MESMO código que julga os demais caminhos — uma garantia em
+    # vez de duas (S-6). O bloco aqui só escolhe rc e motivo.
     if [ "$DRY_RUN" -eq 1 ]; then
-      if [ "$ROUND_OUTCOME" = "dry-pergunta" ]; then
-        stop_reason="--dry-run: 1 pergunta classificada, nada gravado"
-      else
-        stop_reason="--dry-run: rodada encerrada em $ROUND_OUTCOME sem perguntas, nada gravado"
-      fi
+      case "$ROUND_OUTCOME" in
+        dry-pergunta) stop_reason='--dry-run: 1 pergunta classificada, nada gravado' ;;
+        *) stop_reason="--dry-run: rodada encerrada em $ROUND_OUTCOME sem perguntas, nada gravado" ;;
+      esac
       rc=0
-      if [ "$cur_hash" != "$prev_hash" ]; then
-        stop_reason="--dry-run ALTEROU o spec (hash mudou) — investigue antes de confiar no modo"
+      [ "$spec_mudou" -eq 0 ] || {
+        stop_reason='--dry-run ALTEROU o spec (hash mudou) — investigue antes de confiar no modo'
         rc=1
-      fi
+      }
       break
     fi
 
-    if [ "$cur_hash" = "$prev_hash" ]; then
+    if [ "$spec_mudou" -eq 0 ]; then
       same=$((same + 1))
       if [ "$same" -ge 2 ]; then
         stop_reason="convergiu por estagnação — 2 rodadas seguidas sem alterar o spec"
