@@ -76,6 +76,46 @@ classify() {  # texto do turno em $1 → rótulo em stdout
   fi
 }
 
+# --- Preflight -------------------------------------------------------------
+# Resolve o spec alvo pela MESMA fonte que a skill usa (passo 1), para que
+# script e skill nunca divirjam de arquivo.
+SPEC=""
+WORK=""
+
+preflight() {
+  [ -d "$REPO" ] || die "repo não encontrado: $REPO"
+  REPO="$(cd "$REPO" && pwd)"
+  [ -d "$REPO/.specify" ] || die "não parece um repo Spec Kit (sem .specify/): $REPO"
+
+  local prereq="$REPO/.specify/scripts/bash/check-prerequisites.sh"
+  [ -f "$prereq" ] || die "check-prerequisites.sh ausente em $REPO/.specify/scripts/bash/"
+
+  git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 \
+    || die "repo alvo não é um repositório git: $REPO"
+  if [ "$ALLOW_DIRTY" -eq 0 ] && [ -n "$(git -C "$REPO" status --porcelain)" ]; then
+    die "working tree sujo em $REPO — commite ou descarte antes (ou passe --allow-dirty)"
+  fi
+
+  local json
+  json="$(cd "$REPO" && bash "$prereq" --json --paths-only 2>&1)" \
+    || die "check-prerequisites.sh falhou: $json"
+  SPEC="$(printf '%s' "$json" | jq -r '.FEATURE_SPEC // empty' 2>/dev/null)" \
+    || die "saída do check-prerequisites.sh não é JSON: $json"
+  [ -n "$SPEC" ] || die "check-prerequisites.sh não devolveu FEATURE_SPEC: $json"
+  [ -f "$SPEC" ] || die "spec alvo não existe: $SPEC"
+
+  mkdir -p "$LOG_DIR" || die "não consegui criar $LOG_DIR"
+  rm -f "$LOG_DIR"/round-*.jsonl "$LOG_DIR"/round-*.jsonl.err
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/speckit-clarify-loop.XXXXXX")" \
+    || die "não consegui criar diretório de trabalho"
+}
+
+cleanup() { [ -n "$WORK" ] && rm -rf "$WORK"; }
+trap cleanup EXIT
+
+spec_hash()  { git hash-object "$SPEC"; }
+spec_lines() { wc -l < "$SPEC" | tr -d ' '; }
+
 # --- Auto-teste embutido ---------------------------------------------------
 # Fixtures espelham o texto literal de speckit-clarify/SKILL.md. Se a skill
 # mudar o formato, é aqui que a regressão aparece.
@@ -187,6 +227,8 @@ esac
 
 need_deps
 
+preflight
+
 # TEMPORÁRIO — substituído pelo driver na Task 5.
-printf 'speckit-clarify-loop: arranque ok (repo=%s max-rounds=%s dry-run=%s allow-dirty=%s)\n' \
-  "$REPO" "$MAX_ROUNDS" "$DRY_RUN" "$ALLOW_DIRTY"
+printf 'speckit-clarify-loop: preflight ok\n  repo: %s\n  spec: %s (%s linhas, %s)\n' \
+  "$REPO" "$SPEC" "$(spec_lines)" "$(spec_hash)"
