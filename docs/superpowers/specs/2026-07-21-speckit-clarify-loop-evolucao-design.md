@@ -98,15 +98,20 @@ abortada (rc=4) deixou o spec alterado e não commitado.
 ### D-4 — Escopo da entrega
 
 Este documento cobre as cinco fases e é a fonte de verdade da ordem. Os planos
-de implementação saem por fase:
+de implementação saem por fase, e cada `M-` da Parte II viaja no plano da fase
+de que ele depende — não num plano de mitigação separado:
 
-| plano | fases | estado |
-|---|---|---|
-| 1 | Fase 0 + Fase 1 | próximo |
-| 2 | Fase 3 | depois |
-| 3 | Fase 2 (em `warn`) | depois |
-| 4 | Fase 4 | depois |
-| — | Fase 5 | protocolo de execução, não vira plano |
+| plano | fases | `M-*` | estado |
+|---|---|---|---|
+| 1 | Fase 0 + Fase 1 | M-06 M-07 M-03 M-04 M-12 (guarda e parsing) | próximo |
+| 2 | Fase 3 | M-08 | depois |
+| 3 | Fase 2 (em `warn`) | — | depois |
+| 4 | Fase 4 | M-01 M-02 M-05 M-09 M-10 M-12 (nome de branch) | depois |
+| — | Fase 5 | M-11 | protocolo de execução, não vira plano |
+
+Distribuir em vez de agrupar tem uma razão só: o M-06 fecha um risco que a
+Fase 1 **cria**. Num plano próprio, entre o merge da Fase 1 e o dele o
+vazamento seria silencioso.
 
 ### E-1 — A sentinela vai inline no `--append-system-prompt`
 
@@ -175,6 +180,10 @@ Use exatamente um destes três valores:
 Essa linha é lida por um script. Não a traduza, não a formate, não a envolva em
 crase, negrito ou bloco de código, e não escreva nada depois dela.
 ```
+
+O M-03 acrescenta uma segunda família de linhas ao mesmo contrato, e o M-07 uma
+proibição; a ordem entre elas está fixada no D-7. O `CLARIFY_STATE` continua
+sendo a última linha da mensagem em qualquer combinação.
 
 **R-08 — `classify` lê a sentinela; heurística vira fallback.**
 
@@ -341,6 +350,9 @@ rodada 3 quando ela só inchou, com `git reset --hard <sha da r02>`.
 
 Fase 0 → Fase 1 → Fase 3 → Fase 2 (`warn`) → Fase 4 → Fase 5 (vira `stop`).
 
+A ordem interna dos `M-` está na §"Ordem de entrega" da Parte II; ela não
+reordena as fases, só diz onde cada item se enfia dentro delas.
+
 Fase 1 tem o maior retorno isolado; Fase 3 é barata e para de descartar rodada
 boa desde já. O único erro de ordem que importa é Fase 2 antes da 0 — implica
 escolher limiar no escuro.
@@ -348,7 +360,7 @@ escolher limiar no escuro.
 Planos de implementação conforme D-4: Fase 0 + Fase 1 no primeiro; Fase 3,
 Fase 2 e Fase 4 em planos próprios; Fase 5 não vira plano.
 
-## Pronto quando
+## Pronto quando (Parte I)
 
 `--self-test` limpo com contador automático e cobertura de todo sensor puro,
 dos três estados do `sensor_marcadores` e da leitura da sentinela · `--dry-run`
@@ -356,3 +368,364 @@ real com `delta +0`, hash inalterado e nenhum commit · uma execução com
 `--sensors=warn` mostrando a linha de sensores em toda rodada e `sentinela: M/M`
 · cabeçalho com a tabela de `rc` e nota de verificação datada · nenhuma
 constante `SIG_*` acrescentada depois da Fase 1 (S-4).
+
+---
+
+# Parte II — Mitigação de contaminação
+
+A Parte I faz o laço convergir. Esta trata do risco de ele degradar o `spec.md`
+que deveria melhorar.
+
+Depende inteiramente dos `R-*` da Parte I. Requisitos aqui são `M-*`.
+
+---
+
+## Modelo de risco
+
+| vetor | origem | mitigação |
+|---|---|---|
+| **V1** — decisões de produto aceitas sem leitura humana | já existia no fluxo manual; a automação apenas remove a percepção periférica de ver a pergunta passar | M-01, M-04, M-09 |
+| **V2** — sentinela vaza para dentro do spec, ou muda a noção de plateia do modelo | **introduzido pela Fase 1** | M-06, M-07, M-11 |
+| **V3** — resposta enviada a um turno que não era pergunta | introduzido pelo R-16 | M-08 |
+
+**V1 é o maior e o menos tratável.** Cada rodada são até 5 decisões tomadas
+pelo modelo; com o teto de 3 do R-21, até 15 por execução. Nenhum `M-` elimina
+isso — M-01 e M-04 tornam recuperável e legível, M-09 é o único que devolve
+julgamento humano ao ponto onde ele rende.
+
+---
+
+## Decisões desta sessão (Parte II)
+
+Cinco pontos que o texto original desta parte deixava em aberto ou definia
+contra o código verificado. Cada um altera requisitos nomeados adiante; os
+grupos já vêm com a alteração dobrada dentro.
+
+### D-5 — a guarda de vazamento casa contra as linhas adicionadas
+
+Altera **M-06**.
+
+O texto original casava contra o spec inteiro (`grep -q '^CLARIFY_' "$SPEC"`),
+com a justificativa de que a âncora `^` protegia a sentinela citada dentro de um
+bloco de exemplo. Não protege: dentro de uma cerca a linha *está* no começo da
+linha. O R-07 desta própria spec é o contra-exemplo — um spec que documente o
+contrato aborta na rodada 1, e em toda rodada 1 seguinte, sem saída a não ser
+editar o spec à mão.
+
+A guarda passa a casar contra `added_lines "$snap" "$SPEC"` — a função que o
+R-03 já entrega. Ocorrência preexistente não envenena a execução; vazamento
+real é linha nova por definição.
+
+### D-6 — as decisões saem do `.jsonl`, não do `.log`
+
+Altera **M-04**.
+
+O `round-NN.log` recebe a prosa do turno depois do `mon_fold`, que indenta a
+continuação em 9 colunas. Uma linha `CLARIFY_DECISION:` no meio da mensagem
+chega lá como `         CLARIFY_DECISION: …`, e a âncora `^` não casa nunca. A
+fonte é o `round-NN.jsonl`, campo `.result` do evento `result` — o mesmo texto
+que o `classify` já lê para achar a sentinela do R-08.
+
+### D-7 — ordem fixa entre as duas famílias de sentinela
+
+Altera **M-03** e **R-07**.
+
+O R-07 fecha com "não escreva nada depois dela". O M-03 acrescenta uma segunda
+linha ao contrato. Sem ordem declarada os dois se contradizem. A ordem é:
+
+```
+CLARIFY_DECISION: <assunto> -> <opção>
+CLARIFY_DECISION: <assunto> -> <opção>
+CLARIFY_STATE: ASKING
+```
+
+`CLARIFY_DECISION` primeiro, zero ou mais; `CLARIFY_STATE` sempre por último e
+sempre exatamente uma. O R-08 já lê com `tail -n 1`, então a leitura da
+sentinela de estado não muda.
+
+### D-8 — o M-08 vale só no caminho indeterminado
+
+Altera **M-08**.
+
+O texto original dizia "substituir o `yes` cego do R-16", mas o `yes` não é do
+R-16: o script o envia em **toda** pergunta classificada, e a skill documenta
+literalmente `accept the recommendation by saying "yes"`. Trocar isso por um
+parágrafo no caminho normal sairia do vocabulário da skill em toda rodada, e
+tornaria o contador `yes: 12 (r01=5 …)` um nome que não descreve mais o que foi
+enviado.
+
+Duas constantes, dois caminhos:
+
+| caminho | envia |
+|---|---|
+| `pergunta-pendente` | `REPLY_YES` = `yes` (inalterado) |
+| `indeterminada` com `ROUND_YES > 0` (R-16) | `REPLY_PROBE` — o texto do M-08 |
+
+### D-9 — branch vazio não sobrevive à execução
+
+Acrescenta ao **M-01**.
+
+Criar um branch no `preflight` é um efeito colateral que ninguém desfaz: uma
+execução que aborta na rodada 1 deixa o humano parado num branch idêntico ao
+base, e a próxima execução deixa outro.
+
+Regra de saída, no `trap`:
+
+- zero commits **e** hash do spec igual ao inicial → volta ao base e apaga o
+  branch, narrado.
+- qualquer outro caso → o branch fica. Em particular o `rc=4` do R-19, em que a
+  rodada abortada deixou o spec alterado e não commitado: apagar o branch
+  arrastaria a alteração de volta para o base, que é exatamente a contaminação
+  que o M-01 existe para conter.
+
+---
+
+## G1 — Contenção
+
+**M-01 — branch dedicado, ativo por default.**
+
+```bash
+BASE_BRANCH="$(git -C "$REPO" rev-parse --abbrev-ref HEAD)"
+CLARIFY_BRANCH="$(clarify_branch_name "$(dirname "$SPEC")" "$(date +%Y%m%d-%H%M%S)")"
+git -C "$REPO" checkout -q -b "$CLARIFY_BRANCH"
+```
+
+- Criado no `preflight`, depois da checagem de árvore limpa.
+- `--no-branch` desliga. `--allow-dirty` **implica** `--no-branch` (a árvore tem
+  trabalho alheio; não é do script decidir o que entra), narrado.
+- `--dry-run` nunca cria branch.
+- Nome do branch e branch base impressos no cabeçalho, antes da rodada 1.
+- Saída conforme D-9.
+
+O nome sai de `clarify_branch_name <dir-do-spec> <timestamp>`, função pura —
+`clarify/<basename do dir>-<timestamp>` — pelo M-12.
+
+Contenção só funciona se for o default. Opt-in não contém.
+
+**M-02 — o resumo imprime as duas saídas, sempre.** Layout canônico e as três
+combinações de modo estão na §"Resumo consolidado" adiante.
+
+O objetivo é transformar contaminação de "algo que você desfaz" em "algo que
+você não aceita".
+
+---
+
+## G2 — Revisão
+
+**M-03 — linha de decisão no contrato de saída.**
+
+Extrair o assunto de cada pergunta da prosa violaria P-2. Em vez disso, estender
+o `--append-system-prompt` do R-07:
+
+```
+Quando você integrar uma resposta ao spec, emita também, em linha própria e
+ANTES da linha CLARIFY_STATE:
+
+CLARIFY_DECISION: <assunto em até 8 palavras> -> <a opção escolhida>
+
+Mesmas regras da linha CLARIFY_STATE: sem tradução, sem formatação, e nunca
+dentro de nenhum arquivo.
+```
+
+Ordem conforme D-7. Custo assumido: mais superfície de contrato = mais chance de
+vazamento e de não-aderência. É por isso que o M-06 vigia o prefixo `CLARIFY_`
+inteiro, e não só `CLARIFY_STATE`.
+
+**M-04 — resumo das decisões no fim da execução.**
+
+Montado a partir das linhas `CLARIFY_DECISION` capturadas nos `round-NN.jsonl`
+(D-6), na ordem das rodadas:
+
+```
+decisões aceitas (12):
+  r01  igualdade de rótulo          -> A (no parse)
+  r01  feedback de falha de cópia   -> B (sinal transitório)
+  …
+```
+
+Ausência da linha não é erro: cai para `decisões aceitas: 12 (texto
+indisponível — contrato não aderiu)`. Linha malformada — sem a seta — é
+descartada e conta para o mesmo fallback.
+
+O problema de "ler o diff depois" não é preguiça: um diff de 200 linhas não
+convida ninguém. Quinze linhas se leem.
+
+**M-05 — `revisar:` como última linha do resumo, sempre.** Inclusive em
+convergência limpa com `rc=0`. É o único ponto do desenho em que o humano volta
+ao laço. Hoje não existe.
+
+---
+
+## Resumo consolidado
+
+Sete requisitos escrevem no mesmo resumo — R-09 (`sentinela:`), R-01 (`logs:`),
+D-3/R-22 (`commits:`/`reverter:`), M-02, M-04, M-05, M-10. Sem um layout
+canônico eles se atropelam. A coluna de rótulos passa de 10 para 11 caracteres
+(`descartar:` e `sentinela:` são os mais longos).
+
+```
+—— resumo ——
+repo:      /home/tuyoshi/projects/zion-test-build-prd
+spec:      specs/006-code-interop/spec.md
+base:      006-code-interop
+branch:    clarify/006-code-interop-20260721-143012
+rodadas:   3
+yes:       12 (r01=5 r02=5 r03=2)
+sentinela: 8/8 turnos
+custo:     US$ 4,12
+spec:      120 → 187 linhas (delta +67)
+commits:   r01 a1b2c3d  r02 e4f5g6h  r03 i7j8k9l
+logs:      /tmp/speckit-clarify-loop/20260721-143012
+           round-NN.jsonl (stream) · round-NN.log (narração) · latest → esta execução
+parada:    convergiu — a skill declarou não haver ambiguidade crítica
+
+decisões aceitas (12):
+  r01  igualdade de rótulo          -> A (no parse)
+  r01  feedback de falha de cópia   -> B (sinal transitório)
+  …
+
+a seguir:  /speckit.checklist · /speckit.analyze
+aceitar:   git checkout 006-code-interop && git merge --no-ff clarify/006-…
+descartar: git checkout 006-code-interop && git branch -D clarify/006-…
+revisar:   git diff 006-code-interop..HEAD -- specs/006-code-interop/spec.md
+```
+
+`revisar:` é sempre a última linha (M-05). `a seguir:` só aparece em `rc=0`
+(M-10). O par `aceitar:`/`descartar:` substitui o `reverter:` do D-3 quando há
+branch — com o branch, `reset --soft` é redundante:
+
+| modo | linhas de contenção |
+|---|---|
+| branch ativo (default) | `base:` `branch:` `commits:` `aceitar:` `descartar:` `revisar:` |
+| `--no-branch` | `base:` `commits:` `reverter: git -C <repo> reset --soft <base>` `revisar:` |
+| `--allow-dirty` (implica `--no-branch`; o R-22 não commita) | `reverter: git -C <repo> checkout -- <spec>` (o de hoje) · `revisar: git -C <repo> diff -- <spec>` |
+
+Os SHAs por rodada ficam nos dois primeiros modos: são eles que permitem
+descartar só a rodada 3 com `git reset --hard <sha da r02>`.
+
+---
+
+## G3 — Contrato seguro
+
+| id | requisito | nota |
+|---|---|---|
+| **M-06** | Após **cada** rodada: `added_lines "$snap" "$SPEC" \| grep -q '^CLARIFY_'` → `ROUND_OUTCOME=aborto`, `ROUND_ABORT='sentinela vazou para dentro do spec'`. | **Abortar, não limpar.** Limpeza silenciosa esconde que o contrato falhou. Casa contra as linhas adicionadas, não contra o spec inteiro — D-5. |
+| **M-07** | Acrescentar ao contrato: `Nunca escreva essas linhas dentro de nenhum arquivo; elas pertencem apenas à sua mensagem.` | prevenção; M-06 é a rede |
+| **M-08** | No caminho `indeterminada` do R-16, enviar `REPLY_PROBE` em vez de `yes`: `Se você fez uma pergunta de clarificação, responda com a opção recomendada. Se a rodada já terminou, emita apenas a linha CLARIFY_STATE: COMPLETE.` | não pode ser lido como aprovação de uma ação inventada, e ainda recupera a sentinela. Pergunta classificada continua com `yes` seco — D-8. |
+
+**M-06 antes do R-19.** O `rc=4` é do R-19, que é Fase 3 (plano 2), e o M-06 vai
+no plano 1. No plano 1 o M-06 define `ROUND_OUTCOME`/`ROUND_ABORT` e sai pelo
+`rc=1` existente, com linha destacada. Quando o R-19 generaliza a comparação de
+hash a todo caminho de aborto, o `rc=4` passa a valer sem tocar no M-06 — o spec
+foi alterado por construção, já que a linha vazada é linha nova. É o
+comportamento correto nos dois momentos, e é o que permite o M-06 não esperar.
+
+---
+
+## G4 — Processo (não é código)
+
+**M-09 — rodada 1 fica com o humano.**
+
+As perguntas de maior impacto estão na primeira rodada, que é também a mais
+barata (spec ainda pequeno). Automatizar a rodada 1 entrega as decisões caras à
+máquina para poupar o trabalho barato.
+
+Fluxo recomendado, documentado no cabeçalho do script e no `usage`:
+
+```
+1.  /speckit-clarify à mão, aceitando ou não as recomendações
+2.  speckit-clarify-loop --max-rounds 2
+```
+
+Único item que ataca V1 na raiz.
+
+**M-10 — gates a jusante no resumo.** Em convergência (`rc=0`), a linha
+`a seguir:` sugere `/speckit.checklist` e `/speckit.analyze`. Eles pegam o que
+os sensores não veem: requisito incoerente, decisão técnica travestida de
+requisito. É o uso que o próprio Spec Kit prescreve.
+
+---
+
+## G5 — Medição
+
+**M-11 — verificar se o viés de audiência existe.**
+
+Hipótese: dizer ao modelo que a saída é lida por um script pode fazê-lo escrever
+o spec de forma mais telegráfica, ou otimizada para máquina onde deveria ser
+para humano. É especulação — e especulação se mede.
+
+Protocolo, com a Fase 0 no ar:
+
+1. Mesmo repo, mesmo spec base, `git reset --hard` entre execuções.
+2. Três execuções com contrato, três sem (`--no-contract`, flag temporária).
+3. Comparar `yes` por rodada e churn por rodada nas duas amostras, a partir da
+   linha `sensores · …` do R-04.
+
+Distribuições parecidas → o viés não existe na prática; encerrar o assunto e
+remover a flag. Distribuições distintas → enxugar o contrato, tirando a frase
+`Essa linha é lida por um script` e deixando só a instrução. Menos explicação
+pode custar aderência: é trade-off a medir, não a supor.
+
+---
+
+## G6 — Testes
+
+**M-12** — no `--self-test`, via `assert_out` (após S-1). Parte no plano 1,
+parte no plano 4, conforme o D-4:
+
+| teste | plano |
+|---|---|
+| Guarda de vazamento: linha adicionada com `CLARIFY_STATE` no início dispara; a mesma string no meio de uma frase não dispara; ocorrência **já presente no snapshot** não dispara (D-5) | 1 |
+| Parsing de `CLARIFY_DECISION`: linha bem-formada, linha ausente, linha com seta faltando, duas linhas na mesma mensagem | 1 |
+| `clarify_branch_name <dir-do-spec> <timestamp>`: função pura, determinística | 4 |
+
+---
+
+## Dependências
+
+| `M-` | precisa de |
+|---|---|
+| M-01, M-02 | R-22 (commit por rodada) — sem ele o branch guarda um blob só |
+| M-03, M-04 | R-07 (contrato), R-01 (logs preservados por execução) |
+| M-06 | R-03 (`added_lines`). O R-19 melhora o `rc` mas não bloqueia — ver G3 |
+| M-08 | R-16 |
+| M-11 | Fase 0 completa (R-04, R-05) |
+| M-12 | S-1 (colapso dos helpers); a terceira linha também M-01 |
+
+---
+
+## Ordem de entrega
+
+**M-06 + M-07** (fecham o risco que a Fase 1 introduziu; quatro linhas) →
+**M-03 + M-04** (resumo de decisões) → **M-08** → **M-01 + M-02** (contenção) →
+**M-05** (empurrão de revisão, uma linha) → **M-09 + M-10** (processo) →
+**M-11**.
+
+M-06 não deve ficar atrás da Fase 1 em produção: enquanto não existir, o
+vazamento é silencioso. É a razão de os `M-` viajarem distribuídos pelos planos
+das fases (D-4) em vez de num plano de mitigação próprio.
+
+---
+
+## Risco residual
+
+Depois de tudo isto, permanece: **o modelo continua tomando decisões de produto
+que ninguém leu no momento em que foram tomadas.** M-04 e M-05 tornam a leitura
+barata e a lembram; M-01 torna a rejeição possível; M-09 preserva julgamento
+humano onde ele mais rende. Nenhum deles obriga ninguém a ler.
+
+Essa é a fronteira do que um harness pode fazer. O resto é disciplina, e não se
+implementa em bash.
+
+---
+
+## Pronto quando (Parte II)
+
+`--self-test` cobrindo o M-12 · uma execução real criando branch, imprimindo as
+duas saídas do M-02 e terminando com a linha `revisar:` · resumo de decisões
+legível a partir de logs reais · guarda de vazamento exercitada com um spec
+adulterado à mão, saindo `rc=4` (ou `rc=1` enquanto o R-19 não estiver no ar —
+ver G3) · um spec que **cita** a sentinela numa cerca
+rodando até o fim sem abortar (D-5) · execução abortada na rodada 1 sem commit
+deixando o repo no branch base, sem branch órfão (D-9) · protocolo M-11
+executado e o resultado registrado como comentário datado, no padrão do arquivo.
