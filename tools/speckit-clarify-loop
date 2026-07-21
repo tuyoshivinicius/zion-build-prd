@@ -165,17 +165,29 @@ read_sentinel() {  # texto → ASKING|COMPLETE|NO_AMBIGUITY, ou vazio se ausente
   return 0
 }
 
+# Teto de turnos consecutivos sem sentinela, e a única fonte do limiar: tanto a
+# nota quanto a decisão de parar leem daqui. Uma ausência é esquecimento e se
+# resolve com uma sonda (R-C); duas seguidas não são esquecimento, são o
+# contrato caído, e aí a rodada não tem mais como ser interpretada.
+SENT_MISS_MAX=2
+
 # Aviso de contrato quebrado. Puro: entra a sequência de ausências, sai o texto.
-# Ausência NÃO para a rodada, e não ganha `rc` próprio: abortar aqui descartaria
-# a rodada paga, que é a classe de bug que a sentinela existe para matar (P-1).
-# O sinal fica visível — poder de veto ele não tem.
+# A primeira ausência não para a rodada — abortar ali descartaria a rodada paga,
+# que é a classe de bug que a sentinela existe para matar (P-1).
 sentinel_note() {  # nº de turnos consecutivos sem sentinela → aviso, ou vazio
   case "${1:-0}" in
     0|'') : ;;
-    1) printf 'turno sem sentinela — classificando pela heurística' ;;
-    *) printf 'contrato de saída quebrado: %s turnos seguidos sem sentinela — heurística no comando' "$1" ;;
+    1) printf 'turno sem sentinela' ;;
+    *) printf 'contrato de saída quebrado: %s turnos seguidos sem sentinela' "$1" ;;
   esac
   return 0
+}
+
+# A decisão de parada do contrato, isolada como função pura (P-3): recebe o
+# contador, devolve o token. Sem estado interno, por isso não precisa do
+# assert_emit — e por isso o limiar tem um lugar só para mudar.
+miss_action() {  # nº de turnos consecutivos sem sentinela → sonda|aborta
+  if [ "${1:-0}" -lt "$SENT_MISS_MAX" ]; then printf 'sonda'; else printf 'aborta'; fi
 }
 
 # Guarda de vazamento (M-06). Casa contra as linhas que ESTA rodada adicionou, e
@@ -793,6 +805,17 @@ SENT_MISS=0
 # Decisões capturadas na rodada, uma por linha, já com a tag da rodada.
 ROUND_DECISIONS=""
 
+# As duas respostas do laço, e a diferença entre elas é de segurança, não de
+# estilo. `yes` é o vocabulário que a própria skill documenta ("accept the
+# recommendation by saying yes") e vale para pergunta CLASSIFICADA — onde se sabe
+# que houve pergunta. No turno sem sentinela não se sabe, e um `yes` cego ali pode
+# ser lido como aprovação de uma ação que ninguém propôs. A sonda é redigida para
+# não poder: ela condiciona, e ainda pede a sentinela de volta.
+REPLY_YES='yes'
+REPLY_PROBE='Se você fez uma pergunta de clarificação, responda com a opção
+recomendada. Se a rodada já terminou, emita apenas a linha
+CLARIFY_STATE: COMPLETE.'
+
 send_user() {  # texto → uma mensagem de usuário JSONL no fd 3
   jq -cn --arg t "$1" \
     '{type:"user",message:{role:"user",content:[{type:"text",text:$t}]}}' >&3
@@ -911,14 +934,23 @@ run_round() {  # número da rodada em $1
         fi
         ROUND_YES=$((ROUND_YES + 1))
         emit_note you "$(printf '%-24s (pergunta %d/%d)' 'yes' "$ROUND_YES" "$MAX_YES")"
-        send_user 'yes'
+        send_user "$REPLY_YES"
         ;;
       loop-seco)       ROUND_OUTCOME=loop-seco;       break ;;
       rodada-completa) ROUND_OUTCOME=rodada-completa; break ;;
       indeterminada)
-        ROUND_OUTCOME=indeterminada
-        emit_note warn "turno indeterminado — stream em $log"
-        break
+        # O SENT_MISS já foi incrementado para ESTE turno lá em cima, antes do
+        # classify — então aqui ele conta a sequência corrente, inclusive o turno
+        # em curso. Não nasce contador novo: pós-poda "sem sentinela" e
+        # "indeterminada" são o mesmo evento, e dois contadores para um evento
+        # divergem no dia em que alguém mexer num só (P-6).
+        if [ "$(miss_action "$SENT_MISS")" = aborta ]; then
+          ROUND_OUTCOME=aborto
+          ROUND_ABORT="$SENT_MISS turnos seguidos sem sentinela na rodada $n"
+          break
+        fi
+        emit_note warn 'turno sem sentinela — sondando o estado'
+        send_user "$REPLY_PROBE"
         ;;
     esac
   done < <(exec 3>&-; tail -n +1 -f --pid="$cpid" --sleep-interval=0.2 "$log")
@@ -994,9 +1026,6 @@ main_loop() {
         stop_reason="convergiu — a skill declarou não haver ambiguidade crítica"; rc=0; break ;;
       aborto)
         stop_reason="aborto na rodada $tag — $ROUND_ABORT"; rc=1; break ;;
-      indeterminada)
-        stop_reason="turno indeterminado na rodada $tag (stream: $LOG_DIR/round-$tag.jsonl)"
-        rc=1; break ;;
     esac
 
     # O --dry-run vive de uma rodada só: a checagem de hash é o que prova que o
@@ -1542,14 +1571,21 @@ self_test() {
 
   assert_out "sem ausência não há aviso" '' sentinel_note 0
   assert_out "uma ausência é só nota" \
-    'turno sem sentinela — classificando pela heurística' \
+    'turno sem sentinela' \
     sentinel_note 1
   assert_out "duas ausências viram alarme" \
-    'contrato de saída quebrado: 2 turnos seguidos sem sentinela — heurística no comando' \
+    'contrato de saída quebrado: 2 turnos seguidos sem sentinela' \
     sentinel_note 2
   assert_out "três ausências seguem no alarme" \
-    'contrato de saída quebrado: 3 turnos seguidos sem sentinela — heurística no comando' \
+    'contrato de saída quebrado: 3 turnos seguidos sem sentinela' \
     sentinel_note 3
+
+  # O limiar é função pura e RECEBE o contador — por isso cabe no assert_out, sem
+  # o assert_emit que as funções com estado exigem.
+  assert_out "sem ausência nenhuma, nada a decidir"  sonda  miss_action 0
+  assert_out "a primeira ausência sonda, não aborta" sonda  miss_action 1
+  assert_out "a segunda ausência seguida aborta"     aborta miss_action 2
+  assert_out "a terceira também aborta"              aborta miss_action 3
 
   assert_out "linha adicionada com a sentinela dispara a guarda" \
     sim leak_str "$st_new" "$st_leak"
