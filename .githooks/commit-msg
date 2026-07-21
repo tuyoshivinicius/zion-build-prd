@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# commit-msg — commit-lint bloqueante de Conventional Commits (RF-21 / ADR-019).
+# Ativado por scripts/setup-hooks.sh (core.hooksPath .githooks). $1 = arquivo da mensagem.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+exec "$ROOT/scripts/check-commit.sh" "$1"

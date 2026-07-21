@@ -51,6 +51,7 @@ do próprio ADR (campo **Evidência**, que aponta o design doc de origem), não 
 | [ADR-016](adr/ADR-016-skill-ajuda-grounding-vivo.md) | Skill de ajuda conversacional com grounding vivo nas `SKILL.md` irmãs, sem artefato gravado, avaliada só na camada de julgamento, com o envelhecimento das citações cobrado por C8 no `check-canon.sh`. |
 | [ADR-017](adr/ADR-017-delegacao-criativa-classificada.md) | A delegação criativa classifica cada tensão (diagnóstica/propositiva) numa rubrica de fonte única e gateia o prompt montado por `check-delegacao.sh`, sem tocar o contrato externo C1–C3. |
 | [ADR-018](adr/ADR-018-architecture-gerado-do-produto.md) | O `architecture.md` do produto é gerado sob ditado (§1–§2 na fase final do decompose, com âncora nos ADRs) e reconciliado (§3 vira mapa por área; avisos de defasagem em bloco adjacente); substitui o ADR-015. |
+| [ADR-019](adr/ADR-019-releases-por-impacto.md) | Releases por impacto via release-PR automatizado (release-please): Conventional Commits → bump SemVer, CHANGELOG no root, um número para os dois canais; commit-lint bloqueante. |
 
 ## 3. Scripts
 
@@ -68,6 +69,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/check-arquitetura.sh | Verificador advisório do architecture.md do produto (seções, narrativa da §1 presente e ancorada nos ADRs, integrações da §2 declaradas, blocos derivados em dia) + drift do bloco de regras instalado no CLAUDE.md do produto. |
 | scripts/check-adr.sh | Verificador de presença de evidência e supersessão simétrica nos ADRs. |
 | scripts/check-superpowers-contract.sh | Verificador do contrato C1–C3 no superpowers instalado. |
+| scripts/check-commit.sh | Verificador de Conventional Commits de uma mensagem (guard de governança: hook commit-msg + CI); BLOQUEIA. |
 | scripts/check-canon.sh | Guard de canonização: cruza prd.md/architecture.md com skills/, scripts/, ASSET_MAP e docs/adr/. |
 | scripts/trace-prd.sh | Semeia/reconcilia a §12 da PRD a partir das specs. |
 | scripts/trace-backlog.sh | Semeia/reconcilia o backlog de specs. |
@@ -81,6 +83,7 @@ Papel de uma linha por script (`check-canon.sh` acusa script fora desta tabela).
 | scripts/test-check-adr.sh | Auto-teste do check-adr.sh contra fixtures. |
 | scripts/test-check-superpowers-contract.sh | Auto-teste do check de contrato contra fixtures. |
 | scripts/test-check-canon.sh | Auto-teste do check-canon.sh contra fixtures. |
+| scripts/test-check-commit.sh | Auto-teste do check-commit.sh contra fixtures. |
 | scripts/test-trace-prd.sh | Auto-teste do trace-prd.sh contra fixtures. |
 | scripts/test-trace-backlog.sh | Auto-teste do trace-backlog.sh contra fixtures. |
 | scripts/test-trace-arquitetura.sh | Auto-teste do trace-arquitetura.sh contra fixtures. |

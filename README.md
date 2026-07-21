@@ -139,6 +139,37 @@ da evidência do tipo certo por ADR (evidência proporcional ao risco de execuç
 
 O histórico de design está em `docs/superpowers/`.
 
+## Releases (mantenedor)
+
+As releases são **automatizadas por impacto** (ADR-019): cada merge na `main` atualiza um **release-PR**
+que acumula o `CHANGELOG.md` e o bump SemVer calculado pela convenção de commits. **Mergear o release-PR**
+cria a tag `vX.Y.Z`, publica a GitHub Release e reescreve `plugin.json`.`version` — o mesmo número nos
+dois canais.
+
+**Como o impacto vira versão** (Conventional Commits):
+
+| Commit | Bump |
+|--------|------|
+| `fix: …` | patch (`x.y.Z`) |
+| `feat: …` | minor (`x.Y.0`) |
+| `feat(x)!: …` ou footer `BREAKING CHANGE:` | major (`X.0.0`) |
+| `docs`/`test`/`chore`/`ci`/`refactor`/`style`/`perf`/`build`/`revert` | nenhum (não abre release-PR) |
+
+**Declarar um major:** use `!` depois do tipo/escopo (`feat(api)!: …`) **ou** um footer `BREAKING CHANGE: …`
+no corpo do commit. O número calculado passa pelo **gate humano do release-PR** antes de taguear.
+
+**Corrigir versão errada pós-tag:** tags são **imutáveis** — **nunca reescreva uma tag**. Corrija **pra
+frente**: um `fix:` corretivo (novo patch) ou, se a versão saiu no nível errado, um commit `feat!:` que
+força o próximo major. O release-PR seguinte acumula a correção.
+
+A esteira depende do secret `RELEASE_PLEASE_TOKEN` (PAT fine-grained, `contents` + `pull-requests`)
+— criar, cadastrar, validar e rotacionar está em
+[`docs/guias/provisionar-release-please-token.md`](docs/guias/provisionar-release-please-token.md).
+
+O commit-lint (`scripts/check-commit.sh`) bloqueia mensagens fora da convenção no hook `commit-msg`
+(rode `./scripts/setup-hooks.sh` após clonar) e na CI (`commit-lint.yml`), para o cálculo de bump nunca
+ver commit inválido.
+
 ## Licença
 
 MIT — veja [LICENSE](LICENSE).
