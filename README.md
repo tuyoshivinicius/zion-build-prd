@@ -162,6 +162,10 @@ no corpo do commit. O número calculado passa pelo **gate humano do release-PR**
 frente**: um `fix:` corretivo (novo patch) ou, se a versão saiu no nível errado, um commit `feat!:` que
 força o próximo major. O release-PR seguinte acumula a correção.
 
+A esteira depende do secret `RELEASE_PLEASE_TOKEN` (PAT fine-grained, `contents` + `pull-requests`)
+— criar, cadastrar, validar e rotacionar está em
+[`docs/guias/provisionar-release-please-token.md`](docs/guias/provisionar-release-please-token.md).
+
 O commit-lint (`scripts/check-commit.sh`) bloqueia mensagens fora da convenção no hook `commit-msg`
 (rode `./scripts/setup-hooks.sh` após clonar) e na CI (`commit-lint.yml`), para o cálculo de bump nunca
 ver commit inválido.
