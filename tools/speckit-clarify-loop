@@ -104,6 +104,96 @@ classify() {  # texto do turno em $1 → rótulo em stdout
   fi
 }
 
+# --- Monitor: primitivas de formatação -------------------------------------
+# Dois perfis. `tty` usa símbolos e ANSI; `plain` usa rótulos ASCII e nada de
+# escape — porque o round-NN.log tem que continuar legível seis meses depois,
+# e arquivo com sequência ANSI dentro é arquivo que ninguém relê.
+MON_IND='         '   # 9 colunas: a indentação de continuação, nos dois perfis
+
+mon_marker() {  # perfil kind → marcador (no perfil plain, já com 8 colunas)
+  case "${1:-}:${2:-}" in
+    tty:tool)       printf '⚙' ;;
+    tty:text)       printf '◆' ;;
+    tty:you)        printf '▸' ;;
+    tty:thinking)   printf '·' ;;
+    tty:ok)         printf '✓' ;;
+    tty:warn)       printf '⚠' ;;
+    plain:tool)     printf '[tool]  ' ;;
+    plain:text)     printf '[claude]' ;;
+    plain:you)      printf '[você]  ' ;;
+    plain:thinking) printf '[...]   ' ;;
+    plain:ok)       printf '[ok]    ' ;;
+    plain:warn)     printf '[!]     ' ;;
+    *)              printf '?' ;;
+  esac
+}
+
+# Colunas consumidas por "  CLOCK  MARCADOR  ": 2+5+2+largura(marcador)+2.
+mon_prefix() { case "${1:-}" in tty) printf '12' ;; *) printf '19' ;; esac; }
+
+mon_head() {  # clock marcador corpo
+  printf '  %s  %s  %s\n' "${1:-}" "${2:-}" "${3:-}"
+}
+
+mon_paint() {  # perfil cor texto
+  if [ "${1:-}" != tty ]; then printf '%s' "${3:-}"; return 0; fi
+  local c
+  case "${2:-}" in
+    dim)  c=$'\033[2m' ;;
+    bold) c=$'\033[1m' ;;
+    red)  c=$'\033[31m' ;;
+    *)    printf '%s' "${3:-}"; return 0 ;;
+  esac
+  printf '%s%s\033[0m' "$c" "${3:-}"
+}
+
+mon_trunc() {  # texto largura
+  local t="${1:-}" w="${2:-80}"
+  [ "$w" -ge 8 ] || w=8
+  if [ "${#t}" -le "$w" ]; then printf '%s' "$t"; return 0; fi
+  printf '%s…' "${t:0:$((w - 1))}"
+}
+
+# Dobra a prosa e indenta em 9 colunas. Tabelas markdown e cercas de código
+# escapam da dobra de propósito: quebrar a tabela de opções destrói exatamente
+# a informação que se quer ler. Se estourar a largura, estoura.
+mon_fold() {  # largura total; stdin → stdout
+  local w=$(( ${1:-80} - 9 ))
+  [ "$w" -ge 20 ] || w=20
+  local l
+  while IFS= read -r l || [ -n "$l" ]; do
+    case "$l" in
+      '')        printf '\n' ;;
+      '|'*|'```'*) printf '%s%s\n' "$MON_IND" "$l" ;;
+      *)         printf '%s\n' "$l" | fold -s -w "$w" \
+                   | sed -e "s/^/$MON_IND/" -e 's/[[:space:]]*$//' ;;
+    esac
+  done
+  return 0
+}
+
+# Resumo de um tool_use: comando para Bash, basename para quem tem file_path,
+# e um genérico de primeira chave para o resto (nenhuma ferramenta fica muda).
+# Só o primeiro tool_use da linha é resumido — perder uma chamada de ferramenta
+# é aceitável; perder prosa não é, e por isso a prosa tem precedência em
+# event_kind.
+tool_summary() {  # linha-jsonl → NOME<TAB>RESUMO
+  printf '%s' "${1:-}" | jq -r '
+    ([.message.content[]? | select(.type=="tool_use")] | first) as $t
+    | if $t == null then empty else
+        ($t.input // {}) as $i
+        | [ ($t.name // "?"),
+            ( if   $i.command   then ($i.command | gsub("\\s+"; " "))
+              elif $i.file_path then ($i.file_path | split("/") | last)
+              elif $i.pattern   then $i.pattern
+              else (($i | keys | first) as $k
+                    | if $k == null then "" else "\($k)=\($i[$k] | tostring)" end)
+              end ) ]
+        | @tsv
+      end' 2>/dev/null
+  return 0
+}
+
 # --- Monitor: leitura de eventos -------------------------------------------
 # Traduz uma linha do stream JSONL num rótulo. Função pura: sem I/O além do
 # stdout, sem estado global. Qualquer linha que o jq não digira cai em
@@ -558,6 +648,21 @@ assert_dedup() {  # descrição  esperado  prev  kind
   fi
 }
 
+assert_out() {  # descrição  esperado  comando…
+  local desc="$1" want="$2"; shift 2
+  local got; got="$("$@")"
+  if [ "$got" = "$want" ]; then
+    printf 'ok: %s\n' "$desc"
+  else
+    printf 'FALHOU: %s\n  esperado: [%s]\n  veio:     [%s]\n' "$desc" "$want" "$got"
+    ST_FAIL=1
+  fi
+}
+
+# Adaptador de teste: mon_fold é filtro de stdin, e assert_out só sabe chamar
+# comando com argumentos.
+mon_fold_str() { printf '%s\n' "$2" | mon_fold "$1"; }
+
 self_test() {
   assert_classify "pergunta múltipla escolha"        pergunta-pendente "$FIX_MC"
   assert_classify "pergunta de resposta curta"       pergunta-pendente "$FIX_SHORT"
@@ -592,8 +697,40 @@ self_test() {
   assert_dedup "texto após texto passa"          text     text     text
   assert_dedup "sem anterior passa"              tool     ""       tool
 
+  assert_out "marcador plain preenche 8 colunas" '[tool]  ' mon_marker plain tool
+  assert_out "marcador tty é um símbolo"         '⚙'        mon_marker tty   tool
+  assert_out "prefixo tty ocupa 12 colunas"      '12'       mon_prefix tty
+  assert_out "prefixo plain ocupa 19 colunas"    '19'       mon_prefix plain
+  assert_out "cabeçalho monta a linha"           '  01:23  [ok]      pronto' \
+    mon_head '01:23' '[ok]    ' 'pronto'
+  assert_out "perfil plain não pinta"            'nu'       mon_paint plain red 'nu'
+  assert_out "truncagem curta não mexe"          'abc'      mon_trunc 'abc' 10
+  assert_out "truncagem longa corta com reticências" 'abcdefg…' mon_trunc 'abcdefghijklmno' 8
+  assert_out "resumo de Bash usa o command" \
+    "$(printf 'Bash\tcheck-prerequisites.sh --json --paths-only')" \
+    tool_summary "$FX_TOOL_BASH"
+  assert_out "resumo de Read usa só o basename" \
+    "$(printf 'Read\tspec.md')" \
+    tool_summary "$FX_TOOL_READ"
+  assert_out "resumo de ferramenta desconhecida cai no genérico" \
+    "$(printf 'WebSearch\tquery=spec kit clarify')" \
+    tool_summary "$FX_TOOL_OTHER"
+  assert_out "resumo de linha sem tool_use é vazio" '' tool_summary "$FX_THINK"
+
+  assert_out "tabela markdown escapa da dobra" \
+    '         | Opção | Descrição |' \
+    mon_fold_str 40 '| Opção | Descrição |'
+  assert_out "prosa longa dobra e indenta em 9" \
+    "$(printf '         palavra palavra palavra\n         palavra palavra')" \
+    mon_fold_str 40 'palavra palavra palavra palavra palavra'
+  # Verificado: `fold -s -w 31` quebra essa frase em "palavra palavra palavra "
+  # (COM espaço à direita) e "palavra palavra". O `sed` de mon_fold apara esse
+  # espaço — se não aparasse, o log ficaria cheio de espaço invisível no fim da
+  # linha e esta expectativa seria impossível de escrever à mão.
+  assert_out "linha vazia continua vazia" '' mon_fold_str 40 ''
+
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (30 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (45 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
