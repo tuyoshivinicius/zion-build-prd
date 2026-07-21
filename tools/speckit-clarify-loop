@@ -122,6 +122,9 @@ Use exatamente um destes três valores:
 
 Essa linha é lida por um script. Não a traduza, não a formate, não a envolva em
 crase, negrito ou bloco de código, e não escreva nada depois dela.
+
+Nunca escreva linhas começadas por CLARIFY_ dentro de nenhum arquivo; elas
+pertencem apenas à sua mensagem.
 EOF
 )"
 
@@ -146,6 +149,19 @@ sentinel_note() {  # nº de turnos consecutivos sem sentinela → aviso, ou vazi
     *) printf 'contrato de saída quebrado: %s turnos seguidos sem sentinela — heurística no comando' "$1" ;;
   esac
   return 0
+}
+
+# Guarda de vazamento (M-06). Casa contra as linhas que ESTA rodada adicionou, e
+# não contra o spec inteiro: um spec que documente o contrato — a spec desta
+# própria evolução é o contra-exemplo — abortaria na rodada 1, e em toda rodada 1
+# seguinte, sem saída a não ser editar o spec à mão (D-5). Dentro de uma cerca a
+# linha ESTÁ no começo da linha, então a âncora `^` não protege ninguém; quem
+# protege é o recorte em linha nova. Vazamento real é linha nova por definição.
+#
+# Vigia o prefixo `CLARIFY_` inteiro, e não só `CLARIFY_STATE`: o M-03 acrescenta
+# uma segunda família ao contrato, e mais superfície é mais chance de vazar.
+leaked_sentinel() {  # snapshot spec → 0 se alguma linha ADICIONADA começa com CLARIFY_
+  added_lines "${1:-}" "${2:-}" | grep -q '^CLARIFY_'
 }
 
 # --- Classificação do turno (função pura de texto) --------------------------
@@ -883,6 +899,18 @@ main_loop() {
 
     run_round "$round"
 
+    # M-06 — a rodada escreveu uma linha de controle dentro do spec. Aborta, não
+    # limpa: limpeza silenciosa esconderia que o contrato de saída falhou. Narra
+    # mesmo quando a rodada já abortou por outro motivo (o vazamento é
+    # informação que o humano precisa ver), mas não sobrescreve a causa original.
+    if leaked_sentinel "$snap" "$SPEC"; then
+      emit_note warn 'sentinela vazou para dentro do spec — o contrato de saída falhou'
+      if [ "$ROUND_OUTCOME" != aborto ]; then
+        ROUND_OUTCOME=aborto
+        ROUND_ABORT='sentinela vazou para dentro do spec'
+      fi
+    fi
+
     total_yes=$((total_yes + ROUND_YES))
     total_cost="$(add_cost "$total_cost" "$ROUND_COST")"
     total_turns=$((total_turns + ROUND_TURNS))
@@ -1312,6 +1340,10 @@ mon_fold_str() { printf '%s\n' "$2" | mon_fold "$1"; }
 # de saída, e assert_out só sabe comparar stdout.
 fatal_str() { if ratelimit_fatal "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
 
+# Terceiro adaptador da família: leaked_sentinel responde por status de saída, e
+# assert_out só sabe comparar stdout.
+leak_str() { if leaked_sentinel "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
+
 # Irmão do assert_out para as funções COM estado. A diferença é só a captura:
 # `$(...)` roda em subshell, e a atribuição de LAST_KIND dentro de emit_event
 # morreria ali — a supressão de thinking nunca seria exercitada de verdade.
@@ -1341,6 +1373,25 @@ self_test() {
   printf '%s\n' '# Spec fake' '' '## Requisitos' '' '- RF-01 algo' \
     '- RF-02 novo [NEEDS CLARIFICATION] e outro [NEEDS CLARIFICATION]' \
     '' '## Clarifications' '' '```' 'codigo' '```' > "$st_new"
+
+  # Fixtures da guarda de vazamento (M-06/D-5). Todas derivam de $st_new, para
+  # que a única diferença entre elas seja o que se quer medir.
+  local st_leak st_dec st_prosa st_cita st_cita2
+  st_leak="$st_dir/leak.md"; st_dec="$st_dir/dec.md"; st_prosa="$st_dir/prosa.md"
+  st_cita="$st_dir/cita.md"; st_cita2="$st_dir/cita2.md"
+  cp -- "$st_new" "$st_leak"
+  printf 'CLARIFY_STATE: COMPLETE\n' >> "$st_leak"
+  cp -- "$st_new" "$st_dec"
+  printf 'CLARIFY_DECISION: assunto -> A\n' >> "$st_dec"
+  cp -- "$st_new" "$st_prosa"
+  printf 'A skill fecha o turno com CLARIFY_STATE: COMPLETE na última linha.\n' >> "$st_prosa"
+  # D-5: o spec que DOCUMENTA o contrato. A ocorrência está dentro de uma cerca,
+  # e dentro de uma cerca a linha ESTÁ no começo da linha — a âncora `^` não
+  # protege nada. O que protege é comparar só o que a rodada adicionou.
+  cp -- "$st_new" "$st_cita"
+  printf '\n## Contrato\n\n```\nCLARIFY_STATE: ASKING\n```\n' >> "$st_cita"
+  cp -- "$st_cita" "$st_cita2"
+  printf '\n- RF-03 mais um requisito\n' >> "$st_cita2"
 
   assert_out "pergunta múltipla escolha"        pergunta-pendente classify "$FIX_MC"
   assert_out "pergunta de resposta curta"       pergunta-pendente classify "$FIX_SHORT"
@@ -1398,6 +1449,15 @@ self_test() {
   assert_out "três ausências seguem no alarme" \
     'contrato de saída quebrado: 3 turnos seguidos sem sentinela — heurística no comando' \
     sentinel_note 3
+
+  assert_out "linha adicionada com a sentinela dispara a guarda" \
+    sim leak_str "$st_new" "$st_leak"
+  assert_out "CLARIFY_DECISION também dispara — a guarda vigia o prefixo inteiro" \
+    sim leak_str "$st_new" "$st_dec"
+  assert_out "a mesma string no meio de uma frase não dispara" \
+    nao leak_str "$st_new" "$st_prosa"
+  assert_out "ocorrência já presente no snapshot não dispara" \
+    nao leak_str "$st_cita" "$st_cita2"
 
   assert_out "tool_use Bash"                tool      event_kind "$FX_TOOL_BASH"
   assert_out "tool_use Read"                tool      event_kind "$FX_TOOL_READ"
