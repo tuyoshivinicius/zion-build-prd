@@ -48,6 +48,23 @@
 #   Nota de uso: o repo alvo precisa estar num branch de feature, ou o
 #   check-prerequisites.sh recusa antes de qualquer chamada paga — daí o
 #   SPECIFY_FEATURE nas duas execuções acima.
+# Poda da heurística verificada em 2026-07-21 contra claude 2.1.216 e a skill
+# speckit-clarify:
+#   --dry-run em zion-test-build-prd (SPECIFY_FEATURE=006-code-interop) →
+#   sentinela em 1/1 turnos, spec intocado (188 → 188 linhas), US$ 0,58, log em
+#   /tmp/speckit-clarify-loop/20260721-110206. A classificação por prosa não
+#   existe mais: turno sem sentinela vira `indeterminada`, sonda com o
+#   REPLY_PROBE e só aborta na segunda ausência seguida.
+#   O turno trazia a sentinela E um `**Recommended:**` na prosa — antes da poda
+#   os dois caminhos concordavam por acaso; agora só um existe, e foi ele que
+#   classificou.
+#   O que esta execução NÃO prova: o caminho da sonda. O modelo emitiu a
+#   sentinela, então `indeterminada` nunca disparou, e REPLY_PROBE/miss_action
+#   seguem exercitados só pelo auto-teste (a decisão) e por leitura (o envio).
+#   Uma rodada real com o contrato falhando é o que falta, e ela não se encomenda.
+#   O auto-teste fecha com 143 casos, e as 21 fixtures de prosa capturadas das
+#   rodadas de 2026-07-21 continuam lá, todas esperando `indeterminada` — é o
+#   trinco que fica vermelho se alguém trouxer a heurística de volta.
 # Reinstalar após editar:  install -m 755 tools/speckit-clarify-loop ~/.local/bin/
 set -u
 
