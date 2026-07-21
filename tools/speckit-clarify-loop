@@ -135,6 +135,19 @@ read_sentinel() {  # texto → ASKING|COMPLETE|NO_AMBIGUITY, ou vazio se ausente
   return 0
 }
 
+# Aviso de contrato quebrado. Puro: entra a sequência de ausências, sai o texto.
+# Ausência NÃO para a rodada, e não ganha `rc` próprio: abortar aqui descartaria
+# a rodada paga, que é a classe de bug que a sentinela existe para matar (P-1).
+# O sinal fica visível — poder de veto ele não tem.
+sentinel_note() {  # nº de turnos consecutivos sem sentinela → aviso, ou vazio
+  case "${1:-0}" in
+    0|'') : ;;
+    1) printf 'turno sem sentinela — classificando pela heurística' ;;
+    *) printf 'contrato de saída quebrado: %s turnos seguidos sem sentinela — heurística no comando' "$1" ;;
+  esac
+  return 0
+}
+
 # --- Classificação do turno (função pura de texto) --------------------------
 # Espelha speckit-clarify/SKILL.md: passo 5 (formato das perguntas), a regra de
 # comportamento da frase seca e o último item do Completion Report.
@@ -693,6 +706,11 @@ ROUND_OUTCOME=""
 ROUND_YES=0
 ROUND_COST=0
 ROUND_ABORT=""
+# Contabilidade do contrato de saída: turnos classificados na rodada, quantos
+# traziam a sentinela, e a sequência corrente de ausências.
+ROUND_TURNS=0
+ROUND_SENT=0
+SENT_MISS=0
 
 send_user() {  # texto → uma mensagem de usuário JSONL no fd 3
   jq -cn --arg t "$1" \
@@ -711,6 +729,7 @@ run_round() {  # número da rodada em $1
   local in="$WORK/in-$n.fifo"
 
   ROUND_OUTCOME=""; ROUND_YES=0; ROUND_COST=0; ROUND_ABORT=""
+  ROUND_TURNS=0; ROUND_SENT=0; SENT_MISS=0
 
   mkfifo "$in" || { ROUND_OUTCOME=aborto; ROUND_ABORT="mkfifo falhou"; return; }
   : > "$log"; : > "$err"
@@ -783,6 +802,13 @@ run_round() {  # número da rodada em $1
       || emit_note warn "permissão negada, rodada segue: $denied"
 
     txt="$(printf '%s' "$line" | jq -r '.result // ""')"
+    ROUND_TURNS=$((ROUND_TURNS + 1))
+    if [ -n "$(read_sentinel "$txt")" ]; then
+      ROUND_SENT=$((ROUND_SENT + 1)); SENT_MISS=0
+    else
+      SENT_MISS=$((SENT_MISS + 1))
+      emit_note warn "$(sentinel_note "$SENT_MISS")"
+    fi
     case "$(classify "$txt")" in
       pergunta-pendente)
         # Em --dry-run paramos na primeira pergunta, sem responder. Sem
@@ -831,6 +857,7 @@ run_round() {  # número da rodada em $1
 main_loop() {
   local round=0 same=0 prev_hash cur_hash
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
+  local total_turns=0 total_sent=0
   local start_lines end_lines delta tag rule_pad snap
 
   start_lines="$(spec_lines)"
@@ -858,6 +885,8 @@ main_loop() {
 
     total_yes=$((total_yes + ROUND_YES))
     total_cost="$(add_cost "$total_cost" "$ROUND_COST")"
+    total_turns=$((total_turns + ROUND_TURNS))
+    total_sent=$((total_sent + ROUND_SENT))
     yes_log="$yes_log r$tag=$ROUND_YES"
     cur_hash="$(spec_hash)"
     emit_note ok "$(printf '%s · %d yes · US$ %s' "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST")"
@@ -913,6 +942,7 @@ main_loop() {
   printf 'rodadas:  %s\n' "$round"
   printf 'yes:      %s (%s)\n' "$total_yes" "${yes_log# }"
   printf 'custo:    US$ %s\n' "$total_cost"
+  printf 'contrato: sentinela em %s/%s turnos\n' "$total_sent" "$total_turns"
   printf 'spec:     %s → %s linhas (delta %+d)\n' "$start_lines" "$end_lines" "$delta"
   printf 'logs:     %s\n' "$LOG_DIR"
   printf '          round-NN.jsonl (stream) · round-NN.log (narração) · latest → esta execução\n'
@@ -1357,6 +1387,17 @@ self_test() {
   assert_out "sentinela em prosa cai na heurística"     pergunta-pendente classify "$FIX_SENT_PROSA"
   assert_out "sentinela em crase cai na heurística"     pergunta-pendente classify "$FIX_SENT_CRASE"
   assert_out "valor desconhecido cai na heurística"     pergunta-pendente classify "$FIX_SENT_INVALIDA"
+
+  assert_out "sem ausência não há aviso" '' sentinel_note 0
+  assert_out "uma ausência é só nota" \
+    'turno sem sentinela — classificando pela heurística' \
+    sentinel_note 1
+  assert_out "duas ausências viram alarme" \
+    'contrato de saída quebrado: 2 turnos seguidos sem sentinela — heurística no comando' \
+    sentinel_note 2
+  assert_out "três ausências seguem no alarme" \
+    'contrato de saída quebrado: 3 turnos seguidos sem sentinela — heurística no comando' \
+    sentinel_note 3
 
   assert_out "tool_use Bash"                tool      event_kind "$FX_TOOL_BASH"
   assert_out "tool_use Read"                tool      event_kind "$FX_TOOL_READ"
