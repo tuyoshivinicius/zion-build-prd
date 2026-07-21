@@ -621,6 +621,30 @@ sensor_line() {  # add del marc_antes marc_depois secoes cercas titulos custo �
   return 0
 }
 
+# --- Sensores: coleta e narração (impura) -----------------------------------
+# Junta a coleta, o custo da rodada e a formatação numa linha só, emitida por
+# emit_note ok — que escreve no round-NN.log mesmo sob --quiet, que é o que o
+# R-04 exige. A Fase 2 transforma isto em `assess_round`, acrescentando a
+# avaliação e devolvendo por STOP_KIND/STOP_WHY; por ora só narra.
+narrate_sensors() {  # snapshot spec custo
+  local snap="${1:-}" spec="${2:-}" cost="${3:-0}"
+  local nums add del secs n_secs
+  nums="$(diff_numstat "$snap" "$spec")"
+  add="${nums%% *}"
+  del="${nums##* }"
+  secs="$(touched_sections "$snap" "$spec")"
+  if [ -z "$secs" ]; then
+    n_secs=0
+  else
+    n_secs="$(printf '%s\n' "$secs" | wc -l | tr -d ' ')"
+  fi
+  emit_note ok "$(sensor_line "$add" "$del" \
+    "$(count_markers "$snap")" "$(count_markers "$spec")" \
+    "$n_secs" "$(added_fences "$snap" "$spec")" \
+    "$(new_headings "$snap" "$spec")" "$cost")"
+  return 0
+}
+
 # --- Motor de uma rodada ----------------------------------------------------
 ROUND_OUTCOME=""
 ROUND_YES=0
@@ -763,7 +787,7 @@ run_round() {  # número da rodada em $1
 main_loop() {
   local round=0 same=0 prev_hash cur_hash
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
-  local start_lines end_lines delta tag rule_pad
+  local start_lines end_lines delta tag rule_pad snap
 
   start_lines="$(spec_lines)"
   printf 'speckit-clarify-loop: %s\n  spec: %s (%s linhas)\n' \
@@ -774,6 +798,10 @@ main_loop() {
     round=$((round + 1))
     tag="$(printf '%02d' "$round")"
     prev_hash="$(spec_hash)"
+    # Snapshot da rodada: toda medição é snapshot × spec, nunca contra HEAD.
+    # Vive no $WORK, que o trap de saída já limpa.
+    snap="$WORK/snap-$tag.md"
+    cp -- "$SPEC" "$snap" || die "não consegui copiar o spec para $snap"
     # mon_round_start fica aqui, e não dentro de run_round: main_loop já tem o
     # `tag`, e é o único ponto em que o cabeçalho da rodada nasce dentro do log
     # daquela rodada — em run_round ele cairia no log da rodada anterior.
@@ -789,6 +817,7 @@ main_loop() {
     yes_log="$yes_log r$tag=$ROUND_YES"
     cur_hash="$(spec_hash)"
     emit_note ok "$(printf '%s · %d yes · US$ %s' "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST")"
+    narrate_sensors "$snap" "$SPEC" "$ROUND_COST"
 
     case "$ROUND_OUTCOME" in
       loop-seco)
