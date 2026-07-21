@@ -237,6 +237,51 @@ dedup_kind() {  # kind-anterior  kind → kind efetivo
   fi
 }
 
+# --- Monitor: renderização --------------------------------------------------
+# (perfil, largura, clock, kind, linha) → narração. Pura: o relógio chega
+# pronto, nada de estado mutável. É a única função que sabe como a saída se
+# parece, e por isso a única que precisa mudar se a apresentação mudar.
+render_line() {  # perfil largura clock kind linha
+  local p="${1:-plain}" w="${2:-80}" clock="${3:-00:00}" kind="${4:-nothing}" line="${5:-}"
+  local body prefix tsv name summary st
+
+  prefix="$(mon_prefix "$p")"
+
+  case "$kind" in
+    thinking)
+      mon_head "$clock" "$(mon_marker "$p" thinking)" "$(mon_paint "$p" dim 'pensando…')"
+      ;;
+    tool)
+      tsv="$(tool_summary "$line")"
+      [ -n "$tsv" ] || return 0
+      name="${tsv%%$'\t'*}"
+      summary="${tsv#*$'\t'}"
+      [ "$summary" != "$tsv" ] || summary=""
+      body="$(printf '%-8s %s' "$name" "$summary")"
+      body="$(mon_trunc "$body" $(( w - prefix )))"
+      mon_head "$clock" "$(mon_marker "$p" tool)" "$(mon_paint "$p" dim "$body")"
+      ;;
+    text)
+      mon_head "$clock" "$(mon_marker "$p" text)" 'claude'
+      printf '%s' "$line" \
+        | jq -r '[.message.content[]? | select(.type=="text") | .text] | join("\n\n")' 2>/dev/null \
+        | mon_fold "$w"
+      ;;
+    ratelimit)
+      st="$(printf '%s' "$line" | jq -r '.rate_limit_info.status // "?"' 2>/dev/null)"
+      mon_head "$clock" "$(mon_marker "$p" warn)" "$(mon_paint "$p" red "rate limit: $st")"
+      ;;
+    *)
+      # nothing e result não rendem linha. O rodapé da rodada é emitido pelo
+      # motor (emit_note), que é quem conhece o contador de yes e o delta do
+      # spec; e a prosa do `.result` é a mesma do último bloco assistant, que
+      # já foi impressa — reimprimi-la duplicaria a pergunta inteira.
+      return 0
+      ;;
+  esac
+  return 0
+}
+
 # --- Preflight -------------------------------------------------------------
 # Resolve o spec alvo pela MESMA fonte que a skill usa (passo 1), para que
 # script e skill nunca divirjam de arquivo.
@@ -663,6 +708,16 @@ assert_out() {  # descrição  esperado  comando…
 # comando com argumentos.
 mon_fold_str() { printf '%s\n' "$2" | mon_fold "$1"; }
 
+assert_render() {  # descrição  esperado  kind  linha-jsonl
+  local got; got="$(render_line plain 80 '01:23' "$3" "$4")"
+  if [ "$got" = "$2" ]; then
+    printf 'ok: %s\n' "$1"
+  else
+    printf 'FALHOU: %s\n  esperado: [%s]\n  veio:     [%s]\n' "$1" "$2" "$got"
+    ST_FAIL=1
+  fi
+}
+
 self_test() {
   assert_classify "pergunta múltipla escolha"        pergunta-pendente "$FIX_MC"
   assert_classify "pergunta de resposta curta"       pergunta-pendente "$FIX_SHORT"
@@ -729,8 +784,30 @@ self_test() {
   # linha e esta expectativa seria impossível de escrever à mão.
   assert_out "linha vazia continua vazia" '' mon_fold_str 40 ''
 
+  assert_render "tool_use Bash mostra o comando" \
+    '  01:23  [tool]    Bash     check-prerequisites.sh --json --paths-only' \
+    tool "$FX_TOOL_BASH"
+  assert_render "tool_use Read mostra só o basename" \
+    '  01:23  [tool]    Read     spec.md' \
+    tool "$FX_TOOL_READ"
+  assert_render "ferramenta desconhecida não quebra" \
+    '  01:23  [tool]    WebSearch query=spec kit clarify' \
+    tool "$FX_TOOL_OTHER"
+  assert_render "thinking vira marcador sem conteúdo" \
+    '  01:23  [...]     pensando…' \
+    thinking "$FX_THINK"
+  assert_render "texto imprime cabeçalho e preserva a tabela" \
+    "$(printf '  01:23  [claude]  claude\n         **Recomendado: Opção B**\n\n         | Opção | Descrição |\n         |---|---|\n         | A | Manter o silêncio |')" \
+    text "$FX_TEXT"
+  assert_render "rate limit não-allowed avisa" \
+    '  01:23  [!]       rate limit: rejected' \
+    ratelimit "$FX_RL_BAD"
+  assert_render "result NÃO reimprime a prosa" '' result "$FX_RESULT"
+  assert_render "kind nothing não imprime nada"  '' nothing "$FX_SYS_INIT"
+  assert_render "linha malformada não imprime nada" '' tool "$FX_BAD"
+
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (45 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (54 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
