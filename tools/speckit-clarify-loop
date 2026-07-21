@@ -91,6 +91,11 @@ need_deps() {
 # traduz os próprios marcadores. Por isso cada sinal tem as duas formas — e os
 # marcadores de pergunta param no `:`, sem o `**` de fechamento, porque em
 # português o negrito envolve o rótulo inteiro (`**Recomendado: Opção B**`).
+# E não basta a língua: o português flexiona. A skill concorda o adjetivo com o
+# substantivo que vem depois — "Opção" é feminino, e ela escreve
+# `**Recomendada:** Opção A`. Em 2026-07-21 isso custou uma rodada inteira
+# (US$ 1,58) classificada como `indeterminada` com a pergunta na tela. Por isso
+# cada marcador de pergunta tem as duas flexões, e não só as duas línguas.
 # As frases de convergência ficam propositalmente longas: um falso positivo aqui
 # encerra o loop achando que convergiu, que é a única falha silenciosa possível.
 SIG_DRY='No critical ambiguities detected'
@@ -99,8 +104,10 @@ SIG_COMPLETE='Suggested next command'
 SIG_COMPLETE_PT='Próximo comando sugerido'
 SIG_MC='**Recommended:'
 SIG_MC_PT='**Recomendado:'
+SIG_MC_PT_F='**Recomendada:'
 SIG_SHORT='**Suggested:'
 SIG_SHORT_PT='**Sugerido:'
+SIG_SHORT_PT_F='**Sugerida:'
 
 has_sig() {  # texto em $1, sinais em $2..N → 0 se algum casar
   local txt="$1"; shift
@@ -117,7 +124,8 @@ classify() {  # texto do turno em $1 → rótulo em stdout
     printf 'loop-seco\n'
   elif has_sig "$txt" "$SIG_COMPLETE" "$SIG_COMPLETE_PT"; then
     printf 'rodada-completa\n'
-  elif has_sig "$txt" "$SIG_MC" "$SIG_MC_PT" "$SIG_SHORT" "$SIG_SHORT_PT"; then
+  elif has_sig "$txt" "$SIG_MC" "$SIG_MC_PT" "$SIG_MC_PT_F" \
+                      "$SIG_SHORT" "$SIG_SHORT_PT" "$SIG_SHORT_PT_F"; then
     printf 'pergunta-pendente\n'
   else
     printf 'indeterminada\n'
@@ -704,6 +712,34 @@ Responda com a letra (ex.: "B"), aceite a recomendação com "sim"/"recomendado"
 EOF
 )"
 
+# Capturado da rodada de 2026-07-21 02:16 em zion-mermaid-editor-app, a que
+# custou US$ 1,58 e parou como `indeterminada` com a pergunta na tela. A skill
+# concorda o adjetivo com "Opção", que é feminino: escreveu `**Recomendada:**`,
+# e o `**Recomendado:` masculino não casou. Um `a` no lugar de um `o`.
+FIX_MC_PT_FEM="$(cat <<'EOF'
+**Q1 — Igualdade de rótulo: no parse ou no render.** O SC-001 exige 100% de
+ida e volta, e o corpus do SC-012 exige `<`, `>` e `#` nos rótulos.
+
+**Recomendada:** Opção A — é a única leitura que mantém o SC-001 em 100% e o
+"citar sempre" de pé sem inventar a marca da RF-22.
+
+| Opção | Descrição |
+|--------|-------------|
+| A | Igualdade no parse — a comparação é sobre o que o parser do mermaid devolve |
+| B | Igualdade no render — compara-se o rótulo desenhado |
+
+Responda com a letra (ex.: "A"), aceite a recomendação dizendo "sim" ou
+"recomendada", ou dê a sua própria resposta curta.
+EOF
+)"
+
+FIX_SHORT_PT_FEM="$(cat <<'EOF'
+**Sugerida: exclusão lógica com retenção de 30 dias** — preserva o desfazer sem crescimento ilimitado.
+
+Formato: resposta curta (≤5 palavras). Aceite com "sim"/"sugerida", ou dê sua própria resposta.
+EOF
+)"
+
 FIX_SHORT_PT="$(cat <<'EOF'
 **Sugerido: exclusão lógica com retenção de 30 dias** — preserva o desfazer sem crescimento ilimitado.
 
@@ -849,6 +885,8 @@ self_test() {
   assert_classify "pergunta curta em pt"             pergunta-pendente "$FIX_SHORT_PT"
   assert_classify "Completion Report em pt"          rodada-completa   "$FIX_REPORT_PT"
   assert_classify "frase seca em pt"                 loop-seco         "$FIX_DRY_PT"
+  assert_classify "pergunta em pt no feminino"       pergunta-pendente "$FIX_MC_PT_FEM"
+  assert_classify "pergunta curta em pt no feminino" pergunta-pendente "$FIX_SHORT_PT_FEM"
 
   assert_kind "tool_use Bash"                tool      "$FX_TOOL_BASH"
   assert_kind "tool_use Read"                tool      "$FX_TOOL_READ"
@@ -924,8 +962,17 @@ self_test() {
   assert_render "kind nothing não imprime nada"  '' nothing "$FX_SYS_INIT"
   assert_render "linha malformada não imprime nada" '' tool "$FX_BAD"
 
+  SECONDS=125
+  assert_out "relógio formata mm:ss" '02:05' mon_clock
+
   # A cola tem estado, então o teste a exercita com destinos controlados:
   # sem log em arquivo (ROUND_LOG vazio) e com o perfil plain forçado.
+  #
+  # E com o relógio congelado: emit_event gasta três `jq` antes de chamar
+  # mon_clock, e sob carga isso vira a casa do segundo — o teste passava a
+  # falhar por 00:01 em vez de 00:00, sem nada de errado no código. O relógio
+  # real fica coberto pelo assert de mm:ss logo acima, que é determinístico.
+  mon_clock() { printf '00:00'; }
   MON_PROFILE=plain; MON_WIDTH=80; QUIET=0; ROUND_LOG=""; LAST_KIND=""
   assert_emit "emit_note ecoa a linha do motor" \
     '  00:00  [você]    yes                    (pergunta 1/5)' \
@@ -953,7 +1000,7 @@ self_test() {
   QUIET=0
 
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (63 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (66 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
