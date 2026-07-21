@@ -55,7 +55,13 @@ MAX_YES=5
 # levaram 537 · 166 · 148 s. Continua sendo teto, não expectativa: turno que não
 # emite `result` em 30 min está travado de verdade.
 ROUND_TIMEOUT=1800
-LOG_DIR=/tmp/speckit-clarify-loop
+# Um diretório por execução. Até 2026-07-21 o preflight apagava os logs da
+# execução anterior: a rodada 03 de ontem sumia com a rodada 01 de hoje, e
+# comparar duas execuções — que é o insumo da calibração dos sensores — era
+# impossível. LOG_DIR nasce vazio de propósito: quem o define é o preflight,
+# que é o único lugar que sabe a hora do arranque.
+LOG_ROOT=/tmp/speckit-clarify-loop
+LOG_DIR=""
 
 QUIET=0
 MON_PROFILE=plain
@@ -515,8 +521,12 @@ preflight() {
   [ -n "$SPEC" ] || die "check-prerequisites.sh não devolveu FEATURE_SPEC: $json"
   [ -f "$SPEC" ] || die "spec alvo não existe: $SPEC"
 
+  LOG_DIR="$LOG_ROOT/$(date +%Y%m%d-%H%M%S)"
   mkdir -p "$LOG_DIR" || die "não consegui criar $LOG_DIR"
-  rm -f "$LOG_DIR"/round-*.jsonl "$LOG_DIR"/round-*.jsonl.err "$LOG_DIR"/round-*.log
+  # -n para não SEGUIR o symlink existente e acabar criando um `latest/latest`
+  # lá dentro. Falhar aqui não derruba a execução: `latest` é conveniência de
+  # quem vai ler o log, não contrato de ninguém.
+  ln -sfn "$LOG_DIR" "$LOG_ROOT/latest" 2>/dev/null || true
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/speckit-clarify-loop.XXXXXX")" \
     || die "não consegui criar diretório de trabalho"
 }
@@ -747,7 +757,8 @@ main_loop() {
   printf 'yes:      %s (%s)\n' "$total_yes" "${yes_log# }"
   printf 'custo:    US$ %s\n' "$total_cost"
   printf 'spec:     %s → %s linhas (delta %+d)\n' "$start_lines" "$end_lines" "$delta"
-  printf 'streams:  %s/round-*.jsonl\n' "$LOG_DIR"
+  printf 'logs:     %s\n' "$LOG_DIR"
+  printf '          round-NN.jsonl (stream) · round-NN.log (narração) · latest → esta execução\n'
   printf 'parada:   %s\n' "$stop_reason"
   printf '\nreverter: git -C %s checkout -- %s\n' "$REPO" "$SPEC"
 
