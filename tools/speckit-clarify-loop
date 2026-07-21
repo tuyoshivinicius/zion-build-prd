@@ -456,6 +456,7 @@ run_round() {  # número da rodada em $1
 
   local line typ status iserr denials cost txt
   while IFS= read -r line; do
+    emit_event "$line"
     typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)" || continue
 
     if [ "$typ" = "rate_limit_event" ]; then
@@ -495,7 +496,7 @@ run_round() {  # número da rodada em $1
         # preflight, spec alvo e classificação — com o spec intocado.
         if [ "$DRY_RUN" -eq 1 ]; then
           ROUND_OUTCOME=dry-pergunta
-          printf '  [r%s] pergunta 1 detectada (dry-run: não respondo)\n' "$tag"
+          emit_note warn 'dry-run: pergunta detectada, não respondo'
           break
         fi
         if [ "$ROUND_YES" -ge "$MAX_YES" ]; then
@@ -504,14 +505,14 @@ run_round() {  # número da rodada em $1
           break
         fi
         ROUND_YES=$((ROUND_YES + 1))
-        printf '  [r%s] pergunta %d → yes\n' "$tag" "$ROUND_YES"
+        emit_note you "$(printf '%-24s (pergunta %d/%d)' 'yes' "$ROUND_YES" "$MAX_YES")"
         send_user 'yes'
         ;;
       loop-seco)       ROUND_OUTCOME=loop-seco;       break ;;
       rodada-completa) ROUND_OUTCOME=rodada-completa; break ;;
       indeterminada)
         ROUND_OUTCOME=indeterminada
-        printf '  [r%s] turno indeterminado — stream em %s\n' "$tag" "$log"
+        emit_note warn "turno indeterminado — stream em $log"
         break
         ;;
     esac
@@ -526,13 +527,15 @@ run_round() {  # número da rodada em $1
     ROUND_OUTCOME=aborto
     ROUND_ABORT="o processo claude terminou sem emitir turno classificável (ver $err)"
   fi
+
+  [ "$ROUND_OUTCOME" != aborto ] || emit_note warn "aborto: $ROUND_ABORT"
 }
 
 # --- Driver do loop ---------------------------------------------------------
 main_loop() {
   local round=0 same=0 prev_hash cur_hash
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
-  local start_lines end_lines delta tag
+  local start_lines end_lines delta tag rule_pad
 
   start_lines="$(spec_lines)"
   printf 'speckit-clarify-loop: %s\n  spec: %s (%s linhas)\n' \
@@ -543,7 +546,13 @@ main_loop() {
     round=$((round + 1))
     tag="$(printf '%02d' "$round")"
     prev_hash="$(spec_hash)"
-    printf 'rodada %s/%s …\n' "$tag" "$MAX_ROUNDS"
+    # mon_round_start fica aqui, e não dentro de run_round: main_loop já tem o
+    # `tag`, e é o único ponto em que o cabeçalho da rodada nasce dentro do log
+    # daquela rodada — em run_round ele cairia no log da rodada anterior.
+    mon_round_start "$LOG_DIR/round-$tag.log"
+    printf -v rule_pad '%*s' "$(( MON_WIDTH > 30 ? MON_WIDTH - 20 : 10 ))" ''
+    emit_rule ''
+    emit_rule "$(printf '── rodada %s/%s %s' "$tag" "$MAX_ROUNDS" "${rule_pad// /─}")"
 
     run_round "$round"
 
@@ -551,6 +560,7 @@ main_loop() {
     total_cost="$(add_cost "$total_cost" "$ROUND_COST")"
     yes_log="$yes_log r$tag=$ROUND_YES"
     cur_hash="$(spec_hash)"
+    emit_note ok "$(printf '%s · %d yes · US$ %s' "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST")"
 
     case "$ROUND_OUTCOME" in
       loop-seco)
