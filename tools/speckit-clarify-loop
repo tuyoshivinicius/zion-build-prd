@@ -89,7 +89,7 @@ need_deps() {
   local missing="" c
   # `tput` fica de fora: já tem fallback para 80 e falta em contêiner enxuto —
   # exigi-lo negaria a ferramenta a quem só quer o perfil plain.
-  for c in claude jq git mkfifo awk tail timeout fold sed; do
+  for c in claude jq git mkfifo awk tail timeout fold sed comm sort diff cut cp; do
     command -v "$c" >/dev/null 2>&1 || missing="$missing $c"
   done
   [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
@@ -536,6 +536,70 @@ trap cleanup EXIT
 
 spec_hash()  { git hash-object "$SPEC"; }
 spec_lines() { wc -l < "$SPEC" | tr -d ' '; }
+
+# --- Coleta para os sensores ------------------------------------------------
+# Todas comparam SNAPSHOT × SPEC — nunca contra HEAD. Sob --allow-dirty o spec
+# chega com trabalho alheio já dentro, e o que se quer medir é o que ESTA rodada
+# escreveu. Puras no sentido que importa: mesmos dois arquivos, mesma saída, sem
+# estado global e sem custo. Nesta fase NENHUMA delas decide parada — só narram
+# (R-04/R-05); quem as liga é a Fase 2.
+# O `return 0` explícito não é enfeite: `diff` sai 1 quando os arquivos diferem
+# e `grep -c` sai 1 quando conta zero, e nenhum dos dois é erro aqui.
+
+diff_numstat() {  # snapshot spec → "add del", sempre duas colunas
+  diff -- "${1:-}" "${2:-}" \
+    | awk '/^>/ { a++ } /^</ { d++ } END { printf "%d %d", a + 0, d + 0 }'
+  return 0
+}
+
+added_lines() {  # snapshot spec → as linhas adicionadas, sem o "> " do diff
+  diff -- "${1:-}" "${2:-}" | grep '^>' | cut -c3-
+  return 0
+}
+
+added_fences() {  # snapshot spec → nº de LINHAS de cerca criadas
+  # Linhas, não blocos: um bloco completo soma 2. O sensor de deriva quer o
+  # volume de código enfiado no spec, e meio bloco também é sintoma.
+  added_lines "${1:-}" "${2:-}" | grep -c '^```'
+  return 0
+}
+
+headings_of() {  # arquivo → seus títulos markdown, um por linha
+  grep -E '^#{1,6}[[:space:]]' "${1:-}" 2>/dev/null
+  return 0
+}
+
+new_headings() {  # snapshot spec → nº de títulos que só existem no spec
+  comm -13 <(headings_of "${1:-}" | sort) <(headings_of "${2:-}" | sort) \
+    | wc -l | tr -d ' '
+  return 0
+}
+
+touched_sections() {  # snapshot spec → seções que receberam linha, na ordem
+  # O formato de diff abaixo devolve os números de linha do arquivo NOVO; o awk
+  # faz fill-down do título e atribui cada linha mudada ao título acima dela.
+  # Seção que só PERDEU linha não aparece: é o preço de atribuir toda mudança a
+  # um título que ainda existe, e é o comportamento que o sensor de escopo quer.
+  local nums
+  nums="$(diff --unchanged-line-format='' --old-line-format='' \
+               --new-line-format='%dn
+' -- "${1:-}" "${2:-}")"
+  [ -n "$nums" ] || return 0
+  awk -v nums="$nums" '
+    BEGIN { n = split(nums, a, "\n"); for (i = 1; i <= n; i++) if (a[i] != "") want[a[i]] = 1 }
+    /^#+[[:space:]]/ { sec = $0 }
+    want[FNR] { s = (sec == "" ? "(preâmbulo)" : sec); if (!seen[s]++) order[++k] = s }
+    END { for (i = 1; i <= k; i++) print order[i] }
+  ' < "${2:-}"
+  return 0
+}
+
+count_markers() {  # arquivo → nº de ocorrências de [NEEDS CLARIFICATION]
+  # Contabilidade do próprio Spec Kit, não heurística de prosa. Conta OCORRÊNCIA
+  # e não linha: dois marcadores na mesma linha são duas lacunas.
+  grep -oF '[NEEDS CLARIFICATION]' "${1:-}" 2>/dev/null | wc -l | tr -d ' '
+  return 0
+}
 
 # --- Motor de uma rodada ----------------------------------------------------
 ROUND_OUTCOME=""
@@ -1079,6 +1143,15 @@ assert_emit() {  # descrição  esperado  comando…
 }
 
 self_test() {
+  local st_dir st_old st_new
+  st_dir="$(mktemp -d "${TMPDIR:-/tmp}/speckit-clarify-loop-fx.XXXXXX")"
+  st_old="$st_dir/old.md"
+  st_new="$st_dir/new.md"
+  printf '%s\n' '# Spec fake' '' '## Requisitos' '' '- RF-01 algo' > "$st_old"
+  printf '%s\n' '# Spec fake' '' '## Requisitos' '' '- RF-01 algo' \
+    '- RF-02 novo [NEEDS CLARIFICATION] e outro [NEEDS CLARIFICATION]' \
+    '' '## Clarifications' '' '```' 'codigo' '```' > "$st_new"
+
   assert_out "pergunta múltipla escolha"        pergunta-pendente classify "$FIX_MC"
   assert_out "pergunta de resposta curta"       pergunta-pendente classify "$FIX_SHORT"
   assert_out "Completion Report"                rodada-completa   classify "$FIX_REPORT"
@@ -1215,6 +1288,25 @@ self_test() {
     mutating_only 'Write MultiEdit NotebookEdit'
   assert_out "lista vazia sai vazia"           ''          mutating_only ''
 
+  # Coleta (R-03): fixtures de ARQUIVO, criadas em $TMPDIR e apagadas no fim.
+  # O --self-test continua não exigindo repo, git, rede nem cota.
+  assert_out "numstat conta adição e remoção"     '7 0' diff_numstat "$st_old" "$st_new"
+  assert_out "numstat inverte com os arquivos"    '0 7' diff_numstat "$st_new" "$st_old"
+  assert_out "numstat sem mudança dá duas colunas" '0 0' diff_numstat "$st_old" "$st_old"
+  assert_out "linhas adicionadas vêm sem o '> ' do diff" \
+    "$(printf -- '- RF-02 novo [NEEDS CLARIFICATION] e outro [NEEDS CLARIFICATION]\n\n## Clarifications\n\n```\ncodigo\n```')" \
+    added_lines "$st_old" "$st_new"
+  assert_out "cercas criadas contam por linha"    '2' added_fences "$st_old" "$st_new"
+  assert_out "sem mudança não há cerca nova"      '0' added_fences "$st_old" "$st_old"
+  assert_out "título novo é contado"              '1' new_headings "$st_old" "$st_new"
+  assert_out "sem título novo dá zero"            '0' new_headings "$st_old" "$st_old"
+  assert_out "seções tocadas saem na ordem do arquivo novo" \
+    "$(printf '## Requisitos\n## Clarifications')" \
+    touched_sections "$st_old" "$st_new"
+  assert_out "sem mudança nenhuma seção é tocada" '' touched_sections "$st_old" "$st_old"
+  assert_out "marcadores contam por ocorrência, não por linha" '2' count_markers "$st_new"
+  assert_out "arquivo sem marcador dá zero"       '0' count_markers "$st_old"
+
   SECONDS=125
   assert_out "relógio formata mm:ss" '02:05' mon_clock
 
@@ -1251,6 +1343,8 @@ self_test() {
   QUIET=1
   assert_emit "--quiet cala o stdout" '' emit_event "$FX_TOOL_BASH"
   QUIET=0
+
+  rm -rf "$st_dir"
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-clarify-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
