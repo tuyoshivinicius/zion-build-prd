@@ -91,16 +91,19 @@ perguntas; sem ela, o caso mais provável do mundo pós-poda — rodada 1, turno
 modelo esquece a sentinela — cairia em aborto na primeira, que é a classe de bug
 que a Fase 1 existe para matar (`P-1`).
 
-Contador `IND_STREAK`, por rodada, inicializado ao lado dos demais `ROUND_*`
-(`:812-813`) e **zerado no ramo `pergunta-pendente`** — que é o único ramo do
-`case` que não encerra a rodada, e portanto o único onde zerar tem efeito:
+Sem contador novo: o `SENT_MISS` que já existe conta exatamente este evento.
+Pós-poda, "turno sem sentinela" e "`indeterminada`" são o mesmo acontecimento, e
+o `SENT_MISS` já é incrementado e zerado nos pontos certos (`:887-892`). Um
+segundo contador seria duplicação de fonte de verdade — o que `P-6` proíbe.
+
+O limiar vira a constante `SENT_MISS_MAX=2`, lida tanto pela `sentinel_note`
+quanto pela decisão, e a decisão vira a função pura `miss_action <n> → sonda|aborta`.
 
 ```
 indeterminada)
-  IND_STREAK=$((IND_STREAK + 1))
-  if [ "$IND_STREAK" -ge 2 ]; then
+  if [ "$(miss_action "$SENT_MISS")" = aborta ]; then
     ROUND_OUTCOME=aborto
-    ROUND_ABORT="dois turnos seguidos sem sentinela na rodada $n"
+    ROUND_ABORT="$SENT_MISS turnos seguidos sem sentinela na rodada $n"
     break
   fi
   emit_note warn 'turno sem sentinela — sondando o estado'
@@ -171,6 +174,9 @@ saída custaria uma decisão de contrato que ninguém pediu.
 caminho comum · o bloco de 15 linhas some · aborto com spec alterado narra a
 linha destacada e sai `rc=1`.
 
+O ramo `indeterminada)` do `main_loop` (`:997-999`) vira código morto com o `R-B`
+e sai junto — `ROUND_OUTCOME=indeterminada` não é mais atribuído em lugar nenhum.
+
 ### R-E — `revisar:` fecha todo resumo
 
 Traz o **M-05**. Última linha do resumo, sempre, inclusive em convergência limpa
@@ -223,21 +229,34 @@ marcador de pergunta na prosa não interfere no contrato.
 
 ## Contabilidade do tamanho
 
-Honesta, para não prometer o que não acontece:
+**Medida depois da entrega, e a estimativa estava errada.** Os números abaixo saem
+de `git show --numstat` em cada commit da série, um commit por requisito:
 
-| movimento | linhas |
-|---|---|
-| heurística: 4 constantes, `has_re`, ramo de fallback, comentário datado | −65 |
-| `S-6`: bloco dedicado do `--dry-run` vira ~3 linhas | −12 |
-| `REPLY_PROBE`/`REPLY_YES` + comentário | +10 |
-| ramo `R-B` no `run_round` + `IND_STREAK` | +11 |
-| `spec_mudou` e a linha destacada | +4 |
-| `revisar:` | +2 |
-| fixtures (`P-6`) | ±0 |
-| **líquido** | **≈ −50** |
+| movimento | estimado | **medido** |
+|---|---|---|
+| `R-A` — heurística: 4 constantes, `has_re`, ramo de fallback, comentário datado | −65 | **−50** |
+| `R-B`+`R-C` — `SENT_MISS_MAX`, `miss_action`, `REPLY_*`, ramo da sonda | +21 | **+36** |
+| `R-D` — `spec_mudou`, a linha destacada, o `--dry-run` colapsado | −8 | **+11** |
+| `R-E` — `revisar:` | +2 | **+4** |
+| fixtures (`P-6`) | ±0 | **±0** |
+| **líquido** | **≈ −50** | **+1** |
 
-**1786 → ≈ 1736 linhas.** O arquivo termina menor do que começou, que era a
-promessa; não termina em ~1500, porque `P-6` mantém as ~230 linhas de fixtures.
+**1786 → 1787 linhas.** O arquivo terminou uma linha **maior** do que começou, e
+a promessa de `−50` não se cumpriu. Duas causas, ambas de comentário e nenhuma de
+código:
+
+- o `R-D` foi estimado como redução e é aumento: o bloco do `--dry-run` cai de 15
+  para 13 linhas, não para 3, porque preservar a mensagem `1 pergunta
+  classificada` custa as linhas do `case`; e o ramo `aborto` ganha o parágrafo que
+  explica por que o `rc` continua `1`;
+- a rede custa `+36` e não `+21`: o `REPLY_PROBE` é texto de contrato, e no tom
+  deste arquivo ele vem com o parágrafo que explica **por que** não é um `yes`.
+
+**A contagem de linhas não era o ponto, e não se corta comentário para consertar
+uma métrica.** O ganho é o que a spec prometeu de fato: uma verdade em vez de duas
+sobre a mesma decisão, e um lugar só para consertar quando a classificação falhar.
+Este arquivo vale pelos comentários que registram o custo em dólar de cada
+decisão; enxugá-los para chegar a 1736 seria trocar o certo pelo bonito.
 
 ---
 
@@ -271,20 +290,28 @@ perguntava se o fallback era permanente por desenho.
 
 ## Pronto quando
 
-- `--self-test` limpo, com o contador automático subindo sozinho a partir dos 139
-  de hoje. O número final não é gate; os casos enumerados abaixo são.
-- Casos novos cobrindo: `classify` sem sentinela → `indeterminada` nas 17 fixtures
-  de prosa · `REPLY_PROBE` enviado no 1º indeterminado · 2º consecutivo abortando ·
-  turno classificado zerando o `IND_STREAK` · `spec_mudou` em cada caminho de saída
-  · `revisar:` como última linha.
-- A sequência de dois indeterminados exercitada **no shell corrente** (padrão
-  `assert_emit`; `$(...)` perderia o `IND_STREAK`).
-- `grep -c 'SIG_'` devolve 0.
-- Um `--dry-run` real com `delta +0` e hash inalterado, verificado pelo caminho
-  comum do R-D e não por bloco próprio.
-- Nota datada no cabeçalho, no padrão do arquivo, registrando repo, custo e
-  `sentinela: N/M`.
-- Spec de evolução corrigida conforme a tabela acima, no mesmo commit.
+- ✅ `--self-test` limpo, com o contador automático subindo sozinho a partir dos
+  139 de hoje. **143 casos**, os 4 novos sendo os da `miss_action`.
+- ✅ `classify` sem sentinela → `indeterminada` nas 21 asserções de prosa, que
+  ficam como o **trinco da poda**.
+- ✅ `grep -c 'SIG_\|has_re'` devolve 0.
+- A decisão de parada exercitada por `assert_out`, e não por `assert_emit`: com o
+  limiar numa função pura que **recebe** o contador, não há estado a preservar.
+- ⚠️ **Não coberto pelo auto-teste, por construção:** o envio do `REPLY_PROBE`, o
+  aborto no 2º indeterminado consecutivo, o `spec_mudou` em cada caminho de saída
+  e o `revisar:` como última linha vivem em `run_round`/`main_loop`, que falam com
+  o repo e com o processo `claude`. O auto-teste é sem repo e sem custo (`P-3`), e
+  inventar um teste que precise de repo trairia o princípio. A verificação destes
+  quatro é o `--dry-run` real abaixo.
+- ⬜ Um `--dry-run` real com `delta +0` e hash inalterado, verificado pelo caminho
+  comum do R-D e não por bloco próprio. **Pendente — exige execução paga.**
+- ⬜ Nota datada no cabeçalho, no padrão do arquivo, registrando repo, custo e
+  `sentinela: N/M`. **Pendente, junto com o item acima.**
+- ✅ Spec de evolução corrigida conforme a tabela acima.
+- ❌ ~~`wc -l` menor que 1786.~~ **Não satisfeito: 1787.** Ver
+  `§Contabilidade do tamanho` — a estimativa de `−50` estava errada e o critério
+  não sobrevive à medição. Mantido riscado, e não apagado, porque a estimativa
+  furada é evidência de como este documento errou (`P-6`).
 
 ---
 

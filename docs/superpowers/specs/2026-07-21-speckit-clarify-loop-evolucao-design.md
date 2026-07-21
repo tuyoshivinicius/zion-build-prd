@@ -103,11 +103,14 @@ de que ele depende — não num plano de mitigação separado:
 
 | plano | fases | `M-*` | estado |
 |---|---|---|---|
-| 1 | Fase 0 + Fase 1 | M-06 M-07 M-03 M-04 M-12 (guarda e parsing) | próximo |
-| 2 | Fase 3 | M-08 | depois |
-| 3 | Fase 2 (em `warn`) | — | depois |
-| 4 | Fase 4 | M-01 M-02 M-05 M-09 M-10 M-12 (nome de branch) | depois |
-| — | Fase 5 | M-11 | protocolo de execução, não vira plano |
+| 1 | Fase 0 + Fase 1 | M-06 M-07 M-03 M-04 M-12 (guarda e parsing) | entregue |
+| 2 | Fase 3 | M-08 | não entregue — ver estudo |
+| 3 | Fase 2 (em `warn`) | — | não entregue — ver estudo |
+| 4 | Fase 4 | M-01 M-02 M-05 M-09 M-10 M-12 (nome de branch) | não entregue — ver estudo |
+| — | Fase 5 | M-11 | não agendada (R-23 pede ≥10 execuções pagas em ≥2 repos) |
+
+**Nota de 2026-07-21.** A poda entregou, fora desta tabela, o `R-16` relaxado, o
+`S-6` sem o `R-19`, o `M-05` e o `M-08`. Ver `§Ordem de entrega`.
 
 Distribuir em vez de agrupar tem uma razão só: o M-06 fecha um risco que a
 Fase 1 **cria**. Num plano próprio, entre o merge da Fase 1 e o dele o
@@ -199,7 +202,10 @@ Ordem: sentinela → mapeia direto (`ASKING`→`pergunta-pendente`,
 `COMPLETE`→`rodada-completa`, `NO_AMBIGUITY`→`loop-seco`); ausente → heurística
 atual **inalterada**, com todas as constantes bilíngues e a `SIG_NEXT_RE`.
 Âncora `^…$` (sentinela citada em prosa não conta); `tail -n 1` (última vence).
-A heurística não sai: o contrato depende do modelo obedecer.
+
+**Superado em 2026-07-21.** A heurística saiu: a sentinela é caminho único, e um
+turno sem ela vira `indeterminada`, que sonda em vez de abortar (`R-16` relaxado
++ `M-08`). O `S-4` está consumado.
 
 **R-09 — ausência é narrada, repetida é alarme, nenhuma das duas para a rodada.**
 Contador `SENT_MISS` por rodada; um turno sem sentinela → `warn`; dois seguidos →
@@ -235,6 +241,9 @@ comentários datados de US$.
 ---
 
 ## Fase 2 — Sensores de parada
+
+> **Deferida.** Ver `§Ordem de entrega`. Vale para a fase inteira, incluindo o
+> seletor `--sensors` e a linha de narração por rodada.
 
 **R-11 — três famílias, não uma escala:**
 
@@ -290,6 +299,10 @@ longo do arquivo; com isso o `main_loop` volta a ser só driver.
 
 ## Fase 3 — Semântica de parada e falha
 
+> **Parcialmente entregue em 2026-07-21:** o `R-16` (relaxado) e o `S-6` (sem o
+> `R-19`). O `R-17`, o `R-18`, o `R-19` e o `R-20` seguem **Deferidos**. Ver
+> `§Ordem de entrega`.
+
 | id | requisito | por quê |
 |---|---|---|
 | **R-16** | `indeterminada` isolada deixa de ser fatal: 1ª com `ROUND_YES > 0` narra e envia `yes`; 2ª **consecutiva** aborta; com `ROUND_YES == 0` aborta na 1ª (atual). | ambíguo lido como pergunta gasta um `yes` (o `MAX_YES` cobre); lido como fim descarta rodada paga (nada cobre) |
@@ -298,7 +311,22 @@ longo do arquivo; com isso o `main_loop` volta a ser só driver.
 | **R-19** | Comparar hash inicial/final em **todo** caminho de aborto. Diferiu → `rc=4` + linha destacada `ATENÇÃO: o spec foi alterado numa rodada abortada`. Igual → `rc=1`. | o `TERM` do `ROUND_TIMEOUT` ainda deixa spec meio escrito; hoje o resumo trata os dois casos no mesmo tom |
 | **S-6** | Generalizar a comparação do R-19 para **todo** caminho de saída de rodada, não só aborto. O bloco dedicado do `--dry-run` no `main_loop` reduz-se a definir `rc` e motivo. | a verificação de "não escreveu" do `--dry-run` passa a ser o mesmo código; uma garantia em vez de duas, e ~15 linhas de ramificação viram 3 |
 
+**R-16 — alterado na entrega.** A cláusula `ROUND_YES > 0` caiu. Com a heurística
+removida, o caso mais provável — rodada 1, turno 1, sentinela esquecida — cairia
+em aborto na primeira, que é a classe de bug que a Fase 1 existe para matar. O
+primeiro turno indeterminado nunca é fatal; o contador é o `SENT_MISS`, não um
+`IND_STREAK` novo.
+
+**S-6 — entregue sem o `R-19`.** A comparação foi generalizada e o aborto com
+spec alterado ganha linha destacada, mas nenhum `rc` novo nasce. A tabela do
+`R-20` segue deferida com os três códigos de hoje.
+
+**R-17, R-18, R-19 — Deferidos.** Ver `§Ordem de entrega`.
+
 **R-20 — tabela de `rc` no cabeçalho do arquivo:**
+
+> **Deferido.** Ver `§Ordem de entrega`. O arquivo continua com os três códigos
+> de hoje (0, 1, 2); as linhas 3 e 4 abaixo não existem no script.
 
 | `rc` | significado |
 |---|---|
@@ -314,6 +342,9 @@ parada e não ganha `rc` — ver D-2.
 ---
 
 ## Fase 4 — Custo e auditoria
+
+> **Deferida.** Ver `§Ordem de entrega`. Vale para o `R-21`, o `R-22` e todos os
+> `M-` que viajavam no plano 4, exceto o `M-05`, entregue com a poda.
 
 **R-21 — `MAX_ROUNDS`: default 3, teto 5, `--yes-i-know` acima.** O retorno cai
 forte após a 2ª rodada e da 4ª em diante o clarify empurra decisão de
@@ -348,26 +379,31 @@ rodada 3 quando ela só inchou, com `git reset --hard <sha da r02>`.
 
 ## Ordem de entrega
 
-Fase 0 → Fase 1 → Fase 3 → Fase 2 (`warn`) → Fase 4 → Fase 5 (vira `stop`).
+Fase 0 → Fase 1 → **poda da heurística (entregue em 2026-07-21)**.
 
-A ordem interna dos `M-` está na §"Ordem de entrega" da Parte II; ela não
-reordena as fases, só diz onde cada item se enfia dentro delas.
+**Fase 2 (sensores) e Fase 4 (custo e auditoria) estão DEFERIDAS.** A ordem
+original — Fase 3 → Fase 2 → Fase 4 — foi invertida pelo estudo
+`docs/estudos/refatoracao-final-speckit-clarify-loop.md`, que mediu o ROI das
+alternativas e concluiu que a camada de sensores entregue antes da Fase 5 é
+código que narra e nunca decide, e que a Fase 4 é o único ponto em que um
+defeito passa a custar trabalho e não dólar.
 
-Fase 1 tem o maior retorno isolado; Fase 3 é barata e para de descartar rodada
-boa desde já. O único erro de ordem que importa é Fase 2 antes da 0 — implica
-escolher limiar no escuro.
+O que foi entregue da Fase 3: o `R-16` (relaxado) e o `S-6` (sem o `R-19`).
+O resto da Fase 3 — `R-17`, `R-18`, `R-19`, `R-20` — segue deferido.
 
-Planos de implementação conforme D-4: Fase 0 + Fase 1 no primeiro; Fase 3,
-Fase 2 e Fase 4 em planos próprios; Fase 5 não vira plano.
+A spec da entrega é `2026-07-21-speckit-clarify-loop-poda-design.md`.
 
 ## Pronto quando (Parte I)
 
+> Recortado ao entregue. Os critérios de Fase 2 e Fase 4 seguem deferidos.
+
 `--self-test` limpo com contador automático e cobertura de todo sensor puro,
 dos três estados do `sensor_marcadores` e da leitura da sentinela · `--dry-run`
-real com `delta +0`, hash inalterado e nenhum commit · uma execução com
-`--sensors=warn` mostrando a linha de sensores em toda rodada e `sentinela: M/M`
-· cabeçalho com a tabela de `rc` e nota de verificação datada · nenhuma
-constante `SIG_*` acrescentada depois da Fase 1 (S-4).
+real com `delta +0`, hash inalterado e nenhum commit · ~~uma execução com
+`--sensors=warn` mostrando a linha de sensores em toda rodada~~ e
+`sentinela: M/M` · ~~cabeçalho com a tabela de `rc`~~ e nota de verificação
+datada · nenhuma constante `SIG_*` acrescentada depois da Fase 1 (S-4) — **e,
+desde 2026-07-21, nenhuma `SIG_*` existindo: a poda as removeu.**
 
 ---
 
@@ -482,6 +518,8 @@ Regra de saída, no `trap`:
 
 ## G1 — Contenção
 
+> **Deferido.** Ver `§Ordem de entrega`.
+
 **M-01 — branch dedicado, ativo por default.**
 
 ```bash
@@ -501,6 +539,8 @@ O nome sai de `clarify_branch_name <dir-do-spec> <timestamp>`, função pura —
 `clarify/<basename do dir>-<timestamp>` — pelo M-12.
 
 Contenção só funciona se for o default. Opt-in não contém.
+
+> **Deferido.** Ver `§Ordem de entrega`.
 
 **M-02 — o resumo imprime as duas saídas, sempre.** Layout canônico e as três
 combinações de modo estão na §"Resumo consolidado" adiante.
@@ -554,9 +594,16 @@ convida ninguém. Quinze linhas se leem.
 convergência limpa com `rc=0`. É o único ponto do desenho em que o humano volta
 ao laço. Hoje não existe.
 
+**Entregue em 2026-07-21**, na forma sem branch:
+`revisar: git -C <repo> diff -- <spec>`.
+
 ---
 
 ## Resumo consolidado
+
+> **Deferido.** Ver `§Ordem de entrega`. O layout de 11 colunas depende do
+> `R-22` e do `M-02`, ambos diferidos; o resumo de hoje continua em 10, e o
+> `M-05` foi entregue nessa largura.
 
 Sete requisitos escrevem no mesmo resumo — R-09 (`sentinela:`), R-01 (`logs:`),
 D-3/R-22 (`commits:`/`reverter:`), M-02, M-04, M-05, M-10. Sem um layout
@@ -611,7 +658,7 @@ descartar só a rodada 3 com `git reset --hard <sha da r02>`.
 |---|---|---|
 | **M-06** | Após **cada** rodada: `added_lines "$snap" "$SPEC" \| grep -q '^CLARIFY_'` → `ROUND_OUTCOME=aborto`, `ROUND_ABORT='sentinela vazou para dentro do spec'`. | **Abortar, não limpar.** Limpeza silenciosa esconde que o contrato falhou. Casa contra as linhas adicionadas, não contra o spec inteiro — D-5. |
 | **M-07** | Acrescentar ao contrato: `Nunca escreva essas linhas dentro de nenhum arquivo; elas pertencem apenas à sua mensagem.` | prevenção; M-06 é a rede |
-| **M-08** | No caminho `indeterminada` do R-16, enviar `REPLY_PROBE` em vez de `yes`: `Se você fez uma pergunta de clarificação, responda com a opção recomendada. Se a rodada já terminou, emita apenas a linha CLARIFY_STATE: COMPLETE.` | não pode ser lido como aprovação de uma ação inventada, e ainda recupera a sentinela. Pergunta classificada continua com `yes` seco — D-8. |
+| **M-08** | **Entregue em 2026-07-21.** No caminho `indeterminada` do R-16, enviar `REPLY_PROBE` em vez de `yes`: `Se você fez uma pergunta de clarificação, responda com a opção recomendada. Se a rodada já terminou, emita apenas a linha CLARIFY_STATE: COMPLETE.` | não pode ser lido como aprovação de uma ação inventada, e ainda recupera a sentinela. Pergunta classificada continua com `yes` seco — D-8. |
 
 **M-06 antes do R-19.** O `rc=4` é do R-19, que é Fase 3 (plano 2), e o M-06 vai
 no plano 1. No plano 1 o M-06 define `ROUND_OUTCOME`/`ROUND_ABORT` e sai pelo
@@ -620,9 +667,14 @@ hash a todo caminho de aborto, o `rc=4` passa a valer sem tocar no M-06 — o sp
 foi alterado por construção, já que a linha vazada é linha nova. É o
 comportamento correto nos dois momentos, e é o que permite o M-06 não esperar.
 
+**M-08 — alterado na entrega.** O gatilho é todo turno `indeterminada`, não só o
+caminho do `R-16` original: pós-poda os dois são o mesmo caminho.
+
 ---
 
 ## G4 — Processo (não é código)
+
+> **Deferido.** Ver `§Ordem de entrega`.
 
 **M-09 — rodada 1 fica com o humano.**
 
@@ -639,6 +691,8 @@ Fluxo recomendado, documentado no cabeçalho do script e no `usage`:
 
 Único item que ataca V1 na raiz.
 
+> **Deferido.** Ver `§Ordem de entrega`.
+
 **M-10 — gates a jusante no resumo.** Em convergência (`rc=0`), a linha
 `a seguir:` sugere `/speckit.checklist` e `/speckit.analyze`. Eles pegam o que
 os sensores não veem: requisito incoerente, decisão técnica travestida de
@@ -647,6 +701,8 @@ requisito. É o uso que o próprio Spec Kit prescreve.
 ---
 
 ## G5 — Medição
+
+> **Deferido.** Ver `§Ordem de entrega`.
 
 **M-11 — verificar se o viés de audiência existe.**
 
@@ -721,11 +777,12 @@ implementa em bash.
 
 ## Pronto quando (Parte II)
 
-`--self-test` cobrindo o M-12 · uma execução real criando branch, imprimindo as
-duas saídas do M-02 e terminando com a linha `revisar:` · resumo de decisões
+> Recortado ao entregue. Os critérios de Fase 2 e Fase 4 seguem deferidos.
+
+`--self-test` cobrindo o M-12 · uma execução real ~~criando branch, imprimindo as
+duas saídas do M-02~~ e terminando com a linha `revisar:` · resumo de decisões
 legível a partir de logs reais · guarda de vazamento exercitada com um spec
-adulterado à mão, saindo `rc=4` (ou `rc=1` enquanto o R-19 não estiver no ar —
-ver G3) · um spec que **cita** a sentinela numa cerca
-rodando até o fim sem abortar (D-5) · execução abortada na rodada 1 sem commit
-deixando o repo no branch base, sem branch órfão (D-9) · protocolo M-11
-executado e o resultado registrado como comentário datado, no padrão do arquivo.
+adulterado à mão, saindo ~~`rc=4`~~ `rc=1` (o R-19 segue deferido — ver G3) · um spec que **cita** a sentinela numa cerca
+rodando até o fim sem abortar (D-5) · ~~execução abortada na rodada 1 sem commit
+deixando o repo no branch base, sem branch órfão (D-9)~~ · ~~protocolo M-11
+executado e o resultado registrado como comentário datado, no padrão do arquivo.~~
