@@ -1037,6 +1037,10 @@ main_loop() {
   dec_block="$(decisions_block "$total_yes" "$all_decisions")"
   [ -z "$dec_block" ] || printf '\n%s\n' "$dec_block"
   printf '\nreverter: git -C %s checkout -- %s\n' "$REPO" "$SPEC"
+  # Última linha do resumo, em TODO caminho de saída — inclusive na convergência
+  # limpa com rc=0. É o único ponto do desenho em que o humano volta ao laço.
+  # Não obriga ninguém a ler; essa é a fronteira do que um harness pode fazer.
+  printf 'revisar:  git -C %s diff -- %s\n' "$REPO" "$SPEC"
 
   return "$rc"
 }
