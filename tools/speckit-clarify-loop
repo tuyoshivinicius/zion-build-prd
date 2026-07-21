@@ -104,6 +104,49 @@ classify() {  # texto do turno em $1 → rótulo em stdout
   fi
 }
 
+# --- Monitor: leitura de eventos -------------------------------------------
+# Traduz uma linha do stream JSONL num rótulo. Função pura: sem I/O além do
+# stdout, sem estado global. Qualquer linha que o jq não digira cai em
+# `nothing` — o monitor é aditivo e jamais derruba a rodada.
+#
+# Precedência dentro de uma linha `assistant`: text > tool_use > thinking.
+# No stream observado toda linha trazia um único bloco, mas se a API um dia
+# agrupar blocos, perder a prosa seria a única falha inaceitável.
+event_kind() {
+  local line="${1:-}" typ types st
+  typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)"
+  case "$typ" in
+    result)
+      printf 'result\n'; return 0 ;;
+    rate_limit_event)
+      st="$(printf '%s' "$line" | jq -r '.rate_limit_info.status // "?"' 2>/dev/null)"
+      if [ "$st" = "allowed" ]; then printf 'nothing\n'; else printf 'ratelimit\n'; fi
+      return 0 ;;
+    assistant)
+      types="$(printf '%s' "$line" | jq -r '[.message.content[]?.type] | join(" ")' 2>/dev/null)"
+      case " $types " in
+        *' text '*)     printf 'text\n' ;;
+        *' tool_use '*) printf 'tool\n' ;;
+        *' thinking '*) printf 'thinking\n' ;;
+        *)              printf 'nothing\n' ;;
+      esac
+      return 0 ;;
+    *)
+      printf 'nothing\n'; return 0 ;;
+  esac
+}
+
+# Suprime `pensando…` repetido. Note que o kind anterior é o último kind
+# EFETIVO — eventos que não rendem linha (system/*, tool_result) não o mexem,
+# de modo que thinking · ruído · thinking conta como um só arroubo de reflexão.
+dedup_kind() {  # kind-anterior  kind → kind efetivo
+  if [ "${2:-}" = thinking ] && [ "${1:-}" = thinking ]; then
+    printf 'nothing\n'
+  else
+    printf '%s\n' "${2:-nothing}"
+  fi
+}
+
 # --- Preflight -------------------------------------------------------------
 # Resolve o spec alvo pela MESMA fonte que a skill usa (passo 1), para que
 # script e skill nunca divirjam de arquivo.
@@ -465,9 +508,48 @@ that is a planning-level concern rather than a spec ambiguity.
 EOF
 )"
 
+# --- Fixtures do monitor ---------------------------------------------------
+# Capturadas de /tmp/speckit-clarify-loop/round-01.jsonl numa rodada real.
+# Nesse stream toda linha `assistant` trazia exatamente 1 bloco de conteúdo,
+# mas a precedência text > tool_use > thinking existe para que uma linha em
+# lote nunca faça a prosa desaparecer.
+FX_TOOL_BASH='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"check-prerequisites.sh --json --paths-only","description":"Run prerequisites check"}}]}}'
+FX_TOOL_READ='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"/home/tuyoshi/projects/personal/zion-mermaid-editor-app/specs/001-cano-modelo-codigo/spec.md"}}]}}'
+FX_TOOL_OTHER='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"WebSearch","input":{"query":"spec kit clarify"}}]}}'
+FX_THINK='{"type":"assistant","message":{"content":[{"type":"thinking","thinking":"Vou mapear a estrutura do spec antes de procurar lacunas."}]}}'
+FX_TEXT='{"type":"assistant","message":{"content":[{"type":"text","text":"**Recomendado: Opção B**\n\n| Opção | Descrição |\n|---|---|\n| A | Manter o silêncio |"}]}}'
+FX_MIXED='{"type":"assistant","message":{"content":[{"type":"thinking","thinking":"z"},{"type":"text","text":"prosa"}]}}'
+FX_SYS_INIT='{"type":"system","subtype":"init","session_id":"x"}'
+FX_SYS_TOK='{"type":"system","subtype":"thinking_tokens","tokens":128}'
+FX_RL_OK='{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","rateLimitType":"five_hour"}}'
+FX_RL_BAD='{"type":"rate_limit_event","rate_limit_info":{"status":"rejected","rateLimitType":"five_hour"}}'
+FX_RESULT='{"type":"result","is_error":false,"result":"prosa que NAO pode reaparecer","total_cost_usd":0.41}'
+FX_BAD='{not json'
+FX_USER_TR='{"type":"user","message":{"content":[{"type":"tool_result","content":"1081 linhas"}]}}'
+
 ST_FAIL=0
 assert_classify() {  # descrição  esperado  texto
   local got; got="$(classify "$3")"
+  if [ "$got" = "$2" ]; then
+    printf 'ok: %s\n' "$1"
+  else
+    printf 'FALHOU: %s (esperado %s, veio %s)\n' "$1" "$2" "$got"
+    ST_FAIL=1
+  fi
+}
+
+assert_kind() {  # descrição  esperado  linha-jsonl
+  local got; got="$(event_kind "$3")"
+  if [ "$got" = "$2" ]; then
+    printf 'ok: %s\n' "$1"
+  else
+    printf 'FALHOU: %s (esperado %s, veio %s)\n' "$1" "$2" "$got"
+    ST_FAIL=1
+  fi
+}
+
+assert_dedup() {  # descrição  esperado  prev  kind
+  local got; got="$(dedup_kind "$3" "$4")"
   if [ "$got" = "$2" ]; then
     printf 'ok: %s\n' "$1"
   else
@@ -490,8 +572,28 @@ self_test() {
   assert_classify "Completion Report em pt"          rodada-completa   "$FIX_REPORT_PT"
   assert_classify "frase seca em pt"                 loop-seco         "$FIX_DRY_PT"
 
+  assert_kind "tool_use Bash"                tool      "$FX_TOOL_BASH"
+  assert_kind "tool_use Read"                tool      "$FX_TOOL_READ"
+  assert_kind "tool_use desconhecida"        tool      "$FX_TOOL_OTHER"
+  assert_kind "thinking"                     thinking  "$FX_THINK"
+  assert_kind "texto do assistente"          text      "$FX_TEXT"
+  assert_kind "linha em lote: texto vence"   text      "$FX_MIXED"
+  assert_kind "system/init é ruído"          nothing   "$FX_SYS_INIT"
+  assert_kind "system/thinking_tokens é ruído" nothing "$FX_SYS_TOK"
+  assert_kind "tool_result do usuário é ruído" nothing "$FX_USER_TR"
+  assert_kind "rate limit allowed é ruído"   nothing   "$FX_RL_OK"
+  assert_kind "rate limit não-allowed"       ratelimit "$FX_RL_BAD"
+  assert_kind "result"                       result    "$FX_RESULT"
+  assert_kind "linha malformada não quebra"  nothing   "$FX_BAD"
+  assert_kind "linha vazia não quebra"       nothing   ""
+
+  assert_dedup "thinking após thinking suprime"  nothing  thinking thinking
+  assert_dedup "thinking após tool passa"        thinking tool     thinking
+  assert_dedup "texto após texto passa"          text     text     text
+  assert_dedup "sem anterior passa"              tool     ""       tool
+
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (12 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (30 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
