@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# speckit-clarify-loop — automatiza o ciclo de clarificação do Spec Kit.
+#
+# Invariante: uma rodada = um processo `claude`. O término do processo É o
+# `/clear`. Nunca usa --continue, --resume ou --dangerously-skip-permissions.
+#
+# Uso:
+#   speckit-clarify-loop [--repo DIR] [--max-rounds N] [--allow-dirty] [--dry-run] [--self-test]
+#
+# Exit: 0 convergiu (frase seca ou estagnação), ou --self-test/--dry-run limpo
+#       1 parada por guarda (teto de rodadas) ou aborto por erro
+#       2 erro de uso ou de ambiente
+#
+# Ferramenta pessoal, instalada por cópia no PATH: não presume o ambiente de
+# nenhum repo e checa as próprias dependências no arranque.
+set -u
+
+REPO="$PWD"
+MAX_ROUNDS=10
+ALLOW_DIRTY=0
+DRY_RUN=0
+
+# Teto de `yes` por rodada — espelha o limite de 5 perguntas da própria skill.
+MAX_YES=5
+# Rede contra um turno que trava sem emitir `result`. Não é flag: é salvaguarda.
+ROUND_TIMEOUT=900
+LOG_DIR=/tmp/speckit-clarify-loop
+
+die() { printf 'speckit-clarify-loop: %s\n' "$1" >&2; exit "${2:-2}"; }
+
+usage() {
+  cat >&2 <<'EOF'
+uso: speckit-clarify-loop [--repo DIR] [--max-rounds N] [--allow-dirty] [--dry-run] [--self-test]
+
+  --repo DIR       repo alvo (default: cwd)
+  --max-rounds N   teto duro de rodadas (default: 10)
+  --allow-dirty    dispensa a exigência de working tree limpo
+  --dry-run        uma rodada sem Edit/Write: mostra as perguntas e os `yes`, sem tocar o spec
+  --self-test      roda os testes embutidos da classificação e sai
+EOF
+  exit 2
+}
+
+need_deps() {
+  local missing="" c
+  for c in claude jq git mkfifo awk tail; do
+    command -v "$c" >/dev/null 2>&1 || missing="$missing $c"
+  done
+  [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --repo)        [ $# -ge 2 ] || usage; REPO="$2"; shift 2 ;;
+    --max-rounds)  [ $# -ge 2 ] || usage; MAX_ROUNDS="$2"; shift 2 ;;
+    --allow-dirty) ALLOW_DIRTY=1; shift ;;
+    --dry-run)     DRY_RUN=1; shift ;;
+    -h|--help)     usage ;;
+    *) printf 'speckit-clarify-loop: flag desconhecida: %s\n' "$1" >&2; usage ;;
+  esac
+done
+
+case "$MAX_ROUNDS" in
+  ''|*[!0-9]*) die "--max-rounds exige um inteiro positivo (veio: $MAX_ROUNDS)" ;;
+esac
+[ "$MAX_ROUNDS" -ge 1 ] || die "--max-rounds exige um inteiro positivo (veio: $MAX_ROUNDS)"
+
+need_deps
+
+# TEMPORÁRIO — substituído pelo driver na Task 5.
+printf 'speckit-clarify-loop: arranque ok (repo=%s max-rounds=%s dry-run=%s allow-dirty=%s)\n' \
+  "$REPO" "$MAX_ROUNDS" "$DRY_RUN" "$ALLOW_DIRTY"
