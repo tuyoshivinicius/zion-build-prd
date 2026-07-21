@@ -44,7 +44,17 @@ DRY_RUN=0
 # Teto de `yes` por rodada — espelha o limite de 5 perguntas da própria skill.
 MAX_YES=5
 # Rede contra um turno que trava sem emitir `result`. Não é flag: é salvaguarda.
-ROUND_TIMEOUT=900
+#
+# Era 900 s até 2026-07-21, quando uma rodada produtiva em zion-mermaid-editor-app
+# — 3 perguntas respondidas, +57 linhas no spec — foi morta aos 898 s, no meio da
+# integração da terceira resposta. É o pior momento possível: nenhuma guarda
+# cobre o spec meio escrito por TERM, porque do lado de fora isso é
+# indistinguível de um turno que travou.
+#
+# 1800 s cabe uma rodada de 5 perguntas num spec de ~1100 linhas, onde os turnos
+# levaram 537 · 166 · 148 s. Continua sendo teto, não expectativa: turno que não
+# emite `result` em 30 min está travado de verdade.
+ROUND_TIMEOUT=1800
 LOG_DIR=/tmp/speckit-clarify-loop
 
 QUIET=0
