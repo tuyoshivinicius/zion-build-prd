@@ -13,6 +13,16 @@
 #
 # Ferramenta pessoal, instalada por cópia no PATH: não presume o ambiente de
 # nenhum repo e checa as próprias dependências no arranque.
+#
+# Verificado em 2026-07-21 contra claude 2.1.216 e a skill speckit-clarify:
+#   --dry-run em zion-test-build-prd (SPECIFY_FEATURE=006-code-interop) →
+#   1 pergunta classificada, 0 yes injetados, spec intocado (188 → 188 linhas),
+#   US$ 0,32, ~2 min. O stream confirma Skill + check-prerequisites.sh, ou seja:
+#   `/speckit-clarify` como texto puro É despachado como slash command.
+#   Nas duas execuções a skill alternou a língua dos marcadores (pt e en) — daí
+#   a classificação bilíngue não ser luxo, e sim a diferença entre funcionar e
+#   falhar de forma intermitente.
+# Reinstalar após editar:  install -m 755 tools/speckit-clarify-loop ~/.local/bin/
 set -u
 
 REPO="$PWD"
