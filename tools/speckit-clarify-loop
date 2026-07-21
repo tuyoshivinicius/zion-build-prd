@@ -240,82 +240,29 @@ decisions_block() {  # yes_total  linhas "rNN<TAB>assunto<TAB>opção" → bloco
 }
 
 # --- Classificação do turno (função pura de texto) --------------------------
-# Espelha speckit-clarify/SKILL.md: passo 5 (formato das perguntas), a regra de
-# comportamento da frase seca e o último item do Completion Report.
+# Uma verdade só: a sentinela de estado do SENTINEL_PROMPT. Até 2026-07-21 havia
+# duas — a sentinela e uma heurística de prosa bilíngue com quatro regexes, seis
+# marcadores de pergunta em duas línguas e duas flexões, e sete comentários
+# datados somando mais de US$ 20 em rodadas boas descartadas por variação de
+# prosa. Ela morreu aqui, e é isto que o S-4 prometia:
 #
-# A ORDEM IMPORTA. O turno seco também é um Completion Report (traz "Suggested
-# next command"), então loop-seco é testado primeiro. E, entre report e
-# pergunta, report vem antes: classificar um report como pergunta injetaria
-# `yes` numa rodada já encerrada; o inverso apenas gasta uma rodada a mais.
-# A skill fala a língua do repo alvo: num projeto com CLAUDE.md em português ela
-# traduz os próprios marcadores. Por isso cada sinal tem as duas formas — e os
-# marcadores de pergunta param no `:`, sem o `**` de fechamento, porque em
-# português o negrito envolve o rótulo inteiro (`**Recomendado: Opção B**`).
-# E não basta a língua: o português flexiona. A skill concorda o adjetivo com o
-# substantivo que vem depois — "Opção" é feminino, e ela escreve
-# `**Recomendada:** Opção A`. Em 2026-07-21 isso custou uma rodada inteira
-# (US$ 1,58) classificada como `indeterminada` com a pergunta na tela. Por isso
-# cada marcador de pergunta tem as duas flexões, e não só as duas línguas.
-# As frases de convergência ficam propositalmente longas: um falso positivo aqui
-# encerra o loop achando que convergiu, que é a única falha silenciosa possível.
-# S-4 — HEURÍSTICA CONGELADA. Depois que o resumo mostrar `sentinela em M/M
-# turnos` em 5 execuções reais seguidas, NENHUMA alternância nova entra aqui.
-# Falha de classificação passa a ser bug do contrato de saída, e o remédio é o
-# SENTINEL_PROMPT — não uma sétima captura de prosa. É a regra que impede este
-# arquivo de acumular outros sete comentários datados de US$.
-SIG_DRY_RE='No critical ambiguities detected|Nenhuma ambiguidade crítica detectada'
-# O fecho por frase fixa continua SEPARADO do SIG_NEXT_RE, e sem âncora: esta
-# frase aparece no meio do parágrafo do report, enquanto a do SIG_NEXT_RE só
-# vale ancorada depois de `#` ou `**`. Fundir os dois devolveria ao sinal o
-# risco de casar prosa que a âncora existe para evitar.
-SIG_COMPLETE_RE='Suggested next command|Próximo comando sugerido'
-# Cinco capturas do mesmo fecho em 2026-07-21, todas em rodadas BOAS que o
-# classificador jogou fora (US$ 8,12 + US$ 8,10 só nas duas últimas):
+#   falha de classificação é bug do CONTRATO, não vaga para uma sétima captura de
+#   prosa. O remédio é o SENTINEL_PROMPT, e a heurística NÃO volta.
 #
-#   Suggested next command: `/speckit-plan`   ← constante, cobre-se por substring
-#   ### Próximo passo
-#   ### Próximo comando
-#   **Próximo comando:** `/speckit-plan`      ← nem título é
+# Casar texto livre de LLM para derivar sinal de controle é o que o P-2 proíbe;
+# a heurística era a exceção tolerada enquanto não havia contrato. Há.
 #
-# A quarta capura matou a hipótese de que "só o título é estável": a skill
-# escreve o fecho como título OU como rótulo em negrito, e escolhe entre
-# comando/passo. O que é estável é o par (marca de destaque no início da linha,
-# palavra da família Próximo/Next). Daí a regex, que cobre as quatro formas e as
-# que faltam do mesmo molde — sem cair na prosa, porque em prosa a frase aparece
-# no MEIO da linha ("evita retrabalho no próximo passo do fluxo"), nunca ancorada
-# depois de `#` ou `**`.
-#
-# Se um dia isto falhar de novo, o remédio não é mais uma alternância: é parar de
-# adivinhar prosa e pedir à skill um marcador estável de fim de rodada.
-SIG_NEXT_RE='^(#{1,4}[[:space:]]+|\*\*)(Próximo|Next)[[:space:]]+(comando|passo|command|step)'
-# Os seis marcadores de pergunta tinham todos a mesma forma — `**`, o adjetivo,
-# `:` — em duas línguas e duas flexões. Uma alternância diz o mesmo e não deixa
-# vaga aberta para uma sétima constante.
-SIG_ASK_RE='\*\*(Recomendad[oa]|Sugerid[oa]|Recommended|Suggested):'
-
-has_re() {  # texto em $1, regex estendida em $2 → 0 se casar
-  printf '%s' "${1:-}" | grep -qE -- "${2:-}"
-}
-
+# Turno sem sentinela não classifica — e não custa a rodada: o ramo indeterminado
+# do run_round sonda com o REPLY_PROBE e só aborta na segunda ausência seguida.
+# As fixtures de prosa continuam no auto-teste, todas esperando `indeterminada`:
+# são o trinco que fica vermelho se alguém tentar trazer a heurística de volta.
 classify() {  # texto do turno em $1 → rótulo em stdout
-  local txt="${1:-}"
-  case "$(read_sentinel "$txt")" in
-    ASKING)       printf 'pergunta-pendente\n'; return 0 ;;
-    COMPLETE)     printf 'rodada-completa\n';   return 0 ;;
-    NO_AMBIGUITY) printf 'loop-seco\n';         return 0 ;;
+  case "$(read_sentinel "${1:-}")" in
+    ASKING)       printf 'pergunta-pendente\n' ;;
+    COMPLETE)     printf 'rodada-completa\n'   ;;
+    NO_AMBIGUITY) printf 'loop-seco\n'         ;;
+    *)            printf 'indeterminada\n'     ;;
   esac
-  # Sem sentinela, decide a heurística de prosa — inalterada, com as duas
-  # línguas e as duas flexões. Ela NÃO sai: o contrato depende de o modelo
-  # obedecer, e uma rodada paga não pode depender só disso.
-  if has_re "$txt" "$SIG_DRY_RE"; then
-    printf 'loop-seco\n'
-  elif has_re "$txt" "$SIG_COMPLETE_RE" || has_re "$txt" "$SIG_NEXT_RE"; then
-    printf 'rodada-completa\n'
-  elif has_re "$txt" "$SIG_ASK_RE"; then
-    printf 'pergunta-pendente\n'
-  else
-    printf 'indeterminada\n'
-  fi
 }
 
 # --- Leitura do rate limit (função pura de texto) ---------------------------
@@ -1523,33 +1470,32 @@ self_test() {
   cp -- "$st_cita" "$st_cita2"
   printf '\n- RF-03 mais um requisito\n' >> "$st_cita2"
 
-  assert_out "pergunta múltipla escolha"        pergunta-pendente classify "$FIX_MC"
-  assert_out "pergunta de resposta curta"       pergunta-pendente classify "$FIX_SHORT"
-  assert_out "Completion Report"                rodada-completa   classify "$FIX_REPORT"
-  assert_out "frase seca tem prioridade sobre o report" loop-seco  classify "$FIX_DRY"
-  assert_out "texto que não casa com nada"      indeterminada     classify "$FIX_NOISE"
-  assert_out "texto vazio"                      indeterminada     classify ""
-  assert_out "'recommend' em prosa não é pergunta" indeterminada  classify "$FIX_PROSE_RECOMMEND"
-  assert_out "só o marcador bold conta"         pergunta-pendente classify '**Recommended:** Option A - x'
-  assert_out "pergunta múltipla escolha em pt"  pergunta-pendente classify "$FIX_MC_PT"
-  assert_out "pergunta curta em pt"             pergunta-pendente classify "$FIX_SHORT_PT"
-  assert_out "Completion Report em pt"          rodada-completa   classify "$FIX_REPORT_PT"
-  assert_out "frase seca em pt"                 loop-seco         classify "$FIX_DRY_PT"
-  assert_out "pergunta em pt no feminino"       pergunta-pendente classify "$FIX_MC_PT_FEM"
-  assert_out "pergunta curta em pt no feminino" pergunta-pendente classify "$FIX_SHORT_PT_FEM"
-  assert_out "report que titula 'Próximo passo'" rodada-completa  classify "$FIX_REPORT_PASSO_PT"
-  assert_out "'próximo passo' em prosa não encerra a rodada" \
-    pergunta-pendente classify "$FIX_MC_PT_COM_PASSO"
-  assert_out "report que titula 'Próximo comando'" rodada-completa \
-    classify "$FIX_REPORT_COMANDO_PT"
-  assert_out "'próximo comando' em prosa não encerra a rodada" \
-    pergunta-pendente classify "$FIX_MC_PT_COM_COMANDO"
-  assert_out "report com fecho em negrito, sem título da família" \
-    rodada-completa classify "$FIX_REPORT_NEGRITO_PT"
-  # Guardas da âncora: a regex tem que exigir o `#`/`**` no INÍCIO da linha.
-  assert_out "'Próximo passo' sem destaque não conta" \
+  # A prosa não classifica mais nada — este bloco é o TRINCO DA PODA. São as
+  # mesmas fixtures capturadas das rodadas reais de 2026-07-21, com o valor
+  # esperado invertido: se alguém reintroduzir uma alternância de prosa, dezesseis
+  # casos ficam vermelhos na hora. Elas não são teste morto e não saem (P-6).
+  assert_out "múltipla escolha não classifica"  indeterminada classify "$FIX_MC"
+  assert_out "resposta curta não classifica"    indeterminada classify "$FIX_SHORT"
+  assert_out "Completion Report não classifica" indeterminada classify "$FIX_REPORT"
+  assert_out "frase seca não classifica"        indeterminada classify "$FIX_DRY"
+  assert_out "texto que não casa com nada"      indeterminada classify "$FIX_NOISE"
+  assert_out "texto vazio"                      indeterminada classify ""
+  assert_out "'recommend' em prosa"             indeterminada classify "$FIX_PROSE_RECOMMEND"
+  assert_out "o marcador bold sozinho"          indeterminada classify '**Recommended:** Option A - x'
+  assert_out "múltipla escolha em pt"           indeterminada classify "$FIX_MC_PT"
+  assert_out "resposta curta em pt"             indeterminada classify "$FIX_SHORT_PT"
+  assert_out "Completion Report em pt"          indeterminada classify "$FIX_REPORT_PT"
+  assert_out "frase seca em pt"                 indeterminada classify "$FIX_DRY_PT"
+  assert_out "pergunta em pt no feminino"       indeterminada classify "$FIX_MC_PT_FEM"
+  assert_out "resposta curta em pt no feminino" indeterminada classify "$FIX_SHORT_PT_FEM"
+  assert_out "report que titula 'Próximo passo'"   indeterminada classify "$FIX_REPORT_PASSO_PT"
+  assert_out "'próximo passo' em prosa"            indeterminada classify "$FIX_MC_PT_COM_PASSO"
+  assert_out "report que titula 'Próximo comando'" indeterminada classify "$FIX_REPORT_COMANDO_PT"
+  assert_out "'próximo comando' em prosa"          indeterminada classify "$FIX_MC_PT_COM_COMANDO"
+  assert_out "report com fecho em negrito"         indeterminada classify "$FIX_REPORT_NEGRITO_PT"
+  assert_out "'Próximo passo' sem destaque" \
     indeterminada classify 'Próximo passo do fluxo é o plano.'
-  assert_out "negrito no meio da linha não conta" \
+  assert_out "negrito no meio da linha" \
     indeterminada classify 'Escrevi **Próximo comando** no rascunho e apaguei.'
 
   assert_out "sentinela ASKING é lida"           'ASKING'       read_sentinel "$FIX_SENT_ASK"
@@ -1564,10 +1510,14 @@ self_test() {
   assert_out "ASKING vira pergunta-pendente"     pergunta-pendente classify "$FIX_SENT_ASK"
   assert_out "COMPLETE vira rodada-completa"     rodada-completa   classify "$FIX_SENT_COMPLETE"
   assert_out "NO_AMBIGUITY vira loop-seco"       loop-seco         classify "$FIX_SENT_DRY"
-  assert_out "a sentinela vence a heurística"    rodada-completa   classify "$FIX_SENT_VS_HEUR"
-  assert_out "sentinela em prosa cai na heurística"     pergunta-pendente classify "$FIX_SENT_PROSA"
-  assert_out "sentinela em crase cai na heurística"     pergunta-pendente classify "$FIX_SENT_CRASE"
-  assert_out "valor desconhecido cai na heurística"     pergunta-pendente classify "$FIX_SENT_INVALIDA"
+  # Estas quatro melhoram de significado com a poda. Antes afirmavam "cai na
+  # heurística"; agora afirmam a propriedade que importa de verdade numa
+  # sentinela citada, cercada ou inválida — ela não classifica coisa nenhuma.
+  assert_out "marcador de pergunta na prosa não interfere no contrato" \
+    rodada-completa   classify "$FIX_SENT_VS_HEUR"
+  assert_out "sentinela em prosa não classifica"   indeterminada classify "$FIX_SENT_PROSA"
+  assert_out "sentinela em crase não classifica"   indeterminada classify "$FIX_SENT_CRASE"
+  assert_out "valor desconhecido não classifica"   indeterminada classify "$FIX_SENT_INVALIDA"
 
   assert_out "sem ausência não há aviso" '' sentinel_note 0
   assert_out "uma ausência é só nota" \
