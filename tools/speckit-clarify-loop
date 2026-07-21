@@ -601,6 +601,26 @@ count_markers() {  # arquivo → nº de ocorrências de [NEEDS CLARIFICATION]
   return 0
 }
 
+# --- Sensores: aritmética e formatação (funções puras) ----------------------
+cost_per_line() {  # custo add del → US$ por linha mexida, ou '-' se nada mudou
+  # Denominador é add+del: reescrever um requisito é trabalho tanto quanto
+  # acrescentar um. Rodada que não mexeu em linha nenhuma não tem custo por
+  # linha — tem custo, e o traço diz isso sem fingir um número.
+  awk -v c="${1:-0}" -v a="${2:-0}" -v d="${3:-0}" \
+    'BEGIN { n = a + d; if (n <= 0) printf "-"; else printf "%.6f", c / n }'
+  return 0
+}
+
+# Uma linha por rodada, chave=valor em ASCII, para que a calibração da Fase 5
+# monte a tabela com um grep nos round-NN.log. NARRADA, nunca ligada: nesta fase
+# nenhum destes números decide parada (R-05, R-25).
+sensor_line() {  # add del marc_antes marc_depois secoes cercas titulos custo → linha
+  printf 'sensores · add=%s del=%s marc=%s→%s secoes=%s cercas=%s titulos=%s custo=%s custo/linha=%s' \
+    "${1:-0}" "${2:-0}" "${3:-0}" "${4:-0}" "${5:-0}" "${6:-0}" "${7:-0}" "${8:-0}" \
+    "$(cost_per_line "${8:-0}" "${1:-0}" "${2:-0}")"
+  return 0
+}
+
 # --- Motor de uma rodada ----------------------------------------------------
 ROUND_OUTCOME=""
 ROUND_YES=0
@@ -1306,6 +1326,16 @@ self_test() {
   assert_out "sem mudança nenhuma seção é tocada" '' touched_sections "$st_old" "$st_old"
   assert_out "marcadores contam por ocorrência, não por linha" '2' count_markers "$st_new"
   assert_out "arquivo sem marcador dá zero"       '0' count_markers "$st_old"
+
+  assert_out "custo por linha divide pelo total mexido" '0.025000' cost_per_line 0.5 12 8
+  assert_out "rodada sem mudança não divide por zero"   '-'        cost_per_line 0.5 0 0
+  assert_out "custo zero continua número"               '0.000000' cost_per_line 0 3 0
+  assert_out "linha de sensores é uma só, em chave=valor" \
+    'sensores · add=12 del=8 marc=4→2 secoes=2 cercas=1 titulos=0 custo=0.5 custo/linha=0.025000' \
+    sensor_line 12 8 4 2 2 1 0 0.5
+  assert_out "rodada estéril mostra o traço no custo/linha" \
+    'sensores · add=0 del=0 marc=0→0 secoes=0 cercas=0 titulos=0 custo=0.1 custo/linha=-' \
+    sensor_line 0 0 0 0 0 0 0 0.1
 
   SECONDS=125
   assert_out "relógio formata mm:ss" '02:05' mon_clock
