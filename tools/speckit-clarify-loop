@@ -65,6 +65,24 @@
 #   O auto-teste fecha com 143 casos, e as 21 fixtures de prosa capturadas das
 #   rodadas de 2026-07-21 continuam lá, todas esperando `indeterminada` — é o
 #   trinco que fica vermelho se alguém trouxer a heurística de volta.
+# Sonda e aborto exercitados em 2026-07-21, com o SENTINEL_PROMPT neutralizado
+# num experimento local não commitado — é o único jeito de forçar o ramo, porque
+# em 4 execuções reais o modelo emitiu a sentinela em todo turno:
+#   --dry-run em zion-test-build-prd → sentinela em 0/2 turnos, US$ 0,79, rc=1,
+#   log em /tmp/speckit-clarify-loop/20260721-110903. Turno 1 caiu em `sonda` e
+#   enviou o REPLY_PROBE; turno 2 caiu em `aborta`, com `2 turnos seguidos sem
+#   sentinela na rodada 1` no resumo. O spec ficou intocado (188 → 188) e o
+#   `reverter:`/`revisar:` fecharam também o caminho de ABORTO, que o dry-run
+#   limpo não cobre. O `allowed_warning` chegou no meio e não abortou nada.
+#   O que o experimento NÃO prova, e é o ponto: o modelo tinha pergunta pendente
+#   de verdade, então respondeu à sonda com a opção recomendada — efeito
+#   idêntico ao do `yes` seco. A propriedade que separa os dois (não poder ser
+#   lido como aprovação quando NÃO houve pergunta) segue sem execução real, e a
+#   recuperação da sentinela era intestável aqui, já que o contrato tinha sido
+#   removido do system prompt de propósito.
+#   Corrobora a nota do run_round sobre o --dry-run: sem Edit/Write a skill
+#   tentou gravar o spec por `python3` dentro de Bash, e só não gravou porque o
+#   --allowedTools não a autoriza. O contorno é real e a negação é a rede.
 # Reinstalar após editar:  install -m 755 tools/speckit-clarify-loop ~/.local/bin/
 set -u
 

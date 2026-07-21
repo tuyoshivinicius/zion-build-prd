@@ -309,12 +309,21 @@ perguntava se o fallback era permanente por desenho.
   `sentinela em 1/1 turnos`, `188 → 188 linhas (delta +0)`, US$ 0,58, e
   `git status --porcelain` vazio no repo alvo. Cobriu **dois** dos quatro itens
   acima: o `spec_mudou` pelo caminho comum e o `revisar:` como última linha.
-- ⬜ **O caminho da sonda continua sem execução real.** O modelo emitiu a
-  sentinela, então `indeterminada` nunca disparou: nem o `REPLY_PROBE` nem o
-  aborto na 2ª ausência foram exercitados fora do auto-teste. Isto não se
-  encomenda — depende de uma rodada em que o contrato falhe. É o **risco residual
-  desta entrega**, e é exatamente o que a rede existe para tornar barato quando
-  acontecer.
+- ✅ **O caminho da sonda, exercitado por experimento forçado.** Como o modelo
+  emite a sentinela em toda execução real (4/4), o ramo foi forçado neutralizando
+  o `SENTINEL_PROMPT` numa edição local não commitada. Resultado: `sentinela em
+  0/2 turnos`, US$ 0,79, `rc=1`, spec intocado. Turno 1 caiu em `sonda` e enviou
+  o `REPLY_PROBE`; turno 2 caiu em `aborta` com `2 turnos seguidos sem sentinela
+  na rodada 1`. Cobriu também o `revisar:` no caminho de **aborto**, que o
+  `--dry-run` limpo não alcança.
+- ⚠️ **As duas propriedades que o `R-C` reivindica para o `REPLY_PROBE` seguem
+  sem prova.** Nessa execução o modelo tinha pergunta pendente de verdade e
+  respondeu à sonda com a opção recomendada — **efeito idêntico ao do `yes`
+  seco**. O que separa os dois é o caso em que **não** houve pergunta, e esse não
+  foi exercitado. A segunda propriedade ("recupera a sentinela") era intestável
+  no experimento, já que o contrato tinha sido removido do system prompt.
+  O que está provado é o **controle de fluxo do harness**; o que falta é a
+  **obediência do modelo ao texto da sonda**. É o risco residual da entrega.
 - ✅ Nota datada no cabeçalho, no padrão do arquivo, registrando repo, custo e
   `sentinela: N/M` — e também o que a execução **não** provou.
 - ✅ Spec de evolução corrigida conforme a tabela acima.
