@@ -95,6 +95,46 @@ need_deps() {
   [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
 }
 
+# --- Contrato de saída ------------------------------------------------------
+# Sete comentários datados neste arquivo, todos da mesma classe de bug: a skill
+# variou a prosa do fecho e o classificador jogou fora uma rodada boa e paga
+# (mais de US$ 20 só nas capturas de 2026-07-21). Adivinhar prosa não escala. A
+# sentinela é o contrário: uma linha que o script PEDE, que não depende de
+# língua, de flexão nem do template do momento.
+#
+# Vai INLINE no --append-system-prompt, e não no --append-system-prompt-file: o
+# texto fica ao lado do classify que o lê, e a rodada não ganha um arquivo
+# temporário no $WORK como segundo ponto de falha no arranque. E é --append, e
+# não --system-prompt: o prompt de sistema da skill continua inteiro.
+#
+# A linha aparece na narração, e fica. Filtrá-la exigiria um segundo caminho de
+# renderização no ramo `text` do render_line; custa uma linha por turno e é a
+# prova visual de que o contrato está de pé.
+SENTINEL_PROMPT="$(cat <<'EOF'
+Ao final de CADA turno seu, emita como ÚLTIMA LINHA da mensagem, sozinha:
+
+CLARIFY_STATE: ASKING
+
+Use exatamente um destes três valores:
+- ASKING       você apresentou uma pergunta de clarificação e aguarda resposta
+- COMPLETE     você encerrou a rodada e apresentou o relatório final
+- NO_AMBIGUITY você não encontrou ambiguidade crítica que justifique perguntar
+
+Essa linha é lida por um script. Não a traduza, não a formate, não a envolva em
+crase, negrito ou bloco de código, e não escreva nada depois dela.
+EOF
+)"
+
+read_sentinel() {  # texto → ASKING|COMPLETE|NO_AMBIGUITY, ou vazio se ausente
+  # Âncora `^…$`: sentinela citada em prosa ou embrulhada em crase não conta —
+  # e o modelo cita a própria sentinela ao confirmar que entendeu a instrução.
+  # `tail -n 1`: se o turno emitir duas, a última vence, que é a que fecha.
+  printf '%s' "${1:-}" \
+    | grep -oE '^CLARIFY_STATE: (ASKING|COMPLETE|NO_AMBIGUITY)$' \
+    | tail -n 1 | sed 's/^CLARIFY_STATE: //'
+  return 0
+}
+
 # --- Classificação do turno (função pura de texto) --------------------------
 # Espelha speckit-clarify/SKILL.md: passo 5 (formato das perguntas), a regra de
 # comportamento da frase seca e o último item do Completion Report.
@@ -114,6 +154,11 @@ need_deps() {
 # cada marcador de pergunta tem as duas flexões, e não só as duas línguas.
 # As frases de convergência ficam propositalmente longas: um falso positivo aqui
 # encerra o loop achando que convergiu, que é a única falha silenciosa possível.
+# S-4 — HEURÍSTICA CONGELADA. Depois que o resumo mostrar `sentinela em M/M
+# turnos` em 5 execuções reais seguidas, NENHUMA alternância nova entra aqui.
+# Falha de classificação passa a ser bug do contrato de saída, e o remédio é o
+# SENTINEL_PROMPT — não uma sétima captura de prosa. É a regra que impede este
+# arquivo de acumular outros sete comentários datados de US$.
 SIG_DRY_RE='No critical ambiguities detected|Nenhuma ambiguidade crítica detectada'
 # O fecho por frase fixa continua SEPARADO do SIG_NEXT_RE, e sem âncora: esta
 # frase aparece no meio do parágrafo do report, enquanto a do SIG_NEXT_RE só
@@ -150,6 +195,14 @@ has_re() {  # texto em $1, regex estendida em $2 → 0 se casar
 
 classify() {  # texto do turno em $1 → rótulo em stdout
   local txt="${1:-}"
+  case "$(read_sentinel "$txt")" in
+    ASKING)       printf 'pergunta-pendente\n'; return 0 ;;
+    COMPLETE)     printf 'rodada-completa\n';   return 0 ;;
+    NO_AMBIGUITY) printf 'loop-seco\n';         return 0 ;;
+  esac
+  # Sem sentinela, decide a heurística de prosa — inalterada, com as duas
+  # línguas e as duas flexões. Ela NÃO sai: o contrato depende de o modelo
+  # obedecer, e uma rodada paga não pode depender só disso.
   if has_re "$txt" "$SIG_DRY_RE"; then
     printf 'loop-seco\n'
   elif has_re "$txt" "$SIG_COMPLETE_RE" || has_re "$txt" "$SIG_NEXT_RE"; then
@@ -672,6 +725,7 @@ run_round() {  # número da rodada em $1
     --verbose
     --permission-mode acceptEdits
     --allowedTools 'Bash(.specify/scripts/bash/check-prerequisites.sh*)'
+    --append-system-prompt "$SENTINEL_PROMPT"
   )
   if [ "$DRY_RUN" -eq 1 ]; then
     # Word-splitting INTENCIONAL: $MUTANTES é a fonte única da família que
@@ -1101,6 +1155,73 @@ that is a planning-level concern rather than a spec ambiguity.
 EOF
 )"
 
+# --- Fixtures da sentinela --------------------------------------------------
+FIX_SENT_ASK="$(cat <<'EOF'
+**Recomendada:** Opção A — texto da pergunta.
+
+CLARIFY_STATE: ASKING
+EOF
+)"
+
+FIX_SENT_COMPLETE="$(cat <<'EOF'
+## Relatório
+
+Nada Deferred nem Outstanding.
+
+CLARIFY_STATE: COMPLETE
+EOF
+)"
+
+FIX_SENT_DRY="$(cat <<'EOF'
+Li o spec inteiro e não há ambiguidade que justifique perguntar.
+
+CLARIFY_STATE: NO_AMBIGUITY
+EOF
+)"
+
+# A sentinela VENCE a heurística: este turno traz o marcador de pergunta e a
+# sentinela de fim. Se um dia divergirem, quem manda é o contrato — a heurística
+# só existe para o caso em que o contrato não veio.
+FIX_SENT_VS_HEUR="$(cat <<'EOF'
+**Recomendada:** Opção A — texto da pergunta.
+
+CLARIFY_STATE: COMPLETE
+EOF
+)"
+
+# Os três reversos, que é onde a âncora `^…$` ganha o seu sustento: sentinela
+# citada em prosa, embrulhada em crase, e com valor fora dos três aceitos. Nos
+# três o turno é PERGUNTA, e ler qualquer um deles como fim descartaria a rodada.
+FIX_SENT_PROSA="$(cat <<'EOF'
+Vou fechar cada turno com CLARIFY_STATE: COMPLETE na última linha, como pedido.
+
+**Recomendada:** Opção A — texto da pergunta.
+EOF
+)"
+
+FIX_SENT_CRASE="$(cat <<'EOF'
+**Recomendada:** Opção A — texto da pergunta.
+
+`CLARIFY_STATE: COMPLETE`
+EOF
+)"
+
+FIX_SENT_INVALIDA="$(cat <<'EOF'
+**Recomendada:** Opção A — texto da pergunta.
+
+CLARIFY_STATE: TALVEZ
+EOF
+)"
+
+FIX_SENT_DUAS="$(cat <<'EOF'
+CLARIFY_STATE: ASKING
+
+Corrigindo: era o fim da rodada, não uma pergunta.
+
+CLARIFY_STATE: COMPLETE
+EOF
+)"
+
 # --- Fixtures de negação de permissão ---------------------------------------
 # A de Bash é a captura literal da rodada de 2026-07-21 02:30 em
 # zion-mermaid-editor-app: um `grep` de listar cabeçalhos que o Claude Code
@@ -1219,6 +1340,23 @@ self_test() {
     indeterminada classify 'Próximo passo do fluxo é o plano.'
   assert_out "negrito no meio da linha não conta" \
     indeterminada classify 'Escrevi **Próximo comando** no rascunho e apaguei.'
+
+  assert_out "sentinela ASKING é lida"           'ASKING'       read_sentinel "$FIX_SENT_ASK"
+  assert_out "sentinela COMPLETE é lida"         'COMPLETE'     read_sentinel "$FIX_SENT_COMPLETE"
+  assert_out "sentinela NO_AMBIGUITY é lida"     'NO_AMBIGUITY' read_sentinel "$FIX_SENT_DRY"
+  assert_out "sentinela em prosa não conta"      ''             read_sentinel "$FIX_SENT_PROSA"
+  assert_out "sentinela em crase não conta"      ''             read_sentinel "$FIX_SENT_CRASE"
+  assert_out "valor desconhecido não é sentinela" ''            read_sentinel "$FIX_SENT_INVALIDA"
+  assert_out "turno sem sentinela devolve vazio" ''             read_sentinel "$FIX_MC"
+  assert_out "duas sentinelas: a última vence"   'COMPLETE'     read_sentinel "$FIX_SENT_DUAS"
+
+  assert_out "ASKING vira pergunta-pendente"     pergunta-pendente classify "$FIX_SENT_ASK"
+  assert_out "COMPLETE vira rodada-completa"     rodada-completa   classify "$FIX_SENT_COMPLETE"
+  assert_out "NO_AMBIGUITY vira loop-seco"       loop-seco         classify "$FIX_SENT_DRY"
+  assert_out "a sentinela vence a heurística"    rodada-completa   classify "$FIX_SENT_VS_HEUR"
+  assert_out "sentinela em prosa cai na heurística"     pergunta-pendente classify "$FIX_SENT_PROSA"
+  assert_out "sentinela em crase cai na heurística"     pergunta-pendente classify "$FIX_SENT_CRASE"
+  assert_out "valor desconhecido cai na heurística"     pergunta-pendente classify "$FIX_SENT_INVALIDA"
 
   assert_out "tool_use Bash"                tool      event_kind "$FX_TOOL_BASH"
   assert_out "tool_use Read"                tool      event_kind "$FX_TOOL_READ"
