@@ -1017,36 +1017,6 @@ FX_BAD='{not json'
 FX_USER_TR='{"type":"user","message":{"content":[{"type":"tool_result","content":"1081 linhas"}]}}'
 
 ST_FAIL=0
-assert_classify() {  # descrição  esperado  texto
-  local got; got="$(classify "$3")"
-  if [ "$got" = "$2" ]; then
-    printf 'ok: %s\n' "$1"
-  else
-    printf 'FALHOU: %s (esperado %s, veio %s)\n' "$1" "$2" "$got"
-    ST_FAIL=1
-  fi
-}
-
-assert_kind() {  # descrição  esperado  linha-jsonl
-  local got; got="$(event_kind "$3")"
-  if [ "$got" = "$2" ]; then
-    printf 'ok: %s\n' "$1"
-  else
-    printf 'FALHOU: %s (esperado %s, veio %s)\n' "$1" "$2" "$got"
-    ST_FAIL=1
-  fi
-}
-
-assert_dedup() {  # descrição  esperado  prev  kind
-  local got; got="$(dedup_kind "$3" "$4")"
-  if [ "$got" = "$2" ]; then
-    printf 'ok: %s\n' "$1"
-  else
-    printf 'FALHOU: %s (esperado %s, veio %s)\n' "$1" "$2" "$got"
-    ST_FAIL=1
-  fi
-}
-
 assert_out() {  # descrição  esperado  comando…
   local desc="$1" want="$2"; shift 2
   local got; got="$("$@")"
@@ -1061,6 +1031,10 @@ assert_out() {  # descrição  esperado  comando…
 # Adaptador de teste: mon_fold é filtro de stdin, e assert_out só sabe chamar
 # comando com argumentos.
 mon_fold_str() { printf '%s\n' "$2" | mon_fold "$1"; }
+
+# Adaptador de teste, irmão do mon_fold_str: ratelimit_fatal responde por status
+# de saída, e assert_out só sabe comparar stdout.
+fatal_str() { if ratelimit_fatal "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
 
 # Irmão do assert_out para as funções COM estado. A diferença é só a captura:
 # `$(...)` roda em subshell, e a atribuição de LAST_KIND dentro de emit_event
@@ -1081,86 +1055,66 @@ assert_emit() {  # descrição  esperado  comando…
   fi
 }
 
-assert_fatal() {  # descrição  esperado(sim|nao)  status
-  local got; if ratelimit_fatal "$3"; then got=sim; else got=nao; fi
-  if [ "$got" = "$2" ]; then
-    printf 'ok: %s\n' "$1"
-  else
-    printf 'FALHOU: %s (esperado %s, veio %s)\n' "$1" "$2" "$got"
-    ST_FAIL=1
-  fi
-}
-
-assert_render() {  # descrição  esperado  kind  linha-jsonl
-  local got; got="$(render_line plain 80 '01:23' "$3" "$4")"
-  if [ "$got" = "$2" ]; then
-    printf 'ok: %s\n' "$1"
-  else
-    printf 'FALHOU: %s\n  esperado: [%s]\n  veio:     [%s]\n' "$1" "$2" "$got"
-    ST_FAIL=1
-  fi
-}
-
 self_test() {
-  assert_classify "pergunta múltipla escolha"        pergunta-pendente "$FIX_MC"
-  assert_classify "pergunta de resposta curta"       pergunta-pendente "$FIX_SHORT"
-  assert_classify "Completion Report"                rodada-completa   "$FIX_REPORT"
-  assert_classify "frase seca tem prioridade sobre o report" loop-seco "$FIX_DRY"
-  assert_classify "texto que não casa com nada"      indeterminada     "$FIX_NOISE"
-  assert_classify "texto vazio"                      indeterminada     ""
-  assert_classify "'recommend' em prosa não é pergunta" indeterminada   "$FIX_PROSE_RECOMMEND"
-  assert_classify "só o marcador bold conta"         pergunta-pendente '**Recommended:** Option A - x'
-  assert_classify "pergunta múltipla escolha em pt"  pergunta-pendente "$FIX_MC_PT"
-  assert_classify "pergunta curta em pt"             pergunta-pendente "$FIX_SHORT_PT"
-  assert_classify "Completion Report em pt"          rodada-completa   "$FIX_REPORT_PT"
-  assert_classify "frase seca em pt"                 loop-seco         "$FIX_DRY_PT"
-  assert_classify "pergunta em pt no feminino"       pergunta-pendente "$FIX_MC_PT_FEM"
-  assert_classify "pergunta curta em pt no feminino" pergunta-pendente "$FIX_SHORT_PT_FEM"
-  assert_classify "report que titula 'Próximo passo'" rodada-completa  "$FIX_REPORT_PASSO_PT"
-  assert_classify "'próximo passo' em prosa não encerra a rodada" \
-    pergunta-pendente "$FIX_MC_PT_COM_PASSO"
-  assert_classify "report que titula 'Próximo comando'" rodada-completa \
-    "$FIX_REPORT_COMANDO_PT"
-  assert_classify "'próximo comando' em prosa não encerra a rodada" \
-    pergunta-pendente "$FIX_MC_PT_COM_COMANDO"
-  assert_classify "report com fecho em negrito, sem título da família" \
-    rodada-completa "$FIX_REPORT_NEGRITO_PT"
+  assert_out "pergunta múltipla escolha"        pergunta-pendente classify "$FIX_MC"
+  assert_out "pergunta de resposta curta"       pergunta-pendente classify "$FIX_SHORT"
+  assert_out "Completion Report"                rodada-completa   classify "$FIX_REPORT"
+  assert_out "frase seca tem prioridade sobre o report" loop-seco  classify "$FIX_DRY"
+  assert_out "texto que não casa com nada"      indeterminada     classify "$FIX_NOISE"
+  assert_out "texto vazio"                      indeterminada     classify ""
+  assert_out "'recommend' em prosa não é pergunta" indeterminada  classify "$FIX_PROSE_RECOMMEND"
+  assert_out "só o marcador bold conta"         pergunta-pendente classify '**Recommended:** Option A - x'
+  assert_out "pergunta múltipla escolha em pt"  pergunta-pendente classify "$FIX_MC_PT"
+  assert_out "pergunta curta em pt"             pergunta-pendente classify "$FIX_SHORT_PT"
+  assert_out "Completion Report em pt"          rodada-completa   classify "$FIX_REPORT_PT"
+  assert_out "frase seca em pt"                 loop-seco         classify "$FIX_DRY_PT"
+  assert_out "pergunta em pt no feminino"       pergunta-pendente classify "$FIX_MC_PT_FEM"
+  assert_out "pergunta curta em pt no feminino" pergunta-pendente classify "$FIX_SHORT_PT_FEM"
+  assert_out "report que titula 'Próximo passo'" rodada-completa  classify "$FIX_REPORT_PASSO_PT"
+  assert_out "'próximo passo' em prosa não encerra a rodada" \
+    pergunta-pendente classify "$FIX_MC_PT_COM_PASSO"
+  assert_out "report que titula 'Próximo comando'" rodada-completa \
+    classify "$FIX_REPORT_COMANDO_PT"
+  assert_out "'próximo comando' em prosa não encerra a rodada" \
+    pergunta-pendente classify "$FIX_MC_PT_COM_COMANDO"
+  assert_out "report com fecho em negrito, sem título da família" \
+    rodada-completa classify "$FIX_REPORT_NEGRITO_PT"
   # Guardas da âncora: a regex tem que exigir o `#`/`**` no INÍCIO da linha.
-  assert_classify "'Próximo passo' sem destaque não conta" \
-    indeterminada 'Próximo passo do fluxo é o plano.'
-  assert_classify "negrito no meio da linha não conta" \
-    indeterminada 'Escrevi **Próximo comando** no rascunho e apaguei.'
+  assert_out "'Próximo passo' sem destaque não conta" \
+    indeterminada classify 'Próximo passo do fluxo é o plano.'
+  assert_out "negrito no meio da linha não conta" \
+    indeterminada classify 'Escrevi **Próximo comando** no rascunho e apaguei.'
 
-  assert_kind "tool_use Bash"                tool      "$FX_TOOL_BASH"
-  assert_kind "tool_use Read"                tool      "$FX_TOOL_READ"
-  assert_kind "tool_use desconhecida"        tool      "$FX_TOOL_OTHER"
-  assert_kind "thinking"                     thinking  "$FX_THINK"
-  assert_kind "texto do assistente"          text      "$FX_TEXT"
-  assert_kind "linha em lote: texto vence"   text      "$FX_MIXED"
-  assert_kind "system/init é ruído"          nothing   "$FX_SYS_INIT"
-  assert_kind "system/thinking_tokens é ruído" nothing "$FX_SYS_TOK"
-  assert_kind "tool_result do usuário é ruído" nothing "$FX_USER_TR"
-  assert_kind "rate limit allowed é ruído"   nothing   "$FX_RL_OK"
-  assert_kind "rate limit não-allowed"       ratelimit "$FX_RL_BAD"
+  assert_out "tool_use Bash"                tool      event_kind "$FX_TOOL_BASH"
+  assert_out "tool_use Read"                tool      event_kind "$FX_TOOL_READ"
+  assert_out "tool_use desconhecida"        tool      event_kind "$FX_TOOL_OTHER"
+  assert_out "thinking"                     thinking  event_kind "$FX_THINK"
+  assert_out "texto do assistente"          text      event_kind "$FX_TEXT"
+  assert_out "linha em lote: texto vence"   text      event_kind "$FX_MIXED"
+  assert_out "system/init é ruído"          nothing   event_kind "$FX_SYS_INIT"
+  assert_out "system/thinking_tokens é ruído" nothing event_kind "$FX_SYS_TOK"
+  assert_out "tool_result do usuário é ruído" nothing event_kind "$FX_USER_TR"
+  assert_out "rate limit allowed é ruído"   nothing   event_kind "$FX_RL_OK"
+  assert_out "rate limit não-allowed"       ratelimit event_kind "$FX_RL_BAD"
   # O aviso NÃO é ruído: deixou de abortar, mas continua na tela, porque 90% da
   # janela com excedente indisponível é a informação que decide se vale começar
   # outra rodada agora ou esperar o reset.
-  assert_kind "rate limit allowed_warning é narrado" ratelimit "$FX_RL_WARN"
+  assert_out "rate limit allowed_warning é narrado" ratelimit event_kind "$FX_RL_WARN"
 
-  assert_fatal "allowed não aborta"                 nao allowed
-  assert_fatal "allowed_warning não aborta"         nao allowed_warning
-  assert_fatal "qualquer allowed_* não aborta"      nao allowed_seja_o_que_for
-  assert_fatal "rejected aborta"                    sim rejected
-  assert_fatal "status desconhecido aborta"         sim '?'
-  assert_fatal "status vazio aborta"                sim ''
-  assert_kind "result"                       result    "$FX_RESULT"
-  assert_kind "linha malformada não quebra"  nothing   "$FX_BAD"
-  assert_kind "linha vazia não quebra"       nothing   ""
+  assert_out "allowed não aborta"                 nao fatal_str allowed
+  assert_out "allowed_warning não aborta"         nao fatal_str allowed_warning
+  assert_out "qualquer allowed_* não aborta"      nao fatal_str allowed_seja_o_que_for
+  assert_out "rejected aborta"                    sim fatal_str rejected
+  assert_out "status desconhecido aborta"         sim fatal_str '?'
+  assert_out "status vazio aborta"                sim fatal_str ''
+  assert_out "result"                       result    event_kind "$FX_RESULT"
+  assert_out "linha malformada não quebra"  nothing   event_kind "$FX_BAD"
+  assert_out "linha vazia não quebra"       nothing   event_kind ""
 
-  assert_dedup "thinking após thinking suprime"  nothing  thinking thinking
-  assert_dedup "thinking após tool passa"        thinking tool     thinking
-  assert_dedup "texto após texto passa"          text     text     text
-  assert_dedup "sem anterior passa"              tool     ""       tool
+  assert_out "thinking após thinking suprime"  nothing  dedup_kind thinking thinking
+  assert_out "thinking após tool passa"        thinking dedup_kind tool     thinking
+  assert_out "texto após texto passa"          text     dedup_kind text     text
+  assert_out "sem anterior passa"              tool     dedup_kind ""       tool
 
   assert_out "marcador plain preenche 8 colunas" '[tool]  ' mon_marker plain tool
   assert_out "marcador tty é um símbolo"         '⚙'        mon_marker tty   tool
@@ -1194,27 +1148,27 @@ self_test() {
   # linha e esta expectativa seria impossível de escrever à mão.
   assert_out "linha vazia continua vazia" '' mon_fold_str 40 ''
 
-  assert_render "tool_use Bash mostra o comando" \
+  assert_out "tool_use Bash mostra o comando" \
     '  01:23  [tool]    Bash     check-prerequisites.sh --json --paths-only' \
-    tool "$FX_TOOL_BASH"
-  assert_render "tool_use Read mostra só o basename" \
+    render_line plain 80 '01:23' tool "$FX_TOOL_BASH"
+  assert_out "tool_use Read mostra só o basename" \
     '  01:23  [tool]    Read     spec.md' \
-    tool "$FX_TOOL_READ"
-  assert_render "ferramenta desconhecida não quebra" \
+    render_line plain 80 '01:23' tool "$FX_TOOL_READ"
+  assert_out "ferramenta desconhecida não quebra" \
     '  01:23  [tool]    WebSearch query=spec kit clarify' \
-    tool "$FX_TOOL_OTHER"
-  assert_render "thinking vira marcador sem conteúdo" \
+    render_line plain 80 '01:23' tool "$FX_TOOL_OTHER"
+  assert_out "thinking vira marcador sem conteúdo" \
     '  01:23  [...]     pensando…' \
-    thinking "$FX_THINK"
-  assert_render "texto imprime cabeçalho e preserva a tabela" \
+    render_line plain 80 '01:23' thinking "$FX_THINK"
+  assert_out "texto imprime cabeçalho e preserva a tabela" \
     "$(printf '  01:23  [claude]  claude\n         **Recomendado: Opção B**\n\n         | Opção | Descrição |\n         |---|---|\n         | A | Manter o silêncio |')" \
-    text "$FX_TEXT"
-  assert_render "rate limit não-allowed avisa" \
+    render_line plain 80 '01:23' text "$FX_TEXT"
+  assert_out "rate limit não-allowed avisa" \
     '  01:23  [!]       rate limit: rejected' \
-    ratelimit "$FX_RL_BAD"
-  assert_render "result NÃO reimprime a prosa" '' result "$FX_RESULT"
-  assert_render "kind nothing não imprime nada"  '' nothing "$FX_SYS_INIT"
-  assert_render "linha malformada não imprime nada" '' tool "$FX_BAD"
+    render_line plain 80 '01:23' ratelimit "$FX_RL_BAD"
+  assert_out "result NÃO reimprime a prosa" '' render_line plain 80 '01:23' result "$FX_RESULT"
+  assert_out "kind nothing não imprime nada"  '' render_line plain 80 '01:23' nothing "$FX_SYS_INIT"
+  assert_out "linha malformada não imprime nada" '' render_line plain 80 '01:23' tool "$FX_BAD"
 
   assert_out "custo da rodada é o último, não a soma" '0.41' pick_cost "$FX_RESULT" '9.99'
   assert_out "linha sem custo preserva o anterior"    '2.50' pick_cost "$FX_DENY_BASH" '2.50'
