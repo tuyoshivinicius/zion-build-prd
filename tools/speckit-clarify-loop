@@ -149,6 +149,25 @@ classify() {  # texto do turno em $1 → rótulo em stdout
 # atualizar o spec, e é essa sequência que a guarda protege.
 MUTANTES='Edit Write MultiEdit NotebookEdit'
 
+# O `total_cost_usd` do evento `result` é ACUMULADO da sessão, não a parcela
+# daquele turno — numa rodada com 3 `yes` os quatro results trouxeram
+# 2,27 · 3,77 · 4,59 · 5,10, sempre crescendo, enquanto `usage.output_tokens`
+# ia de 36880 a 3195. Somar os quatro dava US$ 15,74 para uma rodada que custou
+# US$ 5,10: o triplo. Por isso o custo da rodada é o ÚLTIMO valor, não a soma.
+# Entre rodadas a soma continua correta — cada rodada é um processo e uma sessão
+# nova, por invariante. (A documentação oficial não declara essa semântica; ela
+# vem da evidência do stream, e o campo tem histórico de valores inflados no
+# issue anthropics/claude-code#53371.)
+pick_cost() {  # linha-jsonl  custo-atual → custo da rodada
+  local c
+  c="$(printf '%s' "${1:-}" | jq -r '.total_cost_usd // empty' 2>/dev/null)"
+  case "$c" in
+    ''|null) printf '%s' "${2:-0}" ;;
+    *)       printf '%s' "$c" ;;
+  esac
+  return 0
+}
+
 denied_tools() {  # linha-jsonl → nomes das ferramentas negadas, separados por espaço
   printf '%s' "${1:-}" \
     | jq -r '[(.permission_denials // [])[] | .tool_name // "?"] | join(" ")' 2>/dev/null
@@ -507,7 +526,7 @@ run_round() {  # número da rodada em $1
 
   send_user '/speckit-clarify'
 
-  local line typ status iserr denied mutantes cost txt
+  local line typ status iserr denied mutantes txt
   while IFS= read -r line; do
     emit_event "$line"
     typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)" || continue
@@ -527,8 +546,7 @@ run_round() {  # número da rodada em $1
     iserr="$(printf '%s' "$line" | jq -r '.is_error // false')"
     denied="$(denied_tools "$line")"
     mutantes="$(mutating_only "$denied")"
-    cost="$(printf '%s' "$line" | jq -r '.total_cost_usd // 0')"
-    ROUND_COST="$(add_cost "$ROUND_COST" "$cost")"
+    ROUND_COST="$(pick_cost "$line" "$ROUND_COST")"
 
     if [ "$iserr" = "true" ]; then
       ROUND_OUTCOME=aborto; ROUND_ABORT="result com is_error=true (ver $log)"; break
@@ -1010,6 +1028,10 @@ self_test() {
   assert_render "kind nothing não imprime nada"  '' nothing "$FX_SYS_INIT"
   assert_render "linha malformada não imprime nada" '' tool "$FX_BAD"
 
+  assert_out "custo da rodada é o último, não a soma" '0.41' pick_cost "$FX_RESULT" '9.99'
+  assert_out "linha sem custo preserva o anterior"    '2.50' pick_cost "$FX_DENY_BASH" '2.50'
+  assert_out "linha malformada preserva o anterior"   '2.50' pick_cost "$FX_BAD" '2.50'
+
   assert_out "negação de Bash é lida"          'Bash'      denied_tools "$FX_DENY_BASH"
   assert_out "negação de Write é lida"         'Write'     denied_tools "$FX_DENY_WRITE"
   assert_out "negações múltiplas em ordem"     'Bash Edit' denied_tools "$FX_DENY_MIX"
@@ -1059,7 +1081,7 @@ self_test() {
   QUIET=0
 
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (75 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (78 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
