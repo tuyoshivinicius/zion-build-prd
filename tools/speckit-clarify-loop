@@ -43,7 +43,7 @@ EOF
 
 need_deps() {
   local missing="" c
-  for c in claude jq git mkfifo awk tail; do
+  for c in claude jq git mkfifo awk tail timeout; do
     command -v "$c" >/dev/null 2>&1 || missing="$missing $c"
   done
   [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
@@ -176,15 +176,15 @@ run_round() {  # número da rodada em $1
     args+=( --disallowedTools Edit Write MultiEdit NotebookEdit )
   fi
 
-  ( cd "$REPO" && exec claude "${args[@]}" ) < "$in" > "$log" 2> "$err" &
+  # A salvaguarda de tempo é o próprio `timeout` embrulhando o claude, e não um
+  # watchdog em subshell: `kill` no subshell não mata o `sleep` lá dentro, que
+  # sobrevive órfão segurando o stdout herdado — e trava por 15 min qualquer
+  # `speckit-clarify-loop | tee`. Com `timeout` não há filho para vazar.
+  ( cd "$REPO" && exec timeout -s TERM "$ROUND_TIMEOUT" claude "${args[@]}" ) \
+    < "$in" > "$log" 2> "$err" &
   local cpid=$!
 
   exec 3<> "$in"   # read-write: nunca bloqueia, mesmo se o claude já morreu
-  # `3>&-` nos filhos é obrigatório: todo processo criado depois do `exec 3<>`
-  # herda o fd 3 e, com ele, a ponta de escrita do FIFO. Sem isso o `exec 3>&-`
-  # lá embaixo não fecha nada, o claude nunca recebe EOF e a rodada trava.
-  ( sleep "$ROUND_TIMEOUT"; kill -TERM "$cpid" 2>/dev/null ) 3>&- &
-  local wdog=$!
 
   send_user '/speckit-clarify'
 
@@ -252,7 +252,6 @@ run_round() {  # número da rodada em $1
   done < <(exec 3>&-; tail -n +1 -f --pid="$cpid" --sleep-interval=0.2 "$log")
 
   exec 3>&-              # fecha o stdin do claude → o processo sai → é o /clear
-  kill "$wdog" 2>/dev/null
   wait "$cpid" 2>/dev/null
   rm -f "$in"
 
@@ -261,6 +260,88 @@ run_round() {  # número da rodada em $1
     ROUND_OUTCOME=aborto
     ROUND_ABORT="o processo claude terminou sem emitir turno classificável (ver $err)"
   fi
+}
+
+# --- Driver do loop ---------------------------------------------------------
+main_loop() {
+  local round=0 same=0 prev_hash cur_hash
+  local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
+  local start_lines end_lines delta tag
+
+  start_lines="$(spec_lines)"
+  printf 'speckit-clarify-loop: %s\n  spec: %s (%s linhas)\n' \
+    "$REPO" "$SPEC" "$start_lines"
+  [ "$DRY_RUN" -eq 1 ] && printf '  modo: --dry-run (para na 1ª pergunta, sem Edit/Write)\n'
+
+  while [ "$round" -lt "$MAX_ROUNDS" ]; do
+    round=$((round + 1))
+    tag="$(printf '%02d' "$round")"
+    prev_hash="$(spec_hash)"
+    printf 'rodada %s/%s …\n' "$tag" "$MAX_ROUNDS"
+
+    run_round "$round"
+
+    total_yes=$((total_yes + ROUND_YES))
+    total_cost="$(add_cost "$total_cost" "$ROUND_COST")"
+    yes_log="$yes_log r$tag=$ROUND_YES"
+    cur_hash="$(spec_hash)"
+
+    case "$ROUND_OUTCOME" in
+      loop-seco)
+        stop_reason="convergiu — a skill declarou não haver ambiguidade crítica"; rc=0; break ;;
+      aborto)
+        stop_reason="aborto na rodada $tag — $ROUND_ABORT"; rc=1; break ;;
+      indeterminada)
+        stop_reason="turno indeterminado na rodada $tag (stream: $LOG_DIR/round-$tag.jsonl)"
+        rc=1; break ;;
+    esac
+
+    # O --dry-run vive de uma rodada só: a checagem de hash é o que prova que o
+    # ensaio não escreveu nada. Se escreveu, o modo perdeu a razão de existir.
+    if [ "$DRY_RUN" -eq 1 ]; then
+      if [ "$ROUND_OUTCOME" = "dry-pergunta" ]; then
+        stop_reason="--dry-run: 1 pergunta classificada, nada gravado"
+      else
+        stop_reason="--dry-run: rodada encerrada em $ROUND_OUTCOME sem perguntas, nada gravado"
+      fi
+      rc=0
+      if [ "$cur_hash" != "$prev_hash" ]; then
+        stop_reason="--dry-run ALTEROU o spec (hash mudou) — investigue antes de confiar no modo"
+        rc=1
+      fi
+      break
+    fi
+
+    if [ "$cur_hash" = "$prev_hash" ]; then
+      same=$((same + 1))
+      if [ "$same" -ge 2 ]; then
+        stop_reason="convergiu por estagnação — 2 rodadas seguidas sem alterar o spec"
+        rc=0; break
+      fi
+    else
+      same=0
+    fi
+  done
+
+  if [ -z "$stop_reason" ]; then
+    stop_reason="teto de rodadas atingido ($MAX_ROUNDS) sem convergir"
+    rc=1
+  fi
+
+  end_lines="$(spec_lines)"
+  delta=$((end_lines - start_lines))
+  printf '\n—— resumo ——\n'
+  printf 'repo:     %s\n' "$REPO"
+  printf 'spec:     %s\n' "$SPEC"
+  printf 'rodadas:  %s\n' "$round"
+  printf 'yes:      %s (%s)\n' "$total_yes" "${yes_log# }"
+  printf 'custo:    US$ %s\n' "$total_cost"
+  printf 'spec:     %s → %s linhas (delta %+d)\n' "$start_lines" "$end_lines" "$delta"
+  printf 'streams:  %s/round-*.jsonl\n' "$LOG_DIR"
+  printf 'parada:   %s\n' "$stop_reason"
+  printf '\nreverter: git -C %s checkout -- %s\n' "$REPO" "$SPEC"
+
+  return "$rc"
 }
 
 # --- Auto-teste embutido ---------------------------------------------------
@@ -425,8 +506,4 @@ esac
 need_deps
 
 preflight
-
-# TEMPORÁRIO — substituído pelo driver na Task 5.
-run_round 1
-printf 'rodada 1: outcome=%s yes=%s custo=%s %s\n' \
-  "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST" "$ROUND_ABORT"
+main_loop
