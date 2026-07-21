@@ -49,12 +49,132 @@ need_deps() {
   [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
 }
 
+# --- Classificação do turno (função pura de texto) --------------------------
+# Espelha speckit-clarify/SKILL.md: passo 5 (formato das perguntas), a regra de
+# comportamento da frase seca e o último item do Completion Report.
+#
+# A ORDEM IMPORTA. O turno seco também é um Completion Report (traz "Suggested
+# next command"), então loop-seco é testado primeiro. E, entre report e
+# pergunta, report vem antes: classificar um report como pergunta injetaria
+# `yes` numa rodada já encerrada; o inverso apenas gasta uma rodada a mais.
+SIG_DRY='No critical ambiguities detected'
+SIG_COMPLETE='Suggested next command'
+SIG_MC='**Recommended:**'
+SIG_SHORT='**Suggested:**'
+
+classify() {  # texto do turno em $1 → rótulo em stdout
+  local txt="${1:-}"
+  if printf '%s' "$txt" | grep -qF -- "$SIG_DRY"; then
+    printf 'loop-seco\n'
+  elif printf '%s' "$txt" | grep -qF -- "$SIG_COMPLETE"; then
+    printf 'rodada-completa\n'
+  elif printf '%s' "$txt" | grep -qF -- "$SIG_MC" \
+    || printf '%s' "$txt" | grep -qF -- "$SIG_SHORT"; then
+    printf 'pergunta-pendente\n'
+  else
+    printf 'indeterminada\n'
+  fi
+}
+
+# --- Auto-teste embutido ---------------------------------------------------
+# Fixtures espelham o texto literal de speckit-clarify/SKILL.md. Se a skill
+# mudar o formato, é aqui que a regressão aparece.
+
+FIX_MC="$(cat <<'EOF'
+**Recommended:** Option B - patching only changed nodes keeps the preview
+deterministic and avoids a second render path.
+
+| Option | Description |
+|--------|-------------|
+| A | Re-render the whole canvas on every keystroke |
+| B | Diff the AST and patch only changed nodes |
+| C | Debounce for 300ms then full re-render |
+
+You can reply with the option letter (e.g., "A"), accept the recommendation by saying "yes" or "recommended", or provide your own short answer.
+EOF
+)"
+
+FIX_SHORT="$(cat <<'EOF'
+**Suggested:** Soft delete with 30-day retention - preserves undo without unbounded growth.
+
+Format: Short answer (<=5 words). You can accept the suggestion by saying "yes" or "suggested", or provide your own answer.
+EOF
+)"
+
+FIX_REPORT="$(cat <<'EOF'
+## Clarification Summary
+
+- Questions asked & answered: 5
+- Updated spec: specs/006-code-interop/spec.md
+- Sections touched: Functional Requirements, Data Model, Edge Cases
+
+| Category | Status |
+|---|---|
+| Functional Scope & Behavior | Resolved |
+| Domain & Data Model | Resolved |
+| Integration & External Dependencies | Deferred |
+
+Outstanding items remain low impact; I recommend proceeding to planning.
+
+Suggested next command: `/speckit-plan`
+EOF
+)"
+
+FIX_DRY="$(cat <<'EOF'
+No critical ambiguities detected worth formal clarification.
+
+The spec covers all taxonomy categories at Clear status. Suggest proceeding.
+
+Suggested next command: `/speckit-plan`
+EOF
+)"
+
+FIX_NOISE="$(cat <<'EOF'
+I read the spec and started building the internal coverage map. Give me a
+moment while I finish scanning the Non-Functional Quality Attributes section.
+EOF
+)"
+
+FIX_PROSE_RECOMMEND="$(cat <<'EOF'
+Based on the current spec I would recommend a stricter retention policy, but
+that is a planning-level concern rather than a spec ambiguity.
+EOF
+)"
+
+ST_FAIL=0
+assert_classify() {  # descrição  esperado  texto
+  local got; got="$(classify "$3")"
+  if [ "$got" = "$2" ]; then
+    printf 'ok: %s\n' "$1"
+  else
+    printf 'FALHOU: %s (esperado %s, veio %s)\n' "$1" "$2" "$got"
+    ST_FAIL=1
+  fi
+}
+
+self_test() {
+  assert_classify "pergunta múltipla escolha"        pergunta-pendente "$FIX_MC"
+  assert_classify "pergunta de resposta curta"       pergunta-pendente "$FIX_SHORT"
+  assert_classify "Completion Report"                rodada-completa   "$FIX_REPORT"
+  assert_classify "frase seca tem prioridade sobre o report" loop-seco "$FIX_DRY"
+  assert_classify "texto que não casa com nada"      indeterminada     "$FIX_NOISE"
+  assert_classify "texto vazio"                      indeterminada     ""
+  assert_classify "'recommend' em prosa não é pergunta" indeterminada   "$FIX_PROSE_RECOMMEND"
+  assert_classify "só o marcador bold conta"         pergunta-pendente '**Recommended:** Option A - x'
+
+  if [ "$ST_FAIL" -eq 0 ]; then
+    printf 'speckit-clarify-loop: self-test limpo (8 casos)\n'; exit 0
+  fi
+  printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo)        [ $# -ge 2 ] || usage; REPO="$2"; shift 2 ;;
     --max-rounds)  [ $# -ge 2 ] || usage; MAX_ROUNDS="$2"; shift 2 ;;
     --allow-dirty) ALLOW_DIRTY=1; shift ;;
     --dry-run)     DRY_RUN=1; shift ;;
+    --self-test)   self_test ;;
     -h|--help)     usage ;;
     *) printf 'speckit-clarify-loop: flag desconhecida: %s\n' "$1" >&2; usage ;;
   esac
