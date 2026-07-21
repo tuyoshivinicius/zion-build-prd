@@ -132,6 +132,40 @@ classify() {  # texto do turno em $1 → rótulo em stdout
   fi
 }
 
+# --- Leitura das negações de permissão (funções puras de texto) -------------
+# A guarda original abortava a rodada diante de QUALQUER permission_denial, com
+# a justificativa de que a rodada "gravaria spec pela metade". A justificativa
+# vale para a família que escreve: negar um `Edit` no meio de uma sequência de
+# edições deixa o spec com metade das mudanças aplicadas. Não vale para leitura.
+#
+# Em 2026-07-21 isso custou duas rodadas inteiras (US$ 1,75 e US$ 1,79) em
+# zion-mermaid-editor-app: o que foi negado era um `grep` de listar cabeçalhos,
+# a skill contornou, a rodada terminou com a pergunta completa e `is_error`
+# false — e o script jogou tudo fora assim mesmo.
+#
+# `Bash` fica FORA da lista de mutantes de propósito, e a razão merece estar
+# escrita: uma chamada negada não executou, então ela própria não gravou nada. O
+# risco de spec meio escrito nasce da sequência de `Edit` que a skill usa para
+# atualizar o spec, e é essa sequência que a guarda protege.
+MUTANTES='Edit Write MultiEdit NotebookEdit'
+
+denied_tools() {  # linha-jsonl → nomes das ferramentas negadas, separados por espaço
+  printf '%s' "${1:-}" \
+    | jq -r '[(.permission_denials // [])[] | .tool_name // "?"] | join(" ")' 2>/dev/null
+  return 0
+}
+
+mutating_only() {  # lista de nomes → só as que escrevem, na mesma ordem
+  local out="" t m
+  for t in ${1:-}; do
+    for m in $MUTANTES; do
+      if [ "$t" = "$m" ]; then out="$out $t"; break; fi
+    done
+  done
+  printf '%s' "${out# }"
+  return 0
+}
+
 # --- Monitor: primitivas de formatação -------------------------------------
 # Dois perfis. `tty` usa símbolos e ANSI; `plain` usa rótulos ASCII e nada de
 # escape — porque o round-NN.log tem que continuar legível seis meses depois,
@@ -473,7 +507,7 @@ run_round() {  # número da rodada em $1
 
   send_user '/speckit-clarify'
 
-  local line typ status iserr denials cost txt
+  local line typ status iserr denied mutantes cost txt
   while IFS= read -r line; do
     emit_event "$line"
     typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)" || continue
@@ -491,7 +525,8 @@ run_round() {  # número da rodada em $1
     [ "$typ" = "result" ] || continue
 
     iserr="$(printf '%s' "$line" | jq -r '.is_error // false')"
-    denials="$(printf '%s' "$line" | jq -r '(.permission_denials // []) | length')"
+    denied="$(denied_tools "$line")"
+    mutantes="$(mutating_only "$denied")"
     cost="$(printf '%s' "$line" | jq -r '.total_cost_usd // 0')"
     ROUND_COST="$(add_cost "$ROUND_COST" "$cost")"
 
@@ -499,11 +534,14 @@ run_round() {  # número da rodada em $1
       ROUND_OUTCOME=aborto; ROUND_ABORT="result com is_error=true (ver $log)"; break
     fi
     # Em --dry-run a negação de Edit/Write é esperada: é o próprio mecanismo.
-    if [ "$denials" != "0" ] && [ "$DRY_RUN" -eq 0 ]; then
+    if [ -n "$mutantes" ] && [ "$DRY_RUN" -eq 0 ]; then
       ROUND_OUTCOME=aborto
-      ROUND_ABORT="permission_denials não-vazio ($denials) — rodada gravaria spec pela metade"
+      ROUND_ABORT="permissão negada em ferramenta que escreve ($mutantes) — rodada gravaria spec pela metade"
       break
     fi
+    # Negação de leitura não ameaça o spec: a chamada nem executou. Narra e segue.
+    [ -z "$denied" ] || [ -n "$mutantes" ] \
+      || emit_note warn "permissão negada, rodada segue: $denied"
 
     txt="$(printf '%s' "$line" | jq -r '.result // ""')"
     case "$(classify "$txt")" in
@@ -778,6 +816,16 @@ that is a planning-level concern rather than a spec ambiguity.
 EOF
 )"
 
+# --- Fixtures de negação de permissão ---------------------------------------
+# A de Bash é a captura literal da rodada de 2026-07-21 02:30 em
+# zion-mermaid-editor-app: um `grep` de listar cabeçalhos que o Claude Code
+# mandou aprovar. A rodada terminou bem — pergunta completa, is_error false —
+# e mesmo assim o script a jogou fora, com US$ 1,79 já pagos.
+FX_DENY_BASH='{"type":"result","is_error":false,"permission_denials":[{"tool_name":"Bash","tool_use_id":"toolu_01TX","tool_input":{"command":"grep -n '"'"'^#\\{1,4\\} '"'"' specs/001-cano-modelo-codigo/spec.md"}}]}'
+FX_DENY_WRITE='{"type":"result","is_error":false,"permission_denials":[{"tool_name":"Write","tool_use_id":"toolu_02WR","tool_input":{"file_path":"specs/001/spec.md"}}]}'
+FX_DENY_MIX='{"type":"result","is_error":false,"permission_denials":[{"tool_name":"Bash","tool_input":{}},{"tool_name":"Edit","tool_input":{}}]}'
+FX_DENY_NONE='{"type":"result","is_error":false,"permission_denials":[]}'
+
 # --- Fixtures do monitor ---------------------------------------------------
 # Capturadas de /tmp/speckit-clarify-loop/round-01.jsonl numa rodada real.
 # Nesse stream toda linha `assistant` trazia exatamente 1 bloco de conteúdo,
@@ -962,6 +1010,17 @@ self_test() {
   assert_render "kind nothing não imprime nada"  '' nothing "$FX_SYS_INIT"
   assert_render "linha malformada não imprime nada" '' tool "$FX_BAD"
 
+  assert_out "negação de Bash é lida"          'Bash'      denied_tools "$FX_DENY_BASH"
+  assert_out "negação de Write é lida"         'Write'     denied_tools "$FX_DENY_WRITE"
+  assert_out "negações múltiplas em ordem"     'Bash Edit' denied_tools "$FX_DENY_MIX"
+  assert_out "lista vazia não inventa negação" ''          denied_tools "$FX_DENY_NONE"
+  assert_out "linha malformada não inventa negação" ''     denied_tools "$FX_BAD"
+  assert_out "Bash negado não escreve nada"    ''          mutating_only 'Bash'
+  assert_out "Edit sobrevive ao filtro"        'Edit'      mutating_only 'Bash Edit'
+  assert_out "a família de escrita inteira passa" 'Write MultiEdit NotebookEdit' \
+    mutating_only 'Write MultiEdit NotebookEdit'
+  assert_out "lista vazia sai vazia"           ''          mutating_only ''
+
   SECONDS=125
   assert_out "relógio formata mm:ss" '02:05' mon_clock
 
@@ -1000,7 +1059,7 @@ self_test() {
   QUIET=0
 
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (66 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (75 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
