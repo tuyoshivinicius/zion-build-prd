@@ -239,9 +239,11 @@ de `git show --numstat` em cada commit da série, um commit por requisito:
 | `R-D` — `spec_mudou`, a linha destacada, o `--dry-run` colapsado | −8 | **+11** |
 | `R-E` — `revisar:` | +2 | **+4** |
 | fixtures (`P-6`) | ±0 | **±0** |
-| **líquido** | **≈ −50** | **+1** |
+| **líquido (código)** | **≈ −50** | **+1** |
+| nota de verificação datada | não previsto | **+17** |
+| **total do arquivo** | — | **1786 → 1804** |
 
-**1786 → 1787 linhas.** O arquivo terminou uma linha **maior** do que começou, e
+**1786 → 1787 linhas de código, e 1804 com a nota datada.** O arquivo terminou uma linha **maior** do que começou, e
 a promessa de `−50` não se cumpriu. Duas causas, ambas de comentário e nenhuma de
 código:
 
@@ -301,14 +303,23 @@ perguntava se o fallback era permanente por desenho.
   aborto no 2º indeterminado consecutivo, o `spec_mudou` em cada caminho de saída
   e o `revisar:` como última linha vivem em `run_round`/`main_loop`, que falam com
   o repo e com o processo `claude`. O auto-teste é sem repo e sem custo (`P-3`), e
-  inventar um teste que precise de repo trairia o princípio. A verificação destes
-  quatro é o `--dry-run` real abaixo.
-- ⬜ Um `--dry-run` real com `delta +0` e hash inalterado, verificado pelo caminho
-  comum do R-D e não por bloco próprio. **Pendente — exige execução paga.**
-- ⬜ Nota datada no cabeçalho, no padrão do arquivo, registrando repo, custo e
-  `sentinela: N/M`. **Pendente, junto com o item acima.**
+  inventar um teste que precise de repo trairia o princípio.
+- ✅ Um `--dry-run` real com `delta +0` e hash inalterado, verificado pelo caminho
+  comum do R-D e não por bloco próprio. **Executado em 2026-07-21:** `rc=0`,
+  `sentinela em 1/1 turnos`, `188 → 188 linhas (delta +0)`, US$ 0,58, e
+  `git status --porcelain` vazio no repo alvo. Cobriu **dois** dos quatro itens
+  acima: o `spec_mudou` pelo caminho comum e o `revisar:` como última linha.
+- ⬜ **O caminho da sonda continua sem execução real.** O modelo emitiu a
+  sentinela, então `indeterminada` nunca disparou: nem o `REPLY_PROBE` nem o
+  aborto na 2ª ausência foram exercitados fora do auto-teste. Isto não se
+  encomenda — depende de uma rodada em que o contrato falhe. É o **risco residual
+  desta entrega**, e é exatamente o que a rede existe para tornar barato quando
+  acontecer.
+- ✅ Nota datada no cabeçalho, no padrão do arquivo, registrando repo, custo e
+  `sentinela: N/M` — e também o que a execução **não** provou.
 - ✅ Spec de evolução corrigida conforme a tabela acima.
-- ❌ ~~`wc -l` menor que 1786.~~ **Não satisfeito: 1787.** Ver
+- ❌ ~~`wc -l` menor que 1786.~~ **Não satisfeito: 1787 de código, 1804 com a
+  nota datada.** Ver
   `§Contabilidade do tamanho` — a estimativa de `−50` estava errada e o critério
   não sobrevive à medição. Mantido riscado, e não apagado, porque a estimativa
   furada é evidência de como este documento errou (`P-6`).
