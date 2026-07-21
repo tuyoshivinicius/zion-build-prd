@@ -22,6 +22,17 @@
 #   Nas duas execuções a skill alternou a língua dos marcadores (pt e en) — daí
 #   a classificação bilíngue não ser luxo, e sim a diferença entre funcionar e
 #   falhar de forma intermitente.
+# Monitor verificado em 2026-07-21, em --dry-run e em três execuções:
+#   TTY (zion-mermaid-editor-app, spec de 1081 linhas, US$ 1,99) → narração com
+#     símbolos e cor, relógio de 00:03 a 05:16, 15 chamadas de ferramenta
+#     resumidas em uma linha cada, 6 `pensando…` e nenhum par consecutivo, e a
+#     pergunta inteira — tabela de 5 opções intacta — antes do aviso de dry-run;
+#   | cat (zion-test-build-prd, 006-code-interop, US$ 0,30) → zero sequências
+#     ANSI no stdout, e zero também no round-01.log;
+#   --quiet (mesmo alvo, US$ 0,30) → tela só com cabeçalho de rodada e resumo,
+#     e as 63 linhas de narração inteiras preservadas em round-01.log. É o que
+#     faz do --quiet um modo sem perda: cala a tela, não a memória.
+#   Nas três, o spec ficou intocado (delta +0).
 # Reinstalar após editar:  install -m 755 tools/speckit-clarify-loop ~/.local/bin/
 set -u
 
