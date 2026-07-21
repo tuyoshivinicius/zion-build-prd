@@ -1017,8 +1017,13 @@ FX_BAD='{not json'
 FX_USER_TR='{"type":"user","message":{"content":[{"type":"tool_result","content":"1081 linhas"}]}}'
 
 ST_FAIL=0
+# Contador de casos: cresce sozinho a cada asserção. O literal que ele substitui
+# era uma segunda verdade sobre o tamanho da suíte — acrescentar um teste e
+# esquecer de somar 1 não deixava rastro nenhum.
+ST_COUNT=0
 assert_out() {  # descrição  esperado  comando…
   local desc="$1" want="$2"; shift 2
+  ST_COUNT=$((ST_COUNT + 1))
   local got; got="$("$@")"
   if [ "$got" = "$want" ]; then
     printf 'ok: %s\n' "$desc"
@@ -1042,6 +1047,7 @@ fatal_str() { if ratelimit_fatal "${1:-}"; then printf 'sim'; else printf 'nao';
 # Redirecionar para arquivo mantém a chamada no shell corrente.
 assert_emit() {  # descrição  esperado  comando…
   local desc="$1" want="$2"; shift 2
+  ST_COUNT=$((ST_COUNT + 1))
   local tmp got
   tmp="$(mktemp "${TMPDIR:-/tmp}/speckit-clarify-loop-st.XXXXXX")"
   SECONDS=0
@@ -1223,9 +1229,9 @@ self_test() {
   QUIET=0
 
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (92 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
   fi
-  printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
+  printf 'speckit-clarify-loop: self-test COM FALHAS (%d casos)\n' "$ST_COUNT" >&2; exit 1
 }
 
 while [ $# -gt 0 ]; do
