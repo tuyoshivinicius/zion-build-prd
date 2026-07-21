@@ -262,9 +262,6 @@ mon_marker() {  # perfil kind → marcador (no perfil plain, já com 8 colunas)
   esac
 }
 
-# Colunas consumidas por "  CLOCK  MARCADOR  ": 2+5+2+largura(marcador)+2.
-mon_prefix() { case "${1:-}" in tty) printf '12' ;; *) printf '19' ;; esac; }
-
 mon_head() {  # clock marcador corpo
   printf '  %s  %s  %s\n' "${1:-}" "${2:-}" "${3:-}"
 }
@@ -377,9 +374,7 @@ dedup_kind() {  # kind-anterior  kind → kind efetivo
 # parece, e por isso a única que precisa mudar se a apresentação mudar.
 render_line() {  # perfil largura clock kind linha
   local p="${1:-plain}" w="${2:-80}" clock="${3:-00:00}" kind="${4:-nothing}" line="${5:-}"
-  local body prefix tsv name summary st
-
-  prefix="$(mon_prefix "$p")"
+  local body mark prefix tsv name summary st
 
   case "$kind" in
     thinking)
@@ -391,9 +386,16 @@ render_line() {  # perfil largura clock kind linha
       name="${tsv%%$'\t'*}"
       summary="${tsv#*$'\t'}"
       [ "$summary" != "$tsv" ] || summary=""
+      # Colunas consumidas por "  CLOCK  MARCADOR  ": 2+5+2+largura+2. Sai do
+      # próprio marcador em vez de uma tabela paralela: `⚙` dá 12 e `[tool]  `
+      # dá 19, os mesmos números da função que isto substitui. `${#}` conta
+      # caractere e não byte sob locale UTF-8 — a mesma premissa que mon_trunc
+      # já faz ao cortar prosa acentuada, não uma premissa nova.
+      mark="$(mon_marker "$p" tool)"
+      prefix=$(( 2 + 5 + 2 + ${#mark} + 2 ))
       body="$(printf '%-8s %s' "$name" "$summary")"
       body="$(mon_trunc "$body" $(( w - prefix )))"
-      mon_head "$clock" "$(mon_marker "$p" tool)" "$(mon_paint "$p" dim "$body")"
+      mon_head "$clock" "$mark" "$(mon_paint "$p" dim "$body")"
       ;;
     text)
       mon_head "$clock" "$(mon_marker "$p" text)" 'claude'
@@ -1124,8 +1126,15 @@ self_test() {
 
   assert_out "marcador plain preenche 8 colunas" '[tool]  ' mon_marker plain tool
   assert_out "marcador tty é um símbolo"         '⚙'        mon_marker tty   tool
-  assert_out "prefixo tty ocupa 12 colunas"      '12'       mon_prefix tty
-  assert_out "prefixo plain ocupa 19 colunas"    '19'       mon_prefix plain
+  # A largura reservada não é mais observável direto: observa-se onde a
+  # truncagem cai. Com w=40, plain reserva 19 e sobra 21; tty reserva 12 e
+  # sobra 28. São os mesmos 19 e 12 de antes, agora medidos no resultado.
+  assert_out "prefixo plain reserva 19 colunas na truncagem" \
+    '  01:23  [tool]    Bash     check-prere…' \
+    render_line plain 40 '01:23' tool "$FX_TOOL_BASH"
+  assert_out "prefixo tty reserva 12 colunas na truncagem" \
+    "$(printf '  01:23  ⚙  \033[2mBash     check-prerequisite…\033[0m')" \
+    render_line tty 40 '01:23' tool "$FX_TOOL_BASH"
   assert_out "cabeçalho monta a linha"           '  01:23  [ok]      pronto' \
     mon_head '01:23' '[ok]    ' 'pronto'
   assert_out "perfil plain não pinta"            'nu'       mon_paint plain red 'nu'
