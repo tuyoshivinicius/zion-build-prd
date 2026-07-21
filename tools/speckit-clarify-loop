@@ -120,8 +120,20 @@ Use exatamente um destes três valores:
 - COMPLETE     você encerrou a rodada e apresentou o relatório final
 - NO_AMBIGUITY você não encontrou ambiguidade crítica que justifique perguntar
 
-Essa linha é lida por um script. Não a traduza, não a formate, não a envolva em
-crase, negrito ou bloco de código, e não escreva nada depois dela.
+Quando você integrar uma resposta ao spec, emita também, em linha própria e
+ANTES da linha CLARIFY_STATE:
+
+CLARIFY_DECISION: <assunto em até 8 palavras> -> <a opção escolhida>
+
+Zero ou mais linhas CLARIFY_DECISION; a linha CLARIFY_STATE vem sempre por
+último, e sempre uma só. O fecho de um turno fica assim:
+
+CLARIFY_DECISION: igualdade de rótulo -> A (no parse)
+CLARIFY_STATE: ASKING
+
+Essas linhas são lidas por um script. Não as traduza, não as formate, não as
+envolva em crase, negrito ou bloco de código, e não escreva nada depois da
+linha CLARIFY_STATE.
 
 Nunca escreva linhas começadas por CLARIFY_ dentro de nenhum arquivo; elas
 pertencem apenas à sua mensagem.
@@ -162,6 +174,42 @@ sentinel_note() {  # nº de turnos consecutivos sem sentinela → aviso, ou vazi
 # uma segunda família ao contrato, e mais superfície é mais chance de vazar.
 leaked_sentinel() {  # snapshot spec → 0 se alguma linha ADICIONADA começa com CLARIFY_
   added_lines "${1:-}" "${2:-}" | grep -q '^CLARIFY_'
+}
+
+# --- Decisões aceitas (M-03/M-04) -------------------------------------------
+# Lê a segunda família do contrato. A fonte é o texto de `.result` do evento
+# `result` — o mesmo que o classify lê — e NUNCA o round-NN.log: lá a prosa já
+# passou pelo mon_fold, que indenta a continuação em 9 colunas, e a âncora `^`
+# não casaria nunca (D-6).
+#
+# A seta é obrigatória: linha sem ela é meia decisão, e meia decisão desinforma
+# mais do que a ausência. Descartada, cai no mesmo fallback.
+decisions_of() {  # tag texto → zero ou mais linhas "tag<TAB>assunto<TAB>opção"
+  local tag="${1:-}"
+  printf '%s' "${2:-}" \
+    | grep -oE '^CLARIFY_DECISION: .+ -> .+$' \
+    | sed -e 's/^CLARIFY_DECISION: /'"$tag"'\t/' -e 's/ -> /\t/'
+  return 0
+}
+
+# O bloco do resumo. Pura: entram o total de `yes` e as linhas acumuladas, sai o
+# texto. Alinha a coluna do assunto pelo maior assunto — `length()` conta
+# caractere e não byte sob locale UTF-8, a mesma premissa que o mon_trunc já faz.
+decisions_block() {  # yes_total  linhas "rNN<TAB>assunto<TAB>opção" → bloco, ou vazio
+  local yes="${1:-0}" lines="${2:-}"
+  if [ -z "$lines" ]; then
+    # Ausência da linha não é erro — é o contrato não tendo aderido. O número
+    # continua honesto; o que faltou foi o texto. Sem `yes` não houve decisão
+    # nenhuma, e aí o bloco simplesmente não existe.
+    [ "${yes:-0}" -gt 0 ] || return 0
+    printf 'decisões aceitas: %s (texto indisponível — contrato não aderiu)\n' "$yes"
+    return 0
+  fi
+  printf '%s\n' "$lines" | awk -F'\t' '
+    { t[NR] = $1; s[NR] = $2; o[NR] = $3; if (length($2) > w) w = length($2) }
+    END { printf "decisões aceitas (%d):\n", NR
+          for (i = 1; i <= NR; i++) printf "  %s  %-*s -> %s\n", t[i], w, s[i], o[i] }'
+  return 0
 }
 
 # --- Classificação do turno (função pura de texto) --------------------------
@@ -727,6 +775,8 @@ ROUND_ABORT=""
 ROUND_TURNS=0
 ROUND_SENT=0
 SENT_MISS=0
+# Decisões capturadas na rodada, uma por linha, já com a tag da rodada.
+ROUND_DECISIONS=""
 
 send_user() {  # texto → uma mensagem de usuário JSONL no fd 3
   jq -cn --arg t "$1" \
@@ -745,7 +795,7 @@ run_round() {  # número da rodada em $1
   local in="$WORK/in-$n.fifo"
 
   ROUND_OUTCOME=""; ROUND_YES=0; ROUND_COST=0; ROUND_ABORT=""
-  ROUND_TURNS=0; ROUND_SENT=0; SENT_MISS=0
+  ROUND_TURNS=0; ROUND_SENT=0; SENT_MISS=0; ROUND_DECISIONS=""
 
   mkfifo "$in" || { ROUND_OUTCOME=aborto; ROUND_ABORT="mkfifo falhou"; return; }
   : > "$log"; : > "$err"
@@ -782,7 +832,7 @@ run_round() {  # número da rodada em $1
 
   send_user '/speckit-clarify'
 
-  local line typ status iserr denied mutantes txt
+  local line typ status iserr denied mutantes txt dec
   while IFS= read -r line; do
     emit_event "$line"
     typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)" || continue
@@ -825,6 +875,8 @@ run_round() {  # número da rodada em $1
       SENT_MISS=$((SENT_MISS + 1))
       emit_note warn "$(sentinel_note "$SENT_MISS")"
     fi
+    dec="$(decisions_of "r$tag" "$txt")"
+    [ -z "$dec" ] || ROUND_DECISIONS="${ROUND_DECISIONS}${ROUND_DECISIONS:+$'\n'}$dec"
     case "$(classify "$txt")" in
       pergunta-pendente)
         # Em --dry-run paramos na primeira pergunta, sem responder. Sem
@@ -873,7 +925,7 @@ run_round() {  # número da rodada em $1
 main_loop() {
   local round=0 same=0 prev_hash cur_hash
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
-  local total_turns=0 total_sent=0
+  local total_turns=0 total_sent=0 all_decisions="" dec_block=""
   local start_lines end_lines delta tag rule_pad snap
 
   start_lines="$(spec_lines)"
@@ -915,6 +967,8 @@ main_loop() {
     total_cost="$(add_cost "$total_cost" "$ROUND_COST")"
     total_turns=$((total_turns + ROUND_TURNS))
     total_sent=$((total_sent + ROUND_SENT))
+    [ -z "$ROUND_DECISIONS" ] \
+      || all_decisions="${all_decisions}${all_decisions:+$'\n'}$ROUND_DECISIONS"
     yes_log="$yes_log r$tag=$ROUND_YES"
     cur_hash="$(spec_hash)"
     emit_note ok "$(printf '%s · %d yes · US$ %s' "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST")"
@@ -975,6 +1029,11 @@ main_loop() {
   printf 'logs:     %s\n' "$LOG_DIR"
   printf '          round-NN.jsonl (stream) · round-NN.log (narração) · latest → esta execução\n'
   printf 'parada:   %s\n' "$stop_reason"
+  # O único ponto do resumo em que o humano vê O QUE foi decidido, e não só
+  # quanto custou. Bloco, e não coluna: o layout canônico de rótulos é do M-02,
+  # no plano 4.
+  dec_block="$(decisions_block "$total_yes" "$all_decisions")"
+  [ -z "$dec_block" ] || printf '\n%s\n' "$dec_block"
   printf '\nreverter: git -C %s checkout -- %s\n' "$REPO" "$SPEC"
 
   return "$rc"
@@ -1280,6 +1339,33 @@ CLARIFY_STATE: COMPLETE
 EOF
 )"
 
+# --- Fixtures da linha de decisão -------------------------------------------
+# Ordem do D-7: zero ou mais CLARIFY_DECISION, e a CLARIFY_STATE por último.
+FIX_DEC_UMA="$(cat <<'EOF'
+Integrei a resposta ao spec.
+
+CLARIFY_DECISION: igualdade de rótulo -> A (no parse)
+CLARIFY_STATE: ASKING
+EOF
+)"
+
+FIX_DEC_DUAS="$(cat <<'EOF'
+Integrei as duas respostas.
+
+CLARIFY_DECISION: igualdade de rótulo -> A (no parse)
+CLARIFY_DECISION: feedback de falha de cópia -> B (sinal transitório)
+CLARIFY_STATE: COMPLETE
+EOF
+)"
+
+# Linha malformada — sem a seta. É descartada e conta para o mesmo fallback da
+# ausência: melhor não mostrar nada do que mostrar meia decisão (M-04).
+FIX_DEC_SEM_SETA="$(cat <<'EOF'
+CLARIFY_DECISION: assunto sem opção nenhuma
+CLARIFY_STATE: ASKING
+EOF
+)"
+
 # --- Fixtures de negação de permissão ---------------------------------------
 # A de Bash é a captura literal da rodada de 2026-07-21 02:30 em
 # zion-mermaid-editor-app: um `grep` de listar cabeçalhos que o Claude Code
@@ -1458,6 +1544,26 @@ self_test() {
     nao leak_str "$st_new" "$st_prosa"
   assert_out "ocorrência já presente no snapshot não dispara" \
     nao leak_str "$st_cita" "$st_cita2"
+
+  assert_out "decisão bem-formada vira tag/assunto/opção" \
+    "$(printf 'r01\tigualdade de rótulo\tA (no parse)')" \
+    decisions_of r01 "$FIX_DEC_UMA"
+  assert_out "duas decisões saem na ordem do turno" \
+    "$(printf 'r02\tigualdade de rótulo\tA (no parse)\nr02\tfeedback de falha de cópia\tB (sinal transitório)')" \
+    decisions_of r02 "$FIX_DEC_DUAS"
+  assert_out "turno sem decisão não inventa linha" '' decisions_of r01 "$FIX_SENT_ASK"
+  assert_out "decisão sem a seta é descartada"     '' decisions_of r01 "$FIX_DEC_SEM_SETA"
+
+  # A largura da coluna do assunto é a do maior assunto — o `%-22s` do esperado
+  # fixa isso sem que ninguém precise contar espaço à mão.
+  assert_out "bloco de decisões alinha a coluna do assunto" \
+    "$(printf 'decisões aceitas (2):\n  r01  %-22s -> A\n  r02  %-22s -> B' \
+       'assunto curto' 'assunto um pouco maior')" \
+    decisions_block 2 "$(printf 'r01\tassunto curto\tA\nr02\tassunto um pouco maior\tB')"
+  assert_out "sem decisão capturada, o número continua honesto" \
+    'decisões aceitas: 12 (texto indisponível — contrato não aderiu)' \
+    decisions_block 12 ''
+  assert_out "sem decisão e sem yes, não existe bloco" '' decisions_block 0 ''
 
   assert_out "tool_use Bash"                tool      event_kind "$FX_TOOL_BASH"
   assert_out "tool_use Read"                tool      event_kind "$FX_TOOL_READ"
