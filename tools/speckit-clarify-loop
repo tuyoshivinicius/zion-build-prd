@@ -35,7 +35,7 @@ uso: speckit-clarify-loop [--repo DIR] [--max-rounds N] [--allow-dirty] [--dry-r
   --repo DIR       repo alvo (default: cwd)
   --max-rounds N   teto duro de rodadas (default: 10)
   --allow-dirty    dispensa a exigência de working tree limpo
-  --dry-run        uma rodada sem Edit/Write: mostra as perguntas e os `yes`, sem tocar o spec
+  --dry-run        ensaio sem Edit/Write: para na 1ª pergunta sem responder, sem tocar o spec
   --self-test      roda os testes embutidos da classificação e sai
 EOF
   exit 2
@@ -57,19 +57,37 @@ need_deps() {
 # next command"), então loop-seco é testado primeiro. E, entre report e
 # pergunta, report vem antes: classificar um report como pergunta injetaria
 # `yes` numa rodada já encerrada; o inverso apenas gasta uma rodada a mais.
+# A skill fala a língua do repo alvo: num projeto com CLAUDE.md em português ela
+# traduz os próprios marcadores. Por isso cada sinal tem as duas formas — e os
+# marcadores de pergunta param no `:`, sem o `**` de fechamento, porque em
+# português o negrito envolve o rótulo inteiro (`**Recomendado: Opção B**`).
+# As frases de convergência ficam propositalmente longas: um falso positivo aqui
+# encerra o loop achando que convergiu, que é a única falha silenciosa possível.
 SIG_DRY='No critical ambiguities detected'
+SIG_DRY_PT='Nenhuma ambiguidade crítica detectada'
 SIG_COMPLETE='Suggested next command'
-SIG_MC='**Recommended:**'
-SIG_SHORT='**Suggested:**'
+SIG_COMPLETE_PT='Próximo comando sugerido'
+SIG_MC='**Recommended:'
+SIG_MC_PT='**Recomendado:'
+SIG_SHORT='**Suggested:'
+SIG_SHORT_PT='**Sugerido:'
+
+has_sig() {  # texto em $1, sinais em $2..N → 0 se algum casar
+  local txt="$1"; shift
+  local s
+  for s in "$@"; do
+    printf '%s' "$txt" | grep -qF -- "$s" && return 0
+  done
+  return 1
+}
 
 classify() {  # texto do turno em $1 → rótulo em stdout
   local txt="${1:-}"
-  if printf '%s' "$txt" | grep -qF -- "$SIG_DRY"; then
+  if has_sig "$txt" "$SIG_DRY" "$SIG_DRY_PT"; then
     printf 'loop-seco\n'
-  elif printf '%s' "$txt" | grep -qF -- "$SIG_COMPLETE"; then
+  elif has_sig "$txt" "$SIG_COMPLETE" "$SIG_COMPLETE_PT"; then
     printf 'rodada-completa\n'
-  elif printf '%s' "$txt" | grep -qF -- "$SIG_MC" \
-    || printf '%s' "$txt" | grep -qF -- "$SIG_SHORT"; then
+  elif has_sig "$txt" "$SIG_MC" "$SIG_MC_PT" "$SIG_SHORT" "$SIG_SHORT_PT"; then
     printf 'pergunta-pendente\n'
   else
     printf 'indeterminada\n'
@@ -115,6 +133,135 @@ trap cleanup EXIT
 
 spec_hash()  { git hash-object "$SPEC"; }
 spec_lines() { wc -l < "$SPEC" | tr -d ' '; }
+
+# --- Motor de uma rodada ----------------------------------------------------
+ROUND_OUTCOME=""
+ROUND_YES=0
+ROUND_COST=0
+ROUND_ABORT=""
+
+send_user() {  # texto → uma mensagem de usuário JSONL no fd 3
+  jq -cn --arg t "$1" \
+    '{type:"user",message:{role:"user",content:[{type:"text",text:$t}]}}' >&3
+}
+
+add_cost() {  # a b → a+b com 6 casas
+  awk -v a="$1" -v b="$2" 'BEGIN{printf "%.6f", a+b}'
+}
+
+run_round() {  # número da rodada em $1
+  local n="$1"
+  local tag; tag="$(printf '%02d' "$n")"
+  local log="$LOG_DIR/round-$tag.jsonl"
+  local err="$log.err"
+  local in="$WORK/in-$n.fifo"
+
+  ROUND_OUTCOME=""; ROUND_YES=0; ROUND_COST=0; ROUND_ABORT=""
+
+  mkfifo "$in" || { ROUND_OUTCOME=aborto; ROUND_ABORT="mkfifo falhou"; return; }
+  : > "$log"; : > "$err"
+
+  # Permissões mínimas: acceptEdits sozinho não basta porque a skill roda o
+  # check-prerequisites.sh via Bash, e prompt de permissão em modo não
+  # interativo vira negação silenciosa. Em --dry-run, Edit/Write saem de cena.
+  local -a args=(
+    -p
+    --input-format stream-json
+    --output-format stream-json
+    --verbose
+    --permission-mode acceptEdits
+    --allowedTools 'Bash(.specify/scripts/bash/check-prerequisites.sh*)'
+  )
+  if [ "$DRY_RUN" -eq 1 ]; then
+    args+=( --disallowedTools Edit Write MultiEdit NotebookEdit )
+  fi
+
+  ( cd "$REPO" && exec claude "${args[@]}" ) < "$in" > "$log" 2> "$err" &
+  local cpid=$!
+
+  exec 3<> "$in"   # read-write: nunca bloqueia, mesmo se o claude já morreu
+  # `3>&-` nos filhos é obrigatório: todo processo criado depois do `exec 3<>`
+  # herda o fd 3 e, com ele, a ponta de escrita do FIFO. Sem isso o `exec 3>&-`
+  # lá embaixo não fecha nada, o claude nunca recebe EOF e a rodada trava.
+  ( sleep "$ROUND_TIMEOUT"; kill -TERM "$cpid" 2>/dev/null ) 3>&- &
+  local wdog=$!
+
+  send_user '/speckit-clarify'
+
+  local line typ status iserr denials cost txt
+  while IFS= read -r line; do
+    typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)" || continue
+
+    if [ "$typ" = "rate_limit_event" ]; then
+      status="$(printf '%s' "$line" | jq -r '.rate_limit_info.status // "?"')"
+      if [ "$status" != "allowed" ]; then
+        ROUND_OUTCOME=aborto
+        ROUND_ABORT="rate limit com status=$status — cota esgotada, não insisto"
+        break
+      fi
+      continue
+    fi
+
+    [ "$typ" = "result" ] || continue
+
+    iserr="$(printf '%s' "$line" | jq -r '.is_error // false')"
+    denials="$(printf '%s' "$line" | jq -r '(.permission_denials // []) | length')"
+    cost="$(printf '%s' "$line" | jq -r '.total_cost_usd // 0')"
+    ROUND_COST="$(add_cost "$ROUND_COST" "$cost")"
+
+    if [ "$iserr" = "true" ]; then
+      ROUND_OUTCOME=aborto; ROUND_ABORT="result com is_error=true (ver $log)"; break
+    fi
+    # Em --dry-run a negação de Edit/Write é esperada: é o próprio mecanismo.
+    if [ "$denials" != "0" ] && [ "$DRY_RUN" -eq 0 ]; then
+      ROUND_OUTCOME=aborto
+      ROUND_ABORT="permission_denials não-vazio ($denials) — rodada gravaria spec pela metade"
+      break
+    fi
+
+    txt="$(printf '%s' "$line" | jq -r '.result // ""')"
+    case "$(classify "$txt")" in
+      pergunta-pendente)
+        # Em --dry-run paramos na primeira pergunta, sem responder. Sem
+        # Edit/Write a skill não consegue gravar a resposta e se debate em
+        # contornos via Bash até pedir permissão: responder ali só queima cota
+        # num turno que nunca convergiria. O que o modo prova é o que importa —
+        # preflight, spec alvo e classificação — com o spec intocado.
+        if [ "$DRY_RUN" -eq 1 ]; then
+          ROUND_OUTCOME=dry-pergunta
+          printf '  [r%s] pergunta 1 detectada (dry-run: não respondo)\n' "$tag"
+          break
+        fi
+        if [ "$ROUND_YES" -ge "$MAX_YES" ]; then
+          ROUND_OUTCOME=aborto
+          ROUND_ABORT="teto de $MAX_YES yes estourado na rodada $n"
+          break
+        fi
+        ROUND_YES=$((ROUND_YES + 1))
+        printf '  [r%s] pergunta %d → yes\n' "$tag" "$ROUND_YES"
+        send_user 'yes'
+        ;;
+      loop-seco)       ROUND_OUTCOME=loop-seco;       break ;;
+      rodada-completa) ROUND_OUTCOME=rodada-completa; break ;;
+      indeterminada)
+        ROUND_OUTCOME=indeterminada
+        printf '  [r%s] turno indeterminado — stream em %s\n' "$tag" "$log"
+        break
+        ;;
+    esac
+  done < <(exec 3>&-; tail -n +1 -f --pid="$cpid" --sleep-interval=0.2 "$log")
+
+  exec 3>&-              # fecha o stdin do claude → o processo sai → é o /clear
+  kill "$wdog" 2>/dev/null
+  wait "$cpid" 2>/dev/null
+  rm -f "$in"
+
+  # Stream terminou sem classificar nada: o processo caiu.
+  if [ -z "$ROUND_OUTCOME" ]; then
+    ROUND_OUTCOME=aborto
+    ROUND_ABORT="o processo claude terminou sem emitir turno classificável (ver $err)"
+  fi
+}
 
 # --- Auto-teste embutido ---------------------------------------------------
 # Fixtures espelham o texto literal de speckit-clarify/SKILL.md. Se a skill
@@ -169,6 +316,52 @@ Suggested next command: `/speckit-plan`
 EOF
 )"
 
+# Capturado de uma rodada real em 2026-07-21: num repo cujo CLAUDE.md é em
+# português, a skill traduz os próprios marcadores — e embrulha o rótulo INTEIRO
+# em negrito (`**Recomendado: Opção B**`), não só o prefixo. Por isso as
+# constantes não incluem o `**` de fechamento.
+FIX_MC_PT="$(cat <<'EOF'
+**Q1 — Feedback quando a área de transferência falha.** O FR-007 diz o que não
+acontece; nenhum dos dois diz o que a pessoa vê.
+
+**Recomendado: Opção B** — sinal de falha transitório, simétrico à confirmação
+de sucesso que já existe.
+
+| Opção | Descrição |
+|--------|-------------|
+| A | Manter o silêncio |
+| B | Sinal de falha transitório no próprio controle |
+
+Responda com a letra (ex.: "B"), aceite a recomendação com "sim"/"recomendado", ou dê sua própria resposta curta.
+EOF
+)"
+
+FIX_SHORT_PT="$(cat <<'EOF'
+**Sugerido: exclusão lógica com retenção de 30 dias** — preserva o desfazer sem crescimento ilimitado.
+
+Formato: resposta curta (≤5 palavras). Aceite com "sim"/"sugerido", ou dê sua própria resposta.
+EOF
+)"
+
+FIX_REPORT_PT="$(cat <<'EOF'
+## Resumo da clarificação
+
+- Perguntas feitas e respondidas: 4
+- Spec atualizado: specs/006-code-interop/spec.md
+
+Próximo comando sugerido: `/speckit-plan`
+EOF
+)"
+
+FIX_DRY_PT="$(cat <<'EOF'
+Nenhuma ambiguidade crítica detectada que justifique clarificação formal.
+
+O spec cobre todas as categorias da taxonomia. Sugiro seguir para o planejamento.
+
+Próximo comando sugerido: `/speckit-plan`
+EOF
+)"
+
 FIX_NOISE="$(cat <<'EOF'
 I read the spec and started building the internal coverage map. Give me a
 moment while I finish scanning the Non-Functional Quality Attributes section.
@@ -201,9 +394,13 @@ self_test() {
   assert_classify "texto vazio"                      indeterminada     ""
   assert_classify "'recommend' em prosa não é pergunta" indeterminada   "$FIX_PROSE_RECOMMEND"
   assert_classify "só o marcador bold conta"         pergunta-pendente '**Recommended:** Option A - x'
+  assert_classify "pergunta múltipla escolha em pt"  pergunta-pendente "$FIX_MC_PT"
+  assert_classify "pergunta curta em pt"             pergunta-pendente "$FIX_SHORT_PT"
+  assert_classify "Completion Report em pt"          rodada-completa   "$FIX_REPORT_PT"
+  assert_classify "frase seca em pt"                 loop-seco         "$FIX_DRY_PT"
 
   if [ "$ST_FAIL" -eq 0 ]; then
-    printf 'speckit-clarify-loop: self-test limpo (8 casos)\n'; exit 0
+    printf 'speckit-clarify-loop: self-test limpo (12 casos)\n'; exit 0
   fi
   printf 'speckit-clarify-loop: self-test COM FALHAS\n' >&2; exit 1
 }
@@ -230,5 +427,6 @@ need_deps
 preflight
 
 # TEMPORÁRIO — substituído pelo driver na Task 5.
-printf 'speckit-clarify-loop: preflight ok\n  repo: %s\n  spec: %s (%s linhas, %s)\n' \
-  "$REPO" "$SPEC" "$(spec_lines)" "$(spec_hash)"
+run_round 1
+printf 'rodada 1: outcome=%s yes=%s custo=%s %s\n' \
+  "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST" "$ROUND_ABORT"
