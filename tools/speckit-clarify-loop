@@ -778,6 +778,23 @@ round_record() {  # round turns sent yes dec cost delta outcome → linha
   return 0
 }
 
+# Aviso de suficiência (teto suave, só-aviso) — espelha o sentinel_note: entram
+# os três contadores CUMULATIVOS já computados, sai a linha do aviso se QUALQUER
+# limiar foi cruzado (semântica OR), ou vazio. Política, não limiar calibrado: não
+# afirma "o valor caiu abaixo de X", só "o Autor decidiu que N basta" — por isso
+# fica FORA da trava R-24 dos sensores. Os três limiares são env-tuneáveis (N é
+# incerto com dois pontos de dados); lidos de um lugar só, com default. Pura, sem
+# I/O, testável por assert_out (P-3). Sem newline final: quem grava (R-3) narra.
+nudge_note() {  # yes rounds delta → linha de aviso, ou vazio
+  local yes="${1:-0}" rounds="${2:-0}" delta="${3:-0}"
+  local ty="${SKCL_NUDGE_YES:-20}" tr="${SKCL_NUDGE_ROUNDS:-4}" td="${SKCL_NUDGE_DELTA:-300}"
+  if [ "$yes" -ge "$ty" ] || [ "$rounds" -ge "$tr" ] || [ "$delta" -ge "$td" ]; then
+    printf 'suficiência: %s decisões · %s rodadas · %+d linhas — a carga marginal cai; considere parar (teto suave)' \
+      "$yes" "$rounds" "$delta"
+  fi
+  return 0
+}
+
 # --- Sensores: coleta e narração (impura) -----------------------------------
 # Junta a coleta, o custo da rodada e a formatação numa linha só, emitida por
 # emit_note ok — que escreve no round-NN.log mesmo sob --quiet, que é o que o
@@ -1825,6 +1842,22 @@ self_test() {
   assert_out "delta negativo formata com sinal" \
     'round=02 turns=3 sent=3 yes=2 dec=1 cost=0.50 delta=-12 out=rodada-completa' \
     round_record 02 3 3 2 1 0.50 -12 rodada-completa
+
+  # R-1: nudge_note é pura — RECEBE os três contadores cumulativos e devolve a
+  # linha do aviso (ou vazio). Cabe no assert_out (P-3). O `unset` garante os
+  # DEFAULTS (20/4/300) mesmo se o ambiente do teste tiver SKCL_NUDGE_* setado.
+  # Cobre: cruza por yes, cruza por rounds, cruza por delta, e vazio abaixo dos três.
+  unset SKCL_NUDGE_YES SKCL_NUDGE_ROUNDS SKCL_NUDGE_DELTA
+  assert_out "aviso dispara ao cruzar as decisões" \
+    'suficiência: 20 decisões · 1 rodadas · +0 linhas — a carga marginal cai; considere parar (teto suave)' \
+    nudge_note 20 1 0
+  assert_out "aviso dispara ao cruzar as rodadas" \
+    'suficiência: 5 decisões · 4 rodadas · +50 linhas — a carga marginal cai; considere parar (teto suave)' \
+    nudge_note 5 4 50
+  assert_out "aviso dispara ao cruzar as linhas líquidas" \
+    'suficiência: 5 decisões · 1 rodadas · +300 linhas — a carga marginal cai; considere parar (teto suave)' \
+    nudge_note 5 1 300
+  assert_out "abaixo dos três limiares o aviso é vazio" '' nudge_note 19 3 299
 
   SECONDS=125
   assert_out "relógio formata mm:ss" '02:05' mon_clock
