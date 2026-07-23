@@ -750,6 +750,18 @@ sensor_line() {  # add del marc_antes marc_depois secoes cercas titulos custo �
   return 0
 }
 
+# Uma linha por rodada, chave=valor em ASCII (R-1) — espelha o sensor_line: entram
+# os oito valores JÁ computados, sai uma linha que a Fase 5 agrega com grep/awk, e
+# que já se paga na leitura humana de um run isolado (cat/grep, sem jq). Pura, sem
+# I/O, testável por assert_out (P-3). Sem newline final de propósito: quem grava
+# (R-2) é que acrescenta o \n. `sent` e `turns` vão em campos separados (dois
+# inteiros são mais limpos para o awk do que um par a re-splitar).
+round_record() {  # round turns sent yes dec cost delta outcome → linha
+  printf 'round=%s turns=%s sent=%s yes=%s dec=%s cost=%s delta=%+d out=%s' \
+    "${1:-00}" "${2:-0}" "${3:-0}" "${4:-0}" "${5:-0}" "${6:-0}" "${7:-0}" "${8:-?}"
+  return 0
+}
+
 # --- Sensores: coleta e narração (impura) -----------------------------------
 # Junta a coleta, o custo da rodada e a formatação numa linha só, emitida por
 # emit_note ok — que escreve no round-NN.log mesmo sob --quiet, que é o que o
@@ -1751,6 +1763,22 @@ self_test() {
   assert_out "rodada estéril mostra o traço no custo/linha" \
     'sensores · add=0 del=0 marc=0→0 secoes=0 cercas=0 titulos=0 custo=0.1 custo/linha=-' \
     sensor_line 0 0 0 0 0 0 0 0.1
+
+  # R-1: round_record é pura — RECEBE os oito valores e devolve a linha. Cabe no
+  # assert_out (P-3), sem o assert_emit das funções com estado. Cobre: linha
+  # bem-formada, out=aborto, dec=0 (rodada sem decisão) e delta negativo com sinal.
+  assert_out "registro por rodada sai em chave=valor" \
+    'round=03 turns=4 sent=4 yes=3 dec=2 cost=1.33 delta=+36 out=rodada-completa' \
+    round_record 03 4 4 3 2 1.33 36 rodada-completa
+  assert_out "rodada abortada carrega out=aborto" \
+    'round=07 turns=2 sent=0 yes=0 dec=0 cost=0.79 delta=+0 out=aborto' \
+    round_record 07 2 0 0 0 0.79 0 aborto
+  assert_out "rodada sem decisão nomeada mostra dec=0" \
+    'round=01 turns=1 sent=1 yes=0 dec=0 cost=0.10 delta=+0 out=loop-seco' \
+    round_record 01 1 1 0 0 0.10 0 loop-seco
+  assert_out "delta negativo formata com sinal" \
+    'round=02 turns=3 sent=3 yes=2 dec=1 cost=0.50 delta=-12 out=rodada-completa' \
+    round_record 02 3 3 2 1 0.50 -12 rodada-completa
 
   SECONDS=125
   assert_out "relógio formata mm:ss" '02:05' mon_clock
