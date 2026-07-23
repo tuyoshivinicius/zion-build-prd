@@ -83,6 +83,21 @@
 #   Corrobora a nota do run_round sobre o --dry-run: sem Edit/Write a skill
 #   tentou gravar o spec por `python3` dentro de Bash, e só não gravou porque o
 #   --allowedTools não a autoriza. O contorno é real e a negação é a rede.
+# Registro persistente por rodada verificado em 2026-07-23, todo pelo harness sem
+# custo (tools/speckit-clarify-loop-harness.sh) contra a skill speckit-clarify:
+#   Run completo: `--max-rounds 3` deixou rounds.txt com 3 linhas bem-formadas
+#   (round=NN turns=2 sent=2 yes=1 dec=1 cost=0.25 delta=+4 out=rodada-completa) e
+#   summary.txt casando o —— resumo —— do stdout byte-a-byte.
+#   Corte externo (a prova do E-2/R7): SKCL_CUT=2 travou a rodada 3, matou o loop em
+#   voo e deixou rounds.txt com EXATAMENTE 2 linhas e NENHUM summary.txt — a
+#   recuperação que o run real da R7 não teve, agora de graça.
+#   --dry-run: uma linha `round=01 ... delta=+0 out=dry-pergunta`; o repo falso (git
+#   real) ficou intocado (git status --porcelain vazio, spec em 5 linhas) e
+#   rounds.txt/summary.txt nasceram em $LOG_DIR — o registro escreve só ali e a
+#   guarda de vazamento fica intocada.
+#   O auto-teste fecha com 147 casos (os 4 novos são os assert_out do round_record).
+#   Pendente: um --dry-run pago contra um repo Spec Kit vivo, como aferição final
+#   contra o claude real e a skill de verdade — não rodado nesta sessão.
 # Reinstalar após editar:  install -m 755 tools/speckit-clarify-loop ~/.local/bin/
 set -u
 
