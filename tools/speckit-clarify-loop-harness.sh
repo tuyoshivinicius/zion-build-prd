@@ -113,7 +113,7 @@ if [ -n "${SKCL_CUT:-}" ]; then
   wait "$loop_pid" 2>/dev/null
   lines="$(wc -l < "$rounds" 2>/dev/null || echo 0)"
   dir="$(readlink /tmp/speckit-clarify-loop/latest 2>/dev/null)"
-  if [ -n "$ok" ] && [ "$lines" -eq "$SKCL_CUT" ] && [ ! -f "$dir/summary.txt" ]; then
+  if [ -n "$ok" ] && [ "$lines" -eq "$SKCL_CUT" ] && [ -n "$dir" ] && [ ! -f "$dir/summary.txt" ]; then
     printf 'corte OK: rounds.txt=%s linhas (esperado %s), summary.txt ausente\n' "$lines" "$SKCL_CUT"
     exit 0
   fi
