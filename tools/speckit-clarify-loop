@@ -962,11 +962,40 @@ run_round() {  # número da rodada em $1
   [ "$ROUND_OUTCOME" != aborto ] || emit_note warn "aborto: $ROUND_ABORT"
 }
 
+# --- Resumo consolidado -----------------------------------------------------
+# Emissor único do —— resumo —— (R-3): gera o texto UMA vez, para tela e para
+# summary.txt, sem duplicar os printf. Lê por escopo dinâmico os totais e o
+# stop_reason que main_loop já setou; NÃO devolve rc — isso é de main_loop. O `\n`
+# inicial e a estrutura interna são preservados na captura `$(...)`, que apara só
+# newlines FINAIS, então o stdout casa byte-a-byte o de antes.
+print_summary() {
+  local dec_block
+  printf '\n—— resumo ——\n'
+  printf 'repo:     %s\n' "$REPO"
+  printf 'spec:     %s\n' "$SPEC"
+  printf 'rodadas:  %s\n' "$round"
+  printf 'yes:      %s (%s)\n' "$total_yes" "${yes_log# }"
+  printf 'custo:    US$ %s\n' "$total_cost"
+  printf 'contrato: sentinela em %s/%s turnos\n' "$total_sent" "$total_turns"
+  printf 'spec:     %s → %s linhas (delta %+d)\n' "$start_lines" "$end_lines" "$delta"
+  printf 'logs:     %s\n' "$LOG_DIR"
+  printf '          round-NN.jsonl (stream) · round-NN.log (narração) · latest → esta execução\n'
+  printf 'parada:   %s\n' "$stop_reason"
+  # O único ponto do resumo em que o humano vê O QUE foi decidido, e não só quanto
+  # custou. Bloco, e não coluna.
+  dec_block="$(decisions_block "$total_yes" "$all_decisions")"
+  [ -z "$dec_block" ] || printf '\n%s\n' "$dec_block"
+  printf '\nreverter: git -C %s checkout -- %s\n' "$REPO" "$SPEC"
+  # Última linha do resumo, em TODO caminho de saída.
+  printf 'revisar:  git -C %s diff -- %s\n' "$REPO" "$SPEC"
+  return 0
+}
+
 # --- Driver do loop ---------------------------------------------------------
 main_loop() {
   local round=0 same=0 prev_hash cur_hash spec_mudou
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
-  local total_turns=0 total_sent=0 all_decisions="" dec_block=""
+  local total_turns=0 total_sent=0 all_decisions=""
   local start_lines end_lines delta tag rule_pad snap snap_lines r_delta
 
   start_lines="$(spec_lines)"
@@ -1080,27 +1109,14 @@ main_loop() {
 
   end_lines="$(spec_lines)"
   delta=$((end_lines - start_lines))
-  printf '\n—— resumo ——\n'
-  printf 'repo:     %s\n' "$REPO"
-  printf 'spec:     %s\n' "$SPEC"
-  printf 'rodadas:  %s\n' "$round"
-  printf 'yes:      %s (%s)\n' "$total_yes" "${yes_log# }"
-  printf 'custo:    US$ %s\n' "$total_cost"
-  printf 'contrato: sentinela em %s/%s turnos\n' "$total_sent" "$total_turns"
-  printf 'spec:     %s → %s linhas (delta %+d)\n' "$start_lines" "$end_lines" "$delta"
-  printf 'logs:     %s\n' "$LOG_DIR"
-  printf '          round-NN.jsonl (stream) · round-NN.log (narração) · latest → esta execução\n'
-  printf 'parada:   %s\n' "$stop_reason"
-  # O único ponto do resumo em que o humano vê O QUE foi decidido, e não só
-  # quanto custou. Bloco, e não coluna: o layout canônico de rótulos é do M-02,
-  # no plano 4.
-  dec_block="$(decisions_block "$total_yes" "$all_decisions")"
-  [ -z "$dec_block" ] || printf '\n%s\n' "$dec_block"
-  printf '\nreverter: git -C %s checkout -- %s\n' "$REPO" "$SPEC"
-  # Última linha do resumo, em TODO caminho de saída — inclusive na convergência
-  # limpa com rc=0. É o único ponto do desenho em que o humano volta ao laço.
-  # Não obriga ninguém a ler; essa é a fronteira do que um harness pode fazer.
-  printf 'revisar:  git -C %s diff -- %s\n' "$REPO" "$SPEC"
+  # Resumo consolidado (R-3): capturado UMA vez e destinado a tela E a summary.txt.
+  # Captura em vez de `tee`: se summary.txt não abrir, o `|| true` engole o erro sem
+  # arriscar imprimir o resumo duas vezes na tela (P-7). summary.txt é o artefato do
+  # happy-path — só nasce se o run chega até aqui; quem sobrevive a corte externo é
+  # o rounds.txt do R-2.
+  local summ; summ="$(print_summary)"
+  printf '%s\n' "$summ"
+  printf '%s\n' "$summ" > "$LOG_DIR/summary.txt" 2>/dev/null || true
 
   return "$rc"
 }
