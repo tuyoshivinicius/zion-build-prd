@@ -99,6 +99,16 @@
 #   O auto-teste fecha com 147 casos (os 4 novos são os assert_out do round_record).
 #   Pendente: um --dry-run pago contra um repo Spec Kit vivo, como aferição final
 #   contra o claude real e a skill de verdade — não rodado nesta sessão.
+# Aviso de suficiência (teto suave só-aviso) verificado em 2026-07-23, todo pelo
+# harness sem custo — o mesmo stub determinístico do claude, não o modelo real:
+#   Dispara uma vez: SKCL_NUDGE_ROUNDS=2 (demais altos) em --max-rounds 3 narrou
+#   `ⓘ suficiência: …` EXATAMENTE uma vez (a trava nudged segurou a rodada 3); com
+#   os três limiares altos, zero avisos.
+#   Parada intocada: a linha `parada:` do resumo é idêntica com o aviso ligado e
+#   desligado — só a linha ⓘ da rodada difere (P-7); rc/stop_reason inalterados.
+#   O auto-teste sobe de 147 → 154 casos (4 do nudge_note, 3 do kind info).
+#   Pendente: um --dry-run pago contra um repo Spec Kit vivo, para aferir que o
+#   ensaio não dispara o aviso contra o claude real — não rodado nesta sessão.
 # Reinstalar após editar:  install -m 755 tools/speckit-clarify-loop ~/.local/bin/
 set -u
 
