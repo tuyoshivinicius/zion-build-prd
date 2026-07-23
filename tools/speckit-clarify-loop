@@ -967,7 +967,7 @@ main_loop() {
   local round=0 same=0 prev_hash cur_hash spec_mudou
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
   local total_turns=0 total_sent=0 all_decisions="" dec_block=""
-  local start_lines end_lines delta tag rule_pad snap
+  local start_lines end_lines delta tag rule_pad snap snap_lines r_delta
 
   start_lines="$(spec_lines)"
   printf 'speckit-clarify-loop: %s\n  spec: %s (%s linhas)\n' \
@@ -1019,6 +1019,19 @@ main_loop() {
     spec_mudou=0; [ "$cur_hash" = "$prev_hash" ] || spec_mudou=1
     emit_note ok "$(printf '%s · %d yes · US$ %s' "$ROUND_OUTCOME" "$ROUND_YES" "$ROUND_COST")"
     narrate_sensors "$snap" "$SPEC" "$ROUND_COST"
+
+    # Registro incremental por rodada (R-2): anexa a linha do R-1 a rounds.txt
+    # assim que a rodada fecha — ANTES do case que pode dar break, o único ponto
+    # que roda para TODA rodada, qualquer desfecho (inclusive aborto e o vazamento
+    # do M-06, que já reescreveu ROUND_OUTCOME acima). É o append incremental — não
+    # um tee do resumo final — que recupera um run cortado (E-2). O `|| true` e o
+    # `2>/dev/null` são o P-7: se $LOG_DIR sumiu, a rodada segue. `dec` é a CONTAGEM
+    # de linhas de ROUND_DECISIONS (não o texto — o texto é da Alternativa C).
+    snap_lines="$(wc -l < "$snap" | tr -d ' ')"
+    r_delta=$(( $(spec_lines) - snap_lines ))
+    printf '%s\n' "$(round_record "$tag" "$ROUND_TURNS" "$ROUND_SENT" "$ROUND_YES" \
+      "$(printf '%s' "$ROUND_DECISIONS" | grep -c .)" "$ROUND_COST" "$r_delta" \
+      "$ROUND_OUTCOME")" >> "$LOG_DIR/rounds.txt" 2>/dev/null || true
 
     case "$ROUND_OUTCOME" in
       loop-seco)
