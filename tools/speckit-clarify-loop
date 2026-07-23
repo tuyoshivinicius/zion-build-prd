@@ -1030,10 +1030,10 @@ print_summary() {
 
 # --- Driver do loop ---------------------------------------------------------
 main_loop() {
-  local round=0 same=0 prev_hash cur_hash spec_mudou
+  local round=0 same=0 prev_hash cur_hash spec_mudou nudged=0
   local total_yes=0 total_cost=0 yes_log="" stop_reason="" rc=1
   local total_turns=0 total_sent=0 all_decisions=""
-  local start_lines end_lines delta tag rule_pad snap snap_lines r_delta
+  local start_lines end_lines delta tag rule_pad snap snap_lines r_delta nudge_msg
 
   start_lines="$(spec_lines)"
   printf 'speckit-clarify-loop: %s\n  spec: %s (%s linhas)\n' \
@@ -1136,6 +1136,17 @@ main_loop() {
       fi
     else
       same=0
+    fi
+
+    # Aviso de suficiência (teto suave, só-aviso): dispara UMA vez, no fundo do
+    # laço — o ponto alcançado só quando a rodada NÃO deu break (não convergiu,
+    # não abortou, não é --dry-run; a essas, "considere parar" seria ruído). Lê
+    # os contadores CUMULATIVOS já computados (P-2/P-6) — o delta é vs start_lines,
+    # não o r_delta por-rodada do R-2 — e NUNCA toca rc/stop_reason/parada (P-7).
+    # A trava `nudged` impede repetir a cada rodada; limiares em nudge_note.
+    if [ "$nudged" -eq 0 ]; then
+      nudge_msg="$(nudge_note "$total_yes" "$round" "$(( $(spec_lines) - start_lines ))")"
+      [ -z "$nudge_msg" ] || { emit_note info "$nudge_msg"; nudged=1; }
     fi
   done
 
