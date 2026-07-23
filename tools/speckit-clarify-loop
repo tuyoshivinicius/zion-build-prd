@@ -980,6 +980,7 @@ print_summary() {
   printf 'spec:     %s → %s linhas (delta %+d)\n' "$start_lines" "$end_lines" "$delta"
   printf 'logs:     %s\n' "$LOG_DIR"
   printf '          round-NN.jsonl (stream) · round-NN.log (narração) · latest → esta execução\n'
+  printf '          rounds.txt (registro por rodada) · summary.txt (este resumo)\n'
   printf 'parada:   %s\n' "$stop_reason"
   # O único ponto do resumo em que o humano vê O QUE foi decidido, e não só quanto
   # custou. Bloco, e não coluna.
