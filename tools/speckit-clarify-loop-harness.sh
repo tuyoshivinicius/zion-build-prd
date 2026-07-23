@@ -52,6 +52,14 @@ cat > "$ROOT/bin/claude" <<'STUB'
 # Os `\n` ficam LITERAIS de propósito — são escapes de JSON, e viajam como
 # argumento de %s justamente para o printf não os interpretar.
 SPEC="${SKCL_SPEC:?}"
+# Corte externo (SKCL_HANG): na Mésima invocação o stub trava ANTES de emitir
+# qualquer coisa, prendendo o loop na rodada M enquanto o teste o mata. O contador
+# vive num arquivo porque cada rodada é um processo novo do stub.
+if [ -n "${SKCL_HANG:-}" ]; then
+  n=$(( $(cat "${SKCL_COUNT:?}" 2>/dev/null || echo 0) + 1 ))
+  printf '%s\n' "$n" > "$SKCL_COUNT"
+  [ "$n" -lt "$SKCL_HANG" ] || { sleep 60; exit 0; }
+fi
 ask=''; fim=''
 if [ "${SKCL_NOSENT:-0}" -eq 0 ]; then
   ask='\n\nCLARIFY_STATE: ASKING'
@@ -77,6 +85,41 @@ printf '%s\n' '{"type":"result","is_error":false,"total_cost_usd":0.25,"result":
 STUB
 chmod +x "$ROOT/bin/claude"
 
-PATH="$ROOT/bin:$PATH" SKCL_SPEC="$SPEC" \
-  SKCL_NOSENT="${SKCL_NOSENT:-0}" SKCL_LEAK="${SKCL_LEAK:-0}" \
-  "$LOOP" --repo "$ROOT/repo" "$@"
+common_env=(
+  "PATH=$ROOT/bin:$PATH" "SKCL_SPEC=$SPEC"
+  "SKCL_NOSENT=${SKCL_NOSENT:-0}" "SKCL_LEAK=${SKCL_LEAK:-0}"
+  "SKCL_COUNT=$ROOT/turns"
+)
+
+if [ -n "${SKCL_CUT:-}" ]; then
+  # Prova do corte externo (E-2/R7): trava a rodada CUT+1, mata o loop em voo, e
+  # verifica que rounds.txt ficou com exatamente CUT linhas e que summary.txt NÃO
+  # nasceu — a recuperação que o run real da R7 não teve, agora de graça.
+  # Remove só o symlink `latest` (não o tree inteiro): evita casar com um `latest`
+  # velho sem apagar logs de runs reais anteriores.
+  rm -f /tmp/speckit-clarify-loop/latest
+  env "${common_env[@]}" "SKCL_HANG=$((SKCL_CUT + 1))" \
+    "$LOOP" --repo "$ROOT/repo" "$@" >/dev/null 2>&1 &
+  loop_pid=$!
+  rounds=/tmp/speckit-clarify-loop/latest/rounds.txt
+  ok=''
+  for ((i = 0; i < 200; i++)); do
+    if [ -f "$rounds" ] && [ "$(wc -l < "$rounds" 2>/dev/null || echo 0)" -ge "$SKCL_CUT" ]; then
+      ok=1; break
+    fi
+    sleep 0.1
+  done
+  kill -TERM "$loop_pid" 2>/dev/null
+  wait "$loop_pid" 2>/dev/null
+  lines="$(wc -l < "$rounds" 2>/dev/null || echo 0)"
+  dir="$(readlink /tmp/speckit-clarify-loop/latest 2>/dev/null)"
+  if [ -n "$ok" ] && [ "$lines" -eq "$SKCL_CUT" ] && [ ! -f "$dir/summary.txt" ]; then
+    printf 'corte OK: rounds.txt=%s linhas (esperado %s), summary.txt ausente\n' "$lines" "$SKCL_CUT"
+    exit 0
+  fi
+  printf 'corte FALHOU: rounds.txt=%s linhas (esperado %s), summary.txt %s\n' \
+    "$lines" "$SKCL_CUT" "$([ -f "$dir/summary.txt" ] && echo presente || echo ausente)"
+  exit 1
+else
+  env "${common_env[@]}" "$LOOP" --repo "$ROOT/repo" "$@"
+fi
