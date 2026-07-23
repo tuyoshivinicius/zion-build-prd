@@ -403,12 +403,14 @@ mon_marker() {  # perfil kind → marcador (no perfil plain, já com 8 colunas)
     tty:thinking)   printf '·' ;;
     tty:ok)         printf '✓' ;;
     tty:warn)       printf '⚠' ;;
+    tty:info)       printf 'ⓘ' ;;
     plain:tool)     printf '[tool]  ' ;;
     plain:text)     printf '[claude]' ;;
     plain:you)      printf '[você]  ' ;;
     plain:thinking) printf '[...]   ' ;;
     plain:ok)       printf '[ok]    ' ;;
     plain:warn)     printf '[!]     ' ;;
+    plain:info)     printf '[nota]  ' ;;
     *)              printf '?' ;;
   esac
 }
@@ -620,6 +622,7 @@ emit_note() {  # kind texto
   case "$kind" in
     you)  color=bold ;;
     warn) color=red ;;
+    info) color=bold ;;
     *)    color=none ;;
   esac
   clock="$(mon_clock)"
@@ -1874,6 +1877,17 @@ self_test() {
   assert_emit "emit_note ecoa a linha do motor" \
     '  00:00  [você]    yes                    (pergunta 1/5)' \
     emit_note you 'yes                    (pergunta 1/5)'
+
+  # R-2: o kind `info` do aviso. mon_marker é pura e exata nos dois perfis; o
+  # assert_emit prova que emit_note ROTEIA o kind info (mesmo espaçamento do
+  # `you`, porque [nota] e [você] têm 6 chars → marcador de 8 colunas idêntico).
+  # bold só pinta no tty; aqui o perfil é plain, então o texto sai literal.
+  assert_out "marcador info no tty é o glifo ⓘ" 'ⓘ' mon_marker tty info
+  assert_out "marcador info no plain tem 8 colunas" '[nota]  ' mon_marker plain info
+  assert_emit "emit_note roteia o kind info" \
+    '  00:00  [nota]    considere parar (teste)' \
+    emit_note info 'considere parar (teste)'
+
   assert_emit "emit_rule não leva relógio" \
     '── rodada 01/10 ──' \
     emit_rule '── rodada 01/10 ──'
