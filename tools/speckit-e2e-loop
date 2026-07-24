@@ -144,6 +144,69 @@ read_signal() {  # file → OK|SUFFICIENCY_STOP|vazio
   return 0
 }
 
+# --- Classificador do `analyze` (função pura de texto) ---------------------
+# Achado de severidade CRÍTICA no relatório do /speckit.analyze → parada (design
+# #2). Casa a severidade como MARCADOR (célula de tabela `| CRITICAL |`, rótulo
+# `Severity: CRITICAL`, ou `**CRITICAL**`), nunca a palavra solta em prosa —
+# senão "a critical part" abortaria um analyze limpo. Bilíngue: o analyze alterna
+# pt/en. Primeiro corte; a Task 15 endurece contra turnos reais.
+classify_analyze() {  # texto do turno → critico|limpo
+  if printf '%s' "${1:-}" | grep -qiE \
+    '(\|[[:space:]]*(CRITICAL|CRÍTICO|CRÍTICA)[[:space:]]*\|)|(severidade?e?[[:space:]]*:[[:space:]]*(CRITICAL|CRÍTICO|CRÍTICA))|(severity[[:space:]]*:[[:space:]]*(CRITICAL|CRÍTICO|CRÍTICA))|(\*\*(CRITICAL|CRÍTICO|CRÍTICA)\*\*)'; then
+    printf 'critico'
+  else
+    printf 'limpo'
+  fi
+}
+
+# --- Auto-teste embutido ---------------------------------------------------
+
+# --- Fixtures do classificador do analyze (Task 4) --------------------------
+FIX_ANALYZE_CRIT_EN="$(cat <<'EOF'
+## Analysis Report
+
+| ID | Category | Severity | Summary |
+|----|----------|----------|---------|
+| A1 | Coverage | CRITICAL | tasks.md has no task for FR-003 |
+| A2 | Style    | LOW      | wording nit |
+EOF
+)"
+
+FIX_ANALYZE_CRIT_PT="$(cat <<'EOF'
+## Relatório de análise
+
+| ID | Categoria | Severidade | Resumo |
+|----|-----------|------------|--------|
+| A1 | Cobertura | CRÍTICA    | inconsistência entre plan.md e tasks.md |
+EOF
+)"
+
+FIX_ANALYZE_CRIT_LABEL="$(cat <<'EOF'
+Encontrei uma inconsistência.
+
+**Severity: CRITICAL** — o plan.md contradiz o spec.md no requisito RF-002.
+EOF
+)"
+
+FIX_ANALYZE_CLEAN="$(cat <<'EOF'
+## Analysis Report
+
+No critical inconsistencies found. All findings are LOW or MEDIUM.
+
+| ID | Severity | Summary |
+|----|----------|---------|
+| A1 | MEDIUM   | consider naming the endpoint |
+EOF
+)"
+
+# O falso-positivo que a âncora de marcador existe para não pegar: "critical"
+# como adjetivo em prosa, sem ser marcador de severidade.
+FIX_ANALYZE_PROSE="$(cat <<'EOF'
+This is a critical part of the flow, but analysis found no severity issues.
+Everything is consistent between spec, plan and tasks.
+EOF
+)"
+
 # --- Arcabouço de teste (copiado verbatim do speckit-clarify-loop) ----------
 ST_FAIL=0
 # Contador de casos: cresce sozinho a cada asserção. O literal que ele substitui
@@ -235,6 +298,14 @@ self_test() {
   assert_out "sinal SUFFICIENCY_STOP é lido" 'SUFFICIENCY_STOP' read_signal "$st_sig_stop"
   assert_out "sinal ausente é vazio"         '' read_signal "$st_dir/nao-existe.txt"
   assert_out "sinal com lixo não casa"       '' read_signal "$st_next_bad"
+
+  # --- Task 4: classificador do analyze ---
+  assert_out "analyze crítico em en"        critico classify_analyze "$FIX_ANALYZE_CRIT_EN"
+  assert_out "analyze crítico em pt"        critico classify_analyze "$FIX_ANALYZE_CRIT_PT"
+  assert_out "analyze crítico por rótulo"   critico classify_analyze "$FIX_ANALYZE_CRIT_LABEL"
+  assert_out "analyze limpo (só LOW/MEDIUM)" limpo  classify_analyze "$FIX_ANALYZE_CLEAN"
+  assert_out "'critical' em prosa não é crítico" limpo classify_analyze "$FIX_ANALYZE_PROSE"
+  assert_out "texto vazio é limpo"          limpo   classify_analyze ""
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
