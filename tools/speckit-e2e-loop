@@ -159,6 +159,42 @@ classify_analyze() {  # texto do turno → critico|limpo
   fi
 }
 
+# --- Resolução do check-prd.sh + detecção de vazamento de stack ------------
+# O par check-prd.sh+quality-rules.md é a fronteira curada da HARNESS, resolvido
+# da instalação da harness — nunca de --repo (a denylist não é do produto-alvo).
+# Ordem: override explícito, depois o cache do plugin marketplace. Confirma que o
+# quality-rules.md sibling resolve (references-case ao lado, ou repo-case ../assets).
+resolve_check_prd() {  # → path do check-prd.sh, ou vazio+rc1
+  local c d
+  if [ -n "${SPECKIT_E2E_CHECK_PRD:-}" ]; then
+    [ -f "$SPECKIT_E2E_CHECK_PRD" ] && { printf '%s' "$SPECKIT_E2E_CHECK_PRD"; return 0; }
+    return 1
+  fi
+  for c in "$HOME/.claude/plugins/marketplaces/zion-build-prd/scripts/check-prd.sh"; do
+    [ -f "$c" ] || continue
+    d="$(dirname "$c")"
+    if [ -f "$d/quality-rules.md" ] || [ -f "$d/../assets/quality-rules.md" ]; then
+      printf '%s' "$c"; return 0
+    fi
+  done
+  return 1
+}
+
+# Formato do achado de stack: `<LABEL>:<n>: stack — "<termo>" (...)` (check-prd.sh
+# modo specify, linhas 75-91). O `: stack — ` é a marca estável.
+is_stack_finding() {  # linha de saída do check-prd.sh → rc 0 se é achado de stack
+  case "${1:-}" in *': stack — '*) return 0 ;; *) return 1 ;; esac
+}
+
+# Roda check-prd.sh em modo specify sobre o arquivo e mantém SÓ os achados de
+# stack (ignora rf-cobertos-ausente, que não é parada curada). Serve tanto para o
+# next.txt (prompt do specify) quanto para o spec.md gerado. Determinístico: o
+# script já é a fonte curada da fronteira (design §Protocolo).
+stack_findings() {  # check-prd-path  file → linhas de achado stack, ou vazio
+  bash "${1:?}" specify "${2:?}" 2>/dev/null | grep -F ': stack — '
+  return 0
+}
+
 # --- Auto-teste embutido ---------------------------------------------------
 
 # --- Fixtures do classificador do analyze (Task 4) --------------------------
@@ -248,6 +284,8 @@ assert_emit() {  # descrição  esperado  comando…
 # step_valid responde por status de saída, assert_out compara stdout.
 step_valid_str() { if step_valid "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
 next_ready_str() { if next_ready "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
+is_stack_finding_str() { if is_stack_finding "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
+env_resolve_check_prd() { SPECKIT_E2E_CHECK_PRD="${1:-}" resolve_check_prd; }
 
 self_test() {
   # As Tasks 2–7 penduram asserções aqui.
@@ -306,6 +344,18 @@ self_test() {
   assert_out "analyze limpo (só LOW/MEDIUM)" limpo  classify_analyze "$FIX_ANALYZE_CLEAN"
   assert_out "'critical' em prosa não é crítico" limpo classify_analyze "$FIX_ANALYZE_PROSE"
   assert_out "texto vazio é limpo"          limpo   classify_analyze ""
+
+  # --- Task 5: resolução do check-prd.sh e detecção de stack ---
+  # is_stack_finding: fixtures de linha (o formato exato do check-prd.sh:75-91).
+  assert_out "linha de stack é achado"     sim is_stack_finding_str 'specify:3: stack — "React" (mova para o plan.md da feature)'
+  assert_out "rf-cobertos-ausente não é stack" nao is_stack_finding_str 'specify: rf-cobertos-ausente — o prompt não pede a linha **RF cobertos:**'
+  assert_out "linha qualquer não é stack"  nao is_stack_finding_str 'tudo certo aqui'
+  # resolve_check_prd: com override para um arquivo real (o próprio do repo),
+  # e com override para um path que não existe.
+  assert_out "override que existe resolve" \
+    "$PWD/scripts/check-prd.sh" \
+    env_resolve_check_prd "$PWD/scripts/check-prd.sh"
+  assert_out "override ausente não resolve" '' env_resolve_check_prd "/nao/existe/check-prd.sh"
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
