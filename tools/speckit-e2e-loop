@@ -786,6 +786,31 @@ step_initial() {  # step → mensagem de usuário inicial
   esac
 }
 
+# --- Passo de clarify (delega ao binário speckit-clarify-loop) -------------
+# rc 0 = convergiu; rc ≠ 0 = bateu o teto sem convergir (ou abortou) → parada
+# (design #2). Pura, para caber no self-test.
+clarify_outcome() {  # rc → completo|parada
+  if [ "${1:-1}" -eq 0 ]; then printf 'completo'; else printf 'parada'; fi
+}
+
+# Delega ao irmão. Sessão limpa por rodada é do próprio clarify-loop; o e2e-loop
+# só lê o rc. O custo do clarify é governado pelo --max-rounds do clarify-loop e
+# NÃO entra no --max-cost do e2e-loop (processos/summaries separados) — nota no
+# resumo (Task 13).
+run_clarify() {
+  STEP_OUTCOME=""; STEP_ABORT=""; STEP_COST=0; STEP_STOP_WHY=""
+  local -a a=( --repo "$REPO" )
+  [ "$QUIET" -eq 0 ] || a+=( --quiet )
+  emit_rule ''
+  emit_rule '── passo 3/8: clarify (delega a speckit-clarify-loop) ──'
+  speckit-clarify-loop "${a[@]}"
+  local rc=$?
+  STEP_OUTCOME="$(clarify_outcome "$rc")"
+  [ "$STEP_OUTCOME" = parada ] && \
+    STEP_STOP_WHY="o speckit-clarify-loop saiu rc=$rc — não convergiu; entregue ao humano"
+  return 0
+}
+
 # --- Auto-teste embutido ---------------------------------------------------
 
 # --- Fixtures do classificador do analyze (Task 4) --------------------------
@@ -1178,6 +1203,11 @@ self_test() {
   handle_turn_speckit 'gerei o plan.md' >/dev/null
   assert_out "passo speckit fecha no result" completo printf '%s' "$STEP_OUTCOME"
   QUIET=0
+
+  # --- Task 11: passo de clarify (clarify_outcome) ---
+  assert_out "clarify rc 0 vira completo"  completo clarify_outcome 0
+  assert_out "clarify rc 1 vira parada"    parada   clarify_outcome 1
+  assert_out "clarify rc 2 vira parada"    parada   clarify_outcome 2
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
