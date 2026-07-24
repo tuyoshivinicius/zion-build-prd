@@ -51,6 +51,8 @@ STATE_FILE=""    # $STATE_DIR/state
 NEXT_FILE=""     # $STATE_DIR/next.txt
 SIGNAL_FILE=""   # $STATE_DIR/signal.txt
 CHECK_PRD=""     # resolvido na Task 5
+SPECKIT_SEP="."  # separador dos comandos do Spec Kit: '.' (/speckit.x, default do
+                 # harness) ou '-' (/speckit-x, Spec Kit antigo). Detectado no preflight.
 
 die() { printf 'speckit-e2e-loop: %s\n' "$1" >&2; exit "${2:-2}"; }
 
@@ -751,12 +753,35 @@ handle_turn_speckit() {  # texto do turno (guardado em STEP_LAST_TEXT pelo motor
 
 # A mensagem inicial: specify/plan vêm do next.txt do passo de ponte anterior;
 # tasks/analyze são o literal.
-speckit_command() {  # step → a linha a injetar
-  case "$1" in
-    specify|plan) read_next "$NEXT_FILE" ;;
-    tasks)        printf '/speckit.tasks' ;;
-    analyze)      printf '/speckit.analyze' ;;
+# --- Convenção de comando do Spec Kit (dot vs hyphen) ----------------------
+# O harness atual e as skills emitem a forma DOT (/speckit.specify). Mas repos com
+# Spec Kit antigo registram os comandos como skills HYPHEN em
+# .claude/skills/speckit-specify (confirmado 2026-07-23: v0.8.1). Injetar dot num
+# repo hyphen não casa a skill → o passo não dispara. Detectamos a convenção do
+# repo e traduzimos o comando ANTES de injetar (só a ferramenta; a skill segue
+# emitindo dot, o file-drop é traduzido na hora do inject).
+detect_speckit_sep() {  # repo → '-' se o repo tem skills hyphen; senão '.'
+  if [ -e "${1:-}/.claude/skills/speckit-specify" ]; then printf -- '-'; else printf '.'; fi
+}
+
+# Traduz SÓ o comando líder (/speckit.<sub> no início da 1ª linha) para o separador
+# do repo; o resto do texto — o prompt entre aspas, que pode citar /speckit.x em
+# prosa — fica intacto. Pura.
+speckit_translate() {  # texto  sep → texto com o comando líder na convenção do repo
+  case "${2:-.}" in
+    -) printf '%s' "${1:-}" | sed '1s#^/speckit\.#/speckit-#' ;;
+    *) printf '%s' "${1:-}" ;;
   esac
+}
+
+speckit_command() {  # step → a linha a injetar (traduzida p/ a convenção do repo)
+  local cmd
+  case "$1" in
+    specify|plan) cmd="$(read_next "$NEXT_FILE")" ;;
+    tasks)        cmd='/speckit.tasks' ;;
+    analyze)      cmd='/speckit.analyze' ;;
+  esac
+  speckit_translate "$cmd" "$SPECKIT_SEP"
 }
 
 # step_args COMPLETA: allowedTools mínimo por tipo, sem --dangerously-skip.
@@ -1264,6 +1289,20 @@ self_test() {
   assert_out "dry-run ainda bloqueia NotebookEdit"             sim args_has_exact 1 specify-prompt 'NotebookEdit'
   assert_out "sem dry-run não há disallow de repo"             nao args_has_exact 0 specify-prompt 'Write(//tmp/rp/**)'
 
+  # --- Convenção de comando do Spec Kit (dot vs hyphen) ---
+  local sk_hy="$st_dir/hyrepo" sk_dot="$st_dir/dotrepo"
+  mkdir -p "$sk_hy/.claude/skills/speckit-specify" "$sk_dot/.claude/skills"
+  assert_out "repo com skills hyphen detecta '-'"  '-' detect_speckit_sep "$sk_hy"
+  assert_out "repo sem skills hyphen detecta '.'"  '.' detect_speckit_sep "$sk_dot"
+  assert_out "repo inexistente cai no default '.'" '.' detect_speckit_sep "$st_dir/naoexiste"
+  assert_out "translate dot é no-op"               '/speckit.tasks'  speckit_translate '/speckit.tasks' '.'
+  assert_out "translate hyphen no comando tasks"   '/speckit-tasks'  speckit_translate '/speckit.tasks' '-'
+  assert_out "translate hyphen no comando specify" '/speckit-specify "x"' speckit_translate '/speckit.specify "x"' '-'
+  local sk_prose='/speckit.specify "cite o /speckit.specify no texto"'
+  local sk_prose_exp='/speckit-specify "cite o /speckit.specify no texto"'
+  assert_out "translate hyphen só o comando líder, prosa intacta" \
+    "$sk_prose_exp" speckit_translate "$sk_prose" '-'
+
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
   fi
@@ -1298,6 +1337,9 @@ preflight() {
   [ -f "$STATE_FILE" ] || : > "$STATE_FILE"
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/speckit-e2e-loop.XXXXXX")" \
     || die "não consegui criar diretório de trabalho"
+
+  # Convenção de comando do Spec Kit deste repo (dot vs hyphen).
+  SPECKIT_SEP="$(detect_speckit_sep "$REPO")"
 
   # --from: força a re-execução a partir do passo e limpa os marcadores a jusante.
   [ -z "$FROM" ] || state_clear_from "$FROM"
