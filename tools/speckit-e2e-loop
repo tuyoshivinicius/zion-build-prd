@@ -767,7 +767,12 @@ step_args() {  # step → preenche STEP_ARGS
   STEP_ARGS=()
   case "$(step_type "$1")" in
     bridge)
-      STEP_ARGS=( --allowedTools 'Read' 'Bash(*check-prd.sh*)' "Write($STATE_DIR/*)" ) ;;
+      # O file-drop grava em $STATE_DIR (scratch em /tmp — FORA do cwd/repo). O
+      # padrão de path do Claude Code é gitignore-style: `//abs` ancora no
+      # filesystem, `/rel` seria relativo ao cwd. $STATE_DIR já começa com `/`, então
+      # o prefixo extra dá `//tmp/...` — âncora absoluta. Sem o `//`, o acceptEdits
+      # não cobre /tmp (fora do cwd) e o Write viraria negação silenciosa.
+      STEP_ARGS=( --allowedTools 'Read' 'Bash(*check-prd.sh*)' "Write(/$STATE_DIR/*)" ) ;;
     speckit)
       STEP_ARGS=( --allowedTools 'Bash(.specify/scripts/bash/*)' 'Read' 'Write' 'Edit' ) ;;
     trace)
@@ -776,7 +781,13 @@ step_args() {  # step → preenche STEP_ARGS
                   'Read' 'Write' 'Edit' ) ;;
   esac
   if [ "$DRY_RUN" -eq 1 ]; then
-    STEP_ARGS+=( --disallowedTools Edit Write MultiEdit NotebookEdit )
+    # dry-run: o repo NÃO pode ser tocado, mas o file-drop no scratch PRECISA gravar
+    # (é o que o dry-run captura em next.txt). Um `Write` de NOME NU em disallowedTools
+    # remove a ferramenta INTEIRA — mataria também o file-drop (era este o gap). Em
+    # vez disso, NEGA POR ESCOPO só os paths do repo: deny vence tudo (inclusive o
+    # acceptEdits), e o Write(scratch) do allowedTools continua vivo. `//$REPO` ancora
+    # no filesystem (REPO é absoluto). MultiEdit/NotebookEdit a ponte nunca usa → nus.
+    STEP_ARGS+=( --disallowedTools "Write(/$REPO/**)" "Edit(/$REPO/**)" MultiEdit NotebookEdit )
   fi
 }
 
@@ -943,6 +954,16 @@ is_stack_finding_str() { if is_stack_finding "${1:-}"; then printf 'sim'; else p
 env_resolve_check_prd() { SPECKIT_E2E_CHECK_PRD="${1:-}" resolve_check_prd; }
 cost_exceeded_str() { if cost_exceeded "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
 state_keep_line_str() { if state_keep_line "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
+# 'sim' se STEP_ARGS de (dry-run, step), com STATE_DIR/REPO controlados, contém
+# EXATAMENTE `term`. Roda em subshell (assert_out captura via $()), então mexer nos
+# globais aqui não vaza.
+args_has_exact() {  # dry  step  term → sim|nao
+  DRY_RUN="${1:-0}"; STATE_DIR=/tmp/sd; REPO=/tmp/rp
+  step_args "${2:-}"
+  local a
+  for a in "${STEP_ARGS[@]}"; do [ "$a" = "${3:-}" ] && { printf sim; return; }; done
+  printf nao
+}
 # Adaptadores do monitor: ratelimit_fatal responde por status de saída; mon_fold
 # é filtro de stdin. assert_out só sabe chamar comando e comparar stdout.
 fatal_str() { if ratelimit_fatal "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
@@ -1226,6 +1247,19 @@ self_test() {
   handle_turn_trace 'reconciliei a §12, o backlog e o architecture.md' >/dev/null
   assert_out "trace fecha no result" completo printf '%s' "$STEP_OUTCOME"
   QUIET=0
+
+  # --- Fix do gap de Write no --dry-run (step_args) ---
+  # Com STATE_DIR=/tmp/sd e REPO=/tmp/rp: o file-drop precisa de âncora absoluta e
+  # o dry-run não pode nukar Write (nome nu removeria a ferramenta e mataria o
+  # file-drop). Verifica a construção dos args a custo zero; a SEMÂNTICA de
+  # permissão é confirmada na validação paga (Task 15).
+  assert_out "file-drop usa âncora absoluta // (com dry-run)"  sim args_has_exact 1 specify-prompt 'Write(//tmp/sd/*)'
+  assert_out "file-drop usa âncora absoluta // (sem dry-run)"  sim args_has_exact 0 specify-prompt 'Write(//tmp/sd/*)'
+  assert_out "dry-run NÃO usa Write nu (não nuka a ferramenta)" nao args_has_exact 1 specify-prompt 'Write'
+  assert_out "dry-run nega Write do repo por escopo"           sim args_has_exact 1 specify-prompt 'Write(//tmp/rp/**)'
+  assert_out "dry-run nega Edit do repo por escopo"            sim args_has_exact 1 specify-prompt 'Edit(//tmp/rp/**)'
+  assert_out "dry-run ainda bloqueia NotebookEdit"             sim args_has_exact 1 specify-prompt 'NotebookEdit'
+  assert_out "sem dry-run não há disallow de repo"             nao args_has_exact 0 specify-prompt 'Write(//tmp/rp/**)'
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
