@@ -670,6 +670,81 @@ run_step() {
   [ "$STEP_OUTCOME" != aborto ] || emit_note warn "aborto: $STEP_ABORT"
 }
 
+# --- Passos de ponte (specify-prompt, plan-prompt) -------------------------
+# O file-drop: um --append-system-prompt (instrução POR EXECUÇÃO, não edição de
+# skill — ADR-005 intacto) que manda a ponte, além de imprimir, gravar o comando
+# exato e um token de status. Paths ABSOLUTOS (o passo roda com cwd no repo;
+# relativo sujaria a tree). Não contradiz a Fase 4 da ponte (que já manda parar);
+# só acrescenta o efeito colateral do arquivo.
+bridge_appendix() {
+  cat <<EOF
+Além de imprimir o comando /speckit.* pronto, execute estes dois efeitos e PARE
+(não dispare o /speckit.*):
+
+1. Grave a linha /speckit.… "…" INTEIRA, exatamente como a entregaria, em:
+   $NEXT_FILE
+2. Grave OK ou SUFFICIENCY_STOP (uma palavra, sozinha) em:
+   $SIGNAL_FILE
+   Use SUFFICIENCY_STOP se a guarda de suficiência disparar (o spec.md é vago
+   demais para inferir relevância de ADR / falta peça); caso contrário, OK.
+
+Não execute o /speckit.* — apenas grave os dois arquivos e pare.
+EOF
+}
+
+# STEP_ARGS é preenchida por step_args (Task 10 monta o esqueleto; aqui vem o ramo
+# bridge). allowedTools mínimo da ponte: Read (backlog/spec/adr), o check-prd.sh
+# que a Fase 4 roda, e Write só no scratch (o file-drop).
+#   NOTA: os padrões de allowedTools são CONFIRMADOS na validação empírica (Task
+#   15) — negação silenciosa em modo não-interativo é a lição cara do clarify.
+step_appendix() {  # step → texto do --append-system-prompt, ou vazio
+  case "$(step_type "$1")" in
+    bridge) bridge_appendix ;;
+    *)      : ;;
+  esac
+}
+
+# A mensagem inicial de um passo de ponte é o próprio slash command da skill.
+bridge_command() {  # step → /zion-prd-...
+  case "$1" in
+    specify-prompt) printf '/zion-prd-specify-prompt %s' "$SLUG" ;;
+    plan-prompt)    printf '/zion-prd-plan-prompt %s' "$SLUG" ;;
+  esac
+}
+
+# Handler de turno de ponte. signal.txt é lido PRIMEIRO (precedência do
+# SUFFICIENCY_STOP). Depois, next pronto → completo. Senão é gate → injeta
+# "confirma, siga" com teto.
+handle_turn_bridge() {  # texto do turno (ignorado — a decisão é por arquivo)
+  if [ "$(read_signal "$SIGNAL_FILE")" = SUFFICIENCY_STOP ]; then
+    STEP_OUTCOME=parada
+    STEP_STOP_WHY="a ponte sinalizou SUFFICIENCY_STOP — spec vago demais para inferir ADR; entregue ao humano"
+    return
+  fi
+  if next_ready "$NEXT_FILE"; then
+    STEP_OUTCOME=completo
+    return
+  fi
+  # Gate: a ponte pediu confirmação (lista de ADRs / "segue?"). Auto-confirma
+  # (decisão #1) com teto por sessão.
+  if [ "$(gate_action "$GATE_COUNT")" = aborta ]; then
+    STEP_OUTCOME=aborto
+    STEP_ABORT="teto de $GATE_MAX confirmações de gate estourado na ponte"
+    return
+  fi
+  GATE_COUNT=$((GATE_COUNT + 1))
+  emit_note you "$(printf 'confirma, siga (gate %d/%d)' "$GATE_COUNT" "$GATE_MAX")"
+  send_user 'confirma, siga'
+}
+
+# step_initial mínimo (só bridge). A Task 10 substitui pela versão completa.
+step_initial() {  # step → a mensagem de usuário inicial
+  case "$(step_type "$1")" in
+    bridge) bridge_command "$1" ;;
+    *)      printf '' ;;  # speckit/clarify/trace: Tasks 10-12
+  esac
+}
+
 # --- Auto-teste embutido ---------------------------------------------------
 
 # --- Fixtures do classificador do analyze (Task 4) --------------------------
@@ -1030,6 +1105,32 @@ self_test() {
   QUIET=1
   assert_emit "--quiet cala o stdout" '' emit_event "$FX_TOOL_BASH"
   QUIET=0
+
+  # --- Task 9: passos de ponte (handle_turn_bridge) ---
+  # Cenário de ponte: prepara um STATE_DIR de teste e exercita os três ramos.
+  local bd="$st_dir/bridge"; mkdir -p "$bd"
+  NEXT_FILE="$bd/next.txt"; SIGNAL_FILE="$bd/signal.txt"
+
+  # (a) next pronto → completo, sem injeção.
+  printf '/speckit.specify "x"\n' > "$NEXT_FILE"; : > "$SIGNAL_FILE"
+  STEP_OUTCOME=""; QUIET=1
+  handle_turn_bridge 'aqui está o comando' >/dev/null
+  assert_out "ponte com next pronto vira completo" completo printf '%s' "$STEP_OUTCOME"
+
+  # (b) SUFFICIENCY_STOP tem precedência mesmo com next pronto.
+  printf '/speckit.plan "x"\n' > "$NEXT_FILE"; printf 'SUFFICIENCY_STOP\n' > "$SIGNAL_FILE"
+  STEP_OUTCOME=""
+  handle_turn_bridge 'montei um prompt degradado' >/dev/null
+  assert_out "SUFFICIENCY_STOP vence next pronto" parada printf '%s' "$STEP_OUTCOME"
+
+  # (c) gate (sem next, sem stop) injeta confirma e não fecha, até o teto.
+  : > "$NEXT_FILE"; : > "$SIGNAL_FILE"; STEP_OUTCOME=""; GATE_COUNT=0
+  # send_user precisa de fd 3; no teste redireciona para /dev/null.
+  handle_turn_bridge 'confirme a lista de ADRs?' 3>/dev/null >/dev/null
+  assert_out "gate não fecha o passo"    ''  printf '%s' "$STEP_OUTCOME"
+  assert_out "gate incrementa o contador" 1  printf '%s' "$GATE_COUNT"
+  QUIET=0
+
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
   fi
