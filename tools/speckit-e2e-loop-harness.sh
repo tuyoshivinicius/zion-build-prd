@@ -51,8 +51,9 @@ EOF
   git -C "$REPO" init -q
   git -C "$REPO" add -A
   git -C "$REPO" -c user.email=h@local -c user.name=h commit -qm 'backlog + specify falso'
-  # A branch de feature (cursor compartilhado): o stub não roda git, então criamos aqui.
-  git -C "$REPO" checkout -q -b specs/003-preview
+  # NÃO criamos a branch de feature aqui: modelamos o Spec Kit v0.8.1 (branch-by-hook
+  # que não dispara em headless -p). O specify falso grava .specify/feature.json e o
+  # próprio loop (ensure_feature_branch) cria/entra na branch 003-preview.
 
   # Stub de `claude`. Lê a 1ª mensagem de usuário do FIFO, descobre qual passo é
   # pela linha do slash command, e emite o roteiro daquele passo — inclusive o
@@ -87,6 +88,8 @@ case "$msg" in
     emit_text 'prompt do specify pronto'; emit_result 'prompt do specify pronto' ;;
   *speckit.specify*)
     printf '%s\n' '# Spec: preview' '' '**RF cobertos:** RF-01' '' '## Requisitos' '- vê o preview' > "$SPECDIR/spec.md"
+    # Modela o v0.8.1: grava feature.json (feature_directory), mas NÃO cria a branch.
+    printf '{"feature_directory":"specs/%s"}\n' "$(basename "$SPECDIR")" > "$SPECDIR/../../.specify/feature.json"
     emit_text 'spec.md criado'; emit_result 'spec.md criado' ;;
   *zion-prd-plan-prompt*)
     if [ "${SKE_SUFFICIENCY:-0}" = 1 ]; then
