@@ -589,7 +589,11 @@ GATE_COUNT=0   # confirmações injetadas na sessão de ponte corrente
 run_step() {
   local step="$1" tag idx
   idx="$(step_index "$step")"; tag="$(printf 'step-%02d' "$idx")"
-  local log="$STATE_DIR/$tag.jsonl" err="$log.err" in="$WORK/in-$idx.fifo"
+  # local separado: `err="$log.err"` na MESMA declaração expandiria $log antes de
+  # ele existir e, sob set -u, abortaria (unbound). É o padrão do clarify-loop:871.
+  local log="$STATE_DIR/$tag.jsonl"
+  local err="$log.err"
+  local in="$WORK/in-$idx.fifo"
 
   STEP_OUTCOME=""; STEP_ABORT=""; STEP_COST=0; STEP_LAST_TEXT=""; STEP_STOP_WHY=""
   GATE_COUNT=0
