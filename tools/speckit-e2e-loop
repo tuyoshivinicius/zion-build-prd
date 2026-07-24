@@ -76,6 +76,42 @@ need_deps() {
   [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
 }
 
+# --- Máquina de estados dos 8 passos (funções puras) -----------------------
+# A ordem canônica. Uma verdade só: --from, retomada e dispatch leem daqui.
+STEPS='specify-prompt specify clarify plan-prompt plan tasks analyze trace'
+
+step_valid() {  # name → rc 0 se é passo conhecido
+  case " $STEPS " in *" ${1:-} "*) return 0 ;; *) return 1 ;; esac
+}
+
+step_index() {  # name → índice 1-based em stdout, rc 1 se desconhecido
+  local i=0 s
+  for s in $STEPS; do
+    i=$((i + 1))
+    [ "$s" = "${1:-}" ] && { printf '%s' "$i"; return 0; }
+  done
+  return 1
+}
+
+steps_from() {  # name → esse passo e todos a jusante, separados por espaço
+  local out="" hit="" s
+  for s in $STEPS; do
+    [ "$s" = "${1:-}" ] && hit=1
+    [ -n "$hit" ] && out="$out $s"
+  done
+  printf '%s' "${out# }"
+}
+
+step_type() {  # name → bridge|speckit|clarify|trace|unknown
+  case "${1:-}" in
+    specify-prompt|plan-prompt)   printf 'bridge' ;;
+    specify|plan|tasks|analyze)   printf 'speckit' ;;
+    clarify)                      printf 'clarify' ;;
+    trace)                        printf 'trace' ;;
+    *)                            printf 'unknown' ;;
+  esac
+}
+
 # --- Arcabouço de teste (copiado verbatim do speckit-clarify-loop) ----------
 ST_FAIL=0
 # Contador de casos: cresce sozinho a cada asserção. O literal que ele substitui
@@ -113,8 +149,32 @@ assert_emit() {  # descrição  esperado  comando…
   fi
 }
 
+# --- Adaptadores de teste (junto de self_test) -----------------------------
+# step_valid responde por status de saída, assert_out compara stdout.
+step_valid_str() { if step_valid "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
+
 self_test() {
   # As Tasks 2–7 penduram asserções aqui.
+
+  # --- Task 2: máquina de estados dos 8 passos ---
+  assert_out "specify-prompt é passo válido"   sim step_valid_str specify-prompt
+  assert_out "passo inventado é inválido"       nao step_valid_str foo
+  assert_out "índice do primeiro passo"         1   step_index specify-prompt
+  assert_out "índice do último passo"           8   step_index trace
+  assert_out "steps_from do meio traz o resto" \
+    "$(printf 'plan-prompt plan tasks analyze trace')" \
+    steps_from plan-prompt
+  assert_out "steps_from do primeiro traz todos" \
+    "$(printf 'specify-prompt specify clarify plan-prompt plan tasks analyze trace')" \
+    steps_from specify-prompt
+  assert_out "steps_from do último traz só ele"  trace steps_from trace
+  assert_out "tipo de specify-prompt é bridge"   bridge  step_type specify-prompt
+  assert_out "tipo de plan-prompt é bridge"      bridge  step_type plan-prompt
+  assert_out "tipo de specify é speckit"         speckit step_type specify
+  assert_out "tipo de analyze é speckit"         speckit step_type analyze
+  assert_out "tipo de clarify é clarify"         clarify step_type clarify
+  assert_out "tipo de trace é trace"             trace   step_type trace
+
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
   fi
