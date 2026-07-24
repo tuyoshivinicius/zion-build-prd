@@ -737,11 +737,52 @@ handle_turn_bridge() {  # texto do turno (ignorado — a decisão é por arquivo
   send_user 'confirma, siga'
 }
 
-# step_initial mínimo (só bridge). A Task 10 substitui pela versão completa.
-step_initial() {  # step → a mensagem de usuário inicial
+# --- Passos de Spec Kit (specify, plan, tasks, analyze) --------------------
+# One-shot: produzem o artefato, emitem result, encerram. O primeiro result limpo
+# é o passo completo; um turno que peça algo inesperado (segundo result) cai em
+# indeterminada no próximo giro — nunca fica pendurado (igual ao clarify).
+handle_turn_speckit() {  # texto do turno (guardado em STEP_LAST_TEXT pelo motor)
+  STEP_OUTCOME=completo
+}
+
+# A mensagem inicial: specify/plan vêm do next.txt do passo de ponte anterior;
+# tasks/analyze são o literal.
+speckit_command() {  # step → a linha a injetar
+  case "$1" in
+    specify|plan) read_next "$NEXT_FILE" ;;
+    tasks)        printf '/speckit.tasks' ;;
+    analyze)      printf '/speckit.analyze' ;;
+  esac
+}
+
+# step_args COMPLETA: allowedTools mínimo por tipo, sem --dangerously-skip.
+# Em --dry-run, a família que escreve sai de cena (semântica do clarify).
+#   Padrões CONFIRMADOS na validação empírica (Task 15).
+STEP_ARGS=()
+step_args() {  # step → preenche STEP_ARGS
+  STEP_ARGS=()
   case "$(step_type "$1")" in
-    bridge) bridge_command "$1" ;;
-    *)      printf '' ;;  # speckit/clarify/trace: Tasks 10-12
+    bridge)
+      STEP_ARGS=( --allowedTools 'Read' 'Bash(*check-prd.sh*)' "Write($STATE_DIR/*)" ) ;;
+    speckit)
+      STEP_ARGS=( --allowedTools 'Bash(.specify/scripts/bash/*)' 'Read' 'Write' 'Edit' ) ;;
+    trace)
+      STEP_ARGS=( --allowedTools 'Bash(*trace-prd.sh*)' 'Bash(*trace-backlog.sh*)' \
+                  'Bash(*trace-arquitetura.sh*)' 'Bash(*check-arquitetura.sh*)' \
+                  'Read' 'Write' 'Edit' ) ;;
+  esac
+  if [ "$DRY_RUN" -eq 1 ]; then
+    STEP_ARGS+=( --disallowedTools Edit Write MultiEdit NotebookEdit )
+  fi
+}
+
+# step_initial COMPLETA (substitui a mínima da Task 9).
+step_initial() {  # step → mensagem de usuário inicial
+  case "$(step_type "$1")" in
+    bridge)  bridge_command "$1" ;;
+    speckit) speckit_command "$1" ;;
+    clarify) printf '' ;;                 # Task 11 não usa run_step
+    trace)   printf '/zion-prd-trace' ;;  # Task 12
   esac
 }
 
@@ -1129,6 +1170,13 @@ self_test() {
   handle_turn_bridge 'confirme a lista de ADRs?' 3>/dev/null >/dev/null
   assert_out "gate não fecha o passo"    ''  printf '%s' "$STEP_OUTCOME"
   assert_out "gate incrementa o contador" 1  printf '%s' "$GATE_COUNT"
+  QUIET=0
+
+  # --- Task 10: passos de Spec Kit (handle_turn_speckit) ---
+  # Spec Kit é one-shot: o result fecha o passo.
+  STEP_OUTCOME=""; QUIET=1
+  handle_turn_speckit 'gerei o plan.md' >/dev/null
+  assert_out "passo speckit fecha no result" completo printf '%s' "$STEP_OUTCOME"
   QUIET=0
 
   if [ "$ST_FAIL" -eq 0 ]; then
