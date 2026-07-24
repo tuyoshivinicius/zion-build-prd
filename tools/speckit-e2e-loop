@@ -31,6 +31,12 @@ MAX_COST=""
 ALLOW_DIRTY=0
 DRY_RUN=0
 QUIET=0
+# Monitor (copiado do speckit-clarify-loop). Perfil/largura decididos no arranque
+# por mon_setup; STEP_LOG é o log plain por passo; LAST_KIND dedup do thinking.
+MON_PROFILE=plain
+MON_WIDTH=80
+STEP_LOG=""
+LAST_KIND=""
 
 # Teto de "confirma, siga" por sessão de ponte — nunca fica pendurado num gate
 # que se repete (design §Sessão e extração).
@@ -275,6 +281,395 @@ state_clear_from() {  # from-step — apaga done= do passo e a jusante
   mv -- "$tmp" "$STATE_FILE"
 }
 
+# --- Monitor: copiado verbatim do speckit-clarify-loop --------------------
+ratelimit_fatal() {  # status → 0 se a rodada deve abortar
+  case "${1:-?}" in
+    allowed|allowed_*) return 1 ;;
+    *)                 return 0 ;;
+  esac
+}
+
+# --- Leitura das negações de permissão (funções puras de texto) -------------
+# A guarda original abortava a rodada diante de QUALQUER permission_denial, com
+# a justificativa de que a rodada "gravaria spec pela metade". A justificativa
+# vale para a família que escreve: negar um `Edit` no meio de uma sequência de
+# edições deixa o spec com metade das mudanças aplicadas. Não vale para leitura.
+#
+# Em 2026-07-21 isso custou duas rodadas inteiras (US$ 1,75 e US$ 1,79) em
+# zion-mermaid-editor-app: o que foi negado era um `grep` de listar cabeçalhos,
+# a skill contornou, a rodada terminou com a pergunta completa e `is_error`
+# false — e o script jogou tudo fora assim mesmo.
+#
+# `Bash` fica FORA da lista de mutantes de propósito, e a razão merece estar
+# escrita: uma chamada negada não executou, então ela própria não gravou nada. O
+# risco de spec meio escrito nasce da sequência de `Edit` que a skill usa para
+# atualizar o spec, e é essa sequência que a guarda protege.
+MUTANTES='Edit Write MultiEdit NotebookEdit'
+denied_tools() {  # linha-jsonl → nomes das ferramentas negadas, separados por espaço
+  printf '%s' "${1:-}" \
+    | jq -r '[(.permission_denials // [])[] | .tool_name // "?"] | join(" ")' 2>/dev/null
+  return 0
+}
+
+mutating_only() {  # lista de nomes → só as que escrevem, na mesma ordem
+  local out="" t m
+  for t in ${1:-}; do
+    for m in $MUTANTES; do
+      if [ "$t" = "$m" ]; then out="$out $t"; break; fi
+    done
+  done
+  printf '%s' "${out# }"
+  return 0
+}
+# --- Monitor: primitivas de formatação -------------------------------------
+# Dois perfis. `tty` usa símbolos e ANSI; `plain` usa rótulos ASCII e nada de
+# escape — porque o round-NN.log tem que continuar legível seis meses depois,
+# e arquivo com sequência ANSI dentro é arquivo que ninguém relê.
+MON_IND='         '   # 9 colunas: a indentação de continuação, nos dois perfis
+
+mon_marker() {  # perfil kind → marcador (no perfil plain, já com 8 colunas)
+  case "${1:-}:${2:-}" in
+    tty:tool)       printf '⚙' ;;
+    tty:text)       printf '◆' ;;
+    tty:you)        printf '▸' ;;
+    tty:thinking)   printf '·' ;;
+    tty:ok)         printf '✓' ;;
+    tty:warn)       printf '⚠' ;;
+    tty:info)       printf 'ⓘ' ;;
+    plain:tool)     printf '[tool]  ' ;;
+    plain:text)     printf '[claude]' ;;
+    plain:you)      printf '[você]  ' ;;
+    plain:thinking) printf '[...]   ' ;;
+    plain:ok)       printf '[ok]    ' ;;
+    plain:warn)     printf '[!]     ' ;;
+    plain:info)     printf '[nota]  ' ;;
+    *)              printf '?' ;;
+  esac
+}
+
+mon_head() {  # clock marcador corpo
+  printf '  %s  %s  %s\n' "${1:-}" "${2:-}" "${3:-}"
+}
+
+mon_paint() {  # perfil cor texto
+  if [ "${1:-}" != tty ]; then printf '%s' "${3:-}"; return 0; fi
+  local c
+  case "${2:-}" in
+    dim)  c=$'\033[2m' ;;
+    bold) c=$'\033[1m' ;;
+    red)  c=$'\033[31m' ;;
+    *)    printf '%s' "${3:-}"; return 0 ;;
+  esac
+  printf '%s%s\033[0m' "$c" "${3:-}"
+}
+
+mon_trunc() {  # texto largura
+  local t="${1:-}" w="${2:-80}"
+  [ "$w" -ge 8 ] || w=8
+  if [ "${#t}" -le "$w" ]; then printf '%s' "$t"; return 0; fi
+  printf '%s…' "${t:0:$((w - 1))}"
+}
+
+# Dobra a prosa e indenta em 9 colunas. Tabelas markdown e cercas de código
+# escapam da dobra de propósito: quebrar a tabela de opções destrói exatamente
+# a informação que se quer ler. Se estourar a largura, estoura.
+mon_fold() {  # largura total; stdin → stdout
+  local w=$(( ${1:-80} - 9 ))
+  [ "$w" -ge 20 ] || w=20
+  local l
+  while IFS= read -r l || [ -n "$l" ]; do
+    case "$l" in
+      '')        printf '\n' ;;
+      '|'*|'```'*) printf '%s%s\n' "$MON_IND" "$l" ;;
+      *)         printf '%s\n' "$l" | fold -s -w "$w" \
+                   | sed -e "s/^/$MON_IND/" -e 's/[[:space:]]*$//' ;;
+    esac
+  done
+  return 0
+}
+
+# Resumo de um tool_use: comando para Bash, basename para quem tem file_path,
+# e um genérico de primeira chave para o resto (nenhuma ferramenta fica muda).
+# Só o primeiro tool_use da linha é resumido — perder uma chamada de ferramenta
+# é aceitável; perder prosa não é, e por isso a prosa tem precedência em
+# event_kind.
+tool_summary() {  # linha-jsonl → NOME<TAB>RESUMO
+  printf '%s' "${1:-}" | jq -r '
+    ([.message.content[]? | select(.type=="tool_use")] | first) as $t
+    | if $t == null then empty else
+        ($t.input // {}) as $i
+        | [ ($t.name // "?"),
+            ( if   $i.command   then ($i.command | gsub("\\s+"; " "))
+              elif $i.file_path then ($i.file_path | split("/") | last)
+              elif $i.pattern   then $i.pattern
+              else (($i | keys | first) as $k
+                    | if $k == null then "" else "\($k)=\($i[$k] | tostring)" end)
+              end ) ]
+        | @tsv
+      end' 2>/dev/null
+  return 0
+}
+
+# --- Monitor: leitura de eventos -------------------------------------------
+# Traduz uma linha do stream JSONL num rótulo. Função pura: sem I/O além do
+# stdout, sem estado global. Qualquer linha que o jq não digira cai em
+# `nothing` — o monitor é aditivo e jamais derruba a rodada.
+#
+# Precedência dentro de uma linha `assistant`: text > tool_use > thinking.
+# No stream observado toda linha trazia um único bloco, mas se a API um dia
+# agrupar blocos, perder a prosa seria a única falha inaceitável.
+event_kind() {
+  local line="${1:-}" typ types st
+  typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)"
+  case "$typ" in
+    result)
+      printf 'result\n'; return 0 ;;
+    rate_limit_event)
+      st="$(printf '%s' "$line" | jq -r '.rate_limit_info.status // "?"' 2>/dev/null)"
+      if [ "$st" = "allowed" ]; then printf 'nothing\n'; else printf 'ratelimit\n'; fi
+      return 0 ;;
+    assistant)
+      types="$(printf '%s' "$line" | jq -r '[.message.content[]?.type] | join(" ")' 2>/dev/null)"
+      case " $types " in
+        *' text '*)     printf 'text\n' ;;
+        *' tool_use '*) printf 'tool\n' ;;
+        *' thinking '*) printf 'thinking\n' ;;
+        *)              printf 'nothing\n' ;;
+      esac
+      return 0 ;;
+    *)
+      printf 'nothing\n'; return 0 ;;
+  esac
+}
+
+# Suprime `pensando…` repetido. Note que o kind anterior é o último kind
+# EFETIVO — eventos que não rendem linha (system/*, tool_result) não o mexem,
+# de modo que thinking · ruído · thinking conta como um só arroubo de reflexão.
+dedup_kind() {  # kind-anterior  kind → kind efetivo
+  if [ "${2:-}" = thinking ] && [ "${1:-}" = thinking ]; then
+    printf 'nothing\n'
+  else
+    printf '%s\n' "${2:-nothing}"
+  fi
+}
+
+# --- Monitor: renderização --------------------------------------------------
+# (perfil, largura, clock, kind, linha) → narração. Pura: o relógio chega
+# pronto, nada de estado mutável. É a única função que sabe como a saída se
+# parece, e por isso a única que precisa mudar se a apresentação mudar.
+render_line() {  # perfil largura clock kind linha
+  local p="${1:-plain}" w="${2:-80}" clock="${3:-00:00}" kind="${4:-nothing}" line="${5:-}"
+  local body mark prefix tsv name summary st
+
+  case "$kind" in
+    thinking)
+      mon_head "$clock" "$(mon_marker "$p" thinking)" "$(mon_paint "$p" dim 'pensando…')"
+      ;;
+    tool)
+      tsv="$(tool_summary "$line")"
+      [ -n "$tsv" ] || return 0
+      name="${tsv%%$'\t'*}"
+      summary="${tsv#*$'\t'}"
+      [ "$summary" != "$tsv" ] || summary=""
+      # Colunas consumidas por "  CLOCK  MARCADOR  ": 2+5+2+largura+2. Sai do
+      # próprio marcador em vez de uma tabela paralela: `⚙` dá 12 e `[tool]  `
+      # dá 19, os mesmos números da função que isto substitui. `${#}` conta
+      # caractere e não byte sob locale UTF-8 — a mesma premissa que mon_trunc
+      # já faz ao cortar prosa acentuada, não uma premissa nova.
+      mark="$(mon_marker "$p" tool)"
+      prefix=$(( 2 + 5 + 2 + ${#mark} + 2 ))
+      body="$(printf '%-8s %s' "$name" "$summary")"
+      body="$(mon_trunc "$body" $(( w - prefix )))"
+      mon_head "$clock" "$mark" "$(mon_paint "$p" dim "$body")"
+      ;;
+    text)
+      mon_head "$clock" "$(mon_marker "$p" text)" 'claude'
+      printf '%s' "$line" \
+        | jq -r '[.message.content[]? | select(.type=="text") | .text] | join("\n\n")' 2>/dev/null \
+        | mon_fold "$w"
+      ;;
+    ratelimit)
+      st="$(printf '%s' "$line" | jq -r '.rate_limit_info.status // "?"' 2>/dev/null)"
+      mon_head "$clock" "$(mon_marker "$p" warn)" "$(mon_paint "$p" red "rate limit: $st")"
+      ;;
+    *)
+      # nothing e result não rendem linha. O rodapé da rodada é emitido pelo
+      # motor (emit_note), que é quem conhece o contador de yes e o delta do
+      # spec; e a prosa do `.result` é a mesma do último bloco assistant, que
+      # já foi impressa — reimprimi-la duplicaria a pergunta inteira.
+      return 0
+      ;;
+  esac
+  return 0
+}
+
+# --- Monitor: cola com estado -----------------------------------------------
+# O único lugar do monitor que fala com o mundo: relógio, destinos e a memória
+# do último kind. As três funções acima permanecem puras justamente porque tudo
+# que é impuro está aqui.
+
+mon_setup() {  # decide perfil e largura, uma vez, no arranque
+  if [ -t 1 ]; then
+    MON_PROFILE=tty
+    MON_WIDTH="$(tput cols 2>/dev/null || printf '80')"
+    case "$MON_WIDTH" in ''|*[!0-9]*) MON_WIDTH=80 ;; esac
+    [ "$MON_WIDTH" -le 100 ] || MON_WIDTH=100
+    [ "$MON_WIDTH" -ge 40 ] || MON_WIDTH=40
+  else
+    MON_PROFILE=plain
+    MON_WIDTH=80
+  fi
+  return 0
+}
+
+mon_clock() { printf '%02d:%02d' $(( SECONDS / 60 )) $(( SECONDS % 60 )); }
+
+mon_step_start() {  # caminho do round-NN.log
+  STEP_LOG="${1:-}"
+  LAST_KIND=""
+  SECONDS=0
+  [ -z "$STEP_LOG" ] || : > "$STEP_LOG"
+  return 0
+}
+
+# O log em arquivo recebe SEMPRE perfil plain com largura 80 — daí a prosa ser
+# renderizada duas vezes no TTY. É baratíssimo, e evita ter que arrancar ANSI
+# com sed no caminho de escrita.
+emit_event() {  # linha-jsonl
+  local line="${1:-}" kind clock
+  kind="$(event_kind "$line")"
+  kind="$(dedup_kind "$LAST_KIND" "$kind")"
+  [ "$kind" = nothing ] && return 0
+  LAST_KIND="$kind"
+  clock="$(mon_clock)"
+  [ "$QUIET" -eq 1 ] || render_line "$MON_PROFILE" "$MON_WIDTH" "$clock" "$kind" "$line"
+  [ -z "$STEP_LOG" ] || render_line plain 80 "$clock" "$kind" "$line" >> "$STEP_LOG"
+  return 0
+}
+
+# Linhas que nascem no motor, não no stream: o eco do `yes`, o rodapé da
+# rodada, os avisos de aborto.
+emit_note() {  # kind texto
+  local kind="${1:-text}" text="${2:-}" clock color
+  case "$kind" in
+    you)  color=bold ;;
+    warn) color=red ;;
+    info) color=bold ;;
+    *)    color=none ;;
+  esac
+  clock="$(mon_clock)"
+  [ "$QUIET" -eq 1 ] || \
+    mon_head "$clock" "$(mon_marker "$MON_PROFILE" "$kind")" "$(mon_paint "$MON_PROFILE" "$color" "$text")"
+  [ -z "$STEP_LOG" ] || \
+    mon_head "$clock" "$(mon_marker plain "$kind")" "$text" >> "$STEP_LOG"
+  return 0
+}
+
+# Estrutura (cabeçalho de rodada): sem relógio, e sobrevive ao --quiet — é o
+# mínimo que diz "ainda estou vivo" quando a narração está calada.
+emit_rule() {  # texto
+  printf '%s\n' "${1:-}"
+  [ -z "$STEP_LOG" ] || printf '%s\n' "${1:-}" >> "$STEP_LOG"
+  return 0
+}
+# --- Motor de sessão (run_step) --------------------------------------------
+# Uma mensagem de usuário JSONL no fd 3 (speckit-clarify-loop:859-862).
+send_user() {  # texto → mensagem de usuário no fd 3
+  jq -cn --arg t "$1" \
+    '{type:"user",message:{role:"user",content:[{type:"text",text:$t}]}}' >&3
+}
+
+# Saídas do passo, por escopo dinâmico (o dispatch por tipo as escreve).
+STEP_OUTCOME=""; STEP_ABORT=""; STEP_COST=0; STEP_LAST_TEXT=""; STEP_STOP_WHY=""
+GATE_COUNT=0   # confirmações injetadas na sessão de ponte corrente
+
+# run_step: um processo `claude` para o passo. `$1` = nome do passo. As três
+# coisas que variam por passo — allowedTools, --append-system-prompt e a
+# mensagem inicial — vêm de step_args/step_appendix/step_initial (Tasks 9-12).
+run_step() {
+  local step="$1" tag idx
+  idx="$(step_index "$step")"; tag="$(printf 'step-%02d' "$idx")"
+  local log="$STATE_DIR/$tag.jsonl" err="$log.err" in="$WORK/in-$idx.fifo"
+
+  STEP_OUTCOME=""; STEP_ABORT=""; STEP_COST=0; STEP_LAST_TEXT=""; STEP_STOP_WHY=""
+  GATE_COUNT=0
+
+  mkfifo "$in" || { STEP_OUTCOME=aborto; STEP_ABORT="mkfifo falhou"; return; }
+  : > "$log"; : > "$err"
+
+  # Args base + os específicos do passo (Tasks 9-12 preenchem step_args/appendix).
+  local -a args=(
+    -p --input-format stream-json --output-format stream-json --verbose
+    --permission-mode acceptEdits
+  )
+  step_args "$step"; args+=( "${STEP_ARGS[@]}" )
+  local appendix; appendix="$(step_appendix "$step")"
+  [ -z "$appendix" ] || args+=( --append-system-prompt "$appendix" )
+
+  ( cd "$REPO" && exec timeout -s TERM "$STEP_TIMEOUT" claude "${args[@]}" ) \
+    < "$in" > "$log" 2> "$err" &
+  local cpid=$!
+  exec 3<> "$in"
+
+  send_user "$(step_initial "$step")"
+
+  local line typ status iserr denied mutantes txt
+  while IFS= read -r line; do
+    emit_event "$line"
+    typ="$(printf '%s' "$line" | jq -r '.type // empty' 2>/dev/null)" || continue
+
+    if [ "$typ" = "rate_limit_event" ]; then
+      status="$(printf '%s' "$line" | jq -r '.rate_limit_info.status // "?"')"
+      if ratelimit_fatal "$status"; then
+        STEP_OUTCOME=aborto
+        STEP_ABORT="rate limit com status=$status — cota esgotada, não insisto"
+        break
+      fi
+      continue
+    fi
+
+    [ "$typ" = "result" ] || continue
+
+    iserr="$(printf '%s' "$line" | jq -r '.is_error // false')"
+    denied="$(denied_tools "$line")"
+    mutantes="$(mutating_only "$denied")"
+    STEP_COST="$(pick_cost "$line" "$STEP_COST")"
+
+    if [ "$iserr" = "true" ]; then
+      STEP_OUTCOME=aborto; STEP_ABORT="result com is_error=true (ver $log)"; break
+    fi
+    if [ -n "$mutantes" ] && [ "$DRY_RUN" -eq 0 ]; then
+      STEP_OUTCOME=aborto
+      STEP_ABORT="permissão negada em ferramenta que escreve ($mutantes) — passo gravaria pela metade"
+      break
+    fi
+    [ -z "$denied" ] || [ -n "$mutantes" ] \
+      || emit_note warn "permissão negada, passo segue: $denied"
+
+    txt="$(printf '%s' "$line" | jq -r '.result // ""')"
+    STEP_LAST_TEXT="$txt"
+
+    # Dispatch por tipo — decide se o passo terminou, se injeta algo, ou se para.
+    # Cada handler pode setar STEP_OUTCOME (para dar break) via a variável global.
+    case "$(step_type "$step")" in
+      bridge)  handle_turn_bridge  "$txt" ;;
+      speckit) handle_turn_speckit "$txt" ;;
+      trace)   handle_turn_trace   "$txt" ;;
+    esac
+    [ -z "$STEP_OUTCOME" ] || break
+  done < <(exec 3>&-; tail -n +1 -f --pid="$cpid" --sleep-interval=0.2 "$log")
+
+  exec 3>&-              # fecha o stdin do claude → o processo sai → é o /clear
+  wait "$cpid" 2>/dev/null
+  rm -f "$in"
+
+  if [ -z "$STEP_OUTCOME" ]; then
+    STEP_OUTCOME=aborto
+    STEP_ABORT="o processo claude terminou sem passo classificável (ver $err)"
+  fi
+  [ "$STEP_OUTCOME" != aborto ] || emit_note warn "aborto: $STEP_ABORT"
+}
+
 # --- Auto-teste embutido ---------------------------------------------------
 
 # --- Fixtures do classificador do analyze (Task 4) --------------------------
@@ -326,6 +721,29 @@ EOF
 # --- Fixtures de custo/permissão (Task 6, reusadas do speckit-clarify-loop) --
 FX_DENY_BASH='{"type":"result","is_error":false,"permission_denials":[{"tool_name":"Bash","tool_use_id":"toolu_01TX","tool_input":{"command":"grep -n '"'"'^#\\{1,4\\} '"'"' specs/001-cano-modelo-codigo/spec.md"}}]}'
 FX_RESULT='{"type":"result","is_error":false,"result":"prosa que NAO pode reaparecer","total_cost_usd":0.41}'
+# --- Fixtures do monitor ---------------------------------------------------
+# Capturadas de /tmp/speckit-clarify-loop/round-01.jsonl numa rodada real.
+# Nesse stream toda linha `assistant` trazia exatamente 1 bloco de conteúdo,
+# mas a precedência text > tool_use > thinking existe para que uma linha em
+# lote nunca faça a prosa desaparecer.
+FX_TOOL_BASH='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"check-prerequisites.sh --json --paths-only","description":"Run prerequisites check"}}]}}'
+FX_TOOL_READ='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"/home/tuyoshi/projects/personal/zion-mermaid-editor-app/specs/001-cano-modelo-codigo/spec.md"}}]}}'
+FX_TOOL_OTHER='{"type":"assistant","message":{"content":[{"type":"tool_use","name":"WebSearch","input":{"query":"spec kit clarify"}}]}}'
+FX_THINK='{"type":"assistant","message":{"content":[{"type":"thinking","thinking":"Vou mapear a estrutura do spec antes de procurar lacunas."}]}}'
+FX_TEXT='{"type":"assistant","message":{"content":[{"type":"text","text":"**Recomendado: Opção B**\n\n| Opção | Descrição |\n|---|---|\n| A | Manter o silêncio |"}]}}'
+FX_MIXED='{"type":"assistant","message":{"content":[{"type":"thinking","thinking":"z"},{"type":"text","text":"prosa"}]}}'
+FX_SYS_INIT='{"type":"system","subtype":"init","session_id":"x"}'
+FX_SYS_TOK='{"type":"system","subtype":"thinking_tokens","tokens":128}'
+FX_RL_OK='{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","rateLimitType":"five_hour"}}'
+FX_RL_BAD='{"type":"rate_limit_event","rate_limit_info":{"status":"rejected","rateLimitType":"five_hour"}}'
+# Captura literal de 2026-07-21 04:15 em zion-mermaid-editor-app — a que abortou
+# a rodada 03 por engano. Note `isUsingOverage:false` com `overageStatus:
+# rejected`: quando a janela ESTOURA de verdade não há excedente para amortecer,
+# e é por isso que o aviso merece continuar aparecendo na narração mesmo tendo
+# deixado de ser fatal.
+FX_RL_WARN='{"type":"rate_limit_event","rate_limit_info":{"status":"allowed_warning","resetsAt":1784620800,"rateLimitType":"five_hour","utilization":0.9,"isUsingOverage":false,"surpassedThreshold":0.9,"overageStatus":"rejected","overageDisabledReason":"out_of_credits"}}'
+FX_BAD='{not json'
+FX_USER_TR='{"type":"user","message":{"content":[{"type":"tool_result","content":"1081 linhas"}]}}'
 
 # --- Arcabouço de teste (copiado verbatim do speckit-clarify-loop) ----------
 ST_FAIL=0
@@ -372,6 +790,10 @@ is_stack_finding_str() { if is_stack_finding "${1:-}"; then printf 'sim'; else p
 env_resolve_check_prd() { SPECKIT_E2E_CHECK_PRD="${1:-}" resolve_check_prd; }
 cost_exceeded_str() { if cost_exceeded "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
 state_keep_line_str() { if state_keep_line "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
+# Adaptadores do monitor: ratelimit_fatal responde por status de saída; mon_fold
+# é filtro de stdin. assert_out só sabe chamar comando e comparar stdout.
+fatal_str() { if ratelimit_fatal "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
+mon_fold_str() { printf '%s\n' "$2" | mon_fold "$1"; }
 
 self_test() {
   # As Tasks 2–7 penduram asserções aqui.
@@ -468,6 +890,146 @@ self_test() {
   assert_out "done a jusante do from NÃO sobrevive" nao state_keep_line_str 'done=tasks' plan-prompt
   assert_out "linha que não é done= sobrevive"    sim state_keep_line_str 'branch=specs/003-x' plan-prompt
 
+
+  # --- Task 8: testes do monitor (copiados do speckit-clarify-loop) ---
+  assert_out "tool_use Bash"                tool      event_kind "$FX_TOOL_BASH"
+  assert_out "tool_use Read"                tool      event_kind "$FX_TOOL_READ"
+  assert_out "tool_use desconhecida"        tool      event_kind "$FX_TOOL_OTHER"
+  assert_out "thinking"                     thinking  event_kind "$FX_THINK"
+  assert_out "texto do assistente"          text      event_kind "$FX_TEXT"
+  assert_out "linha em lote: texto vence"   text      event_kind "$FX_MIXED"
+  assert_out "system/init é ruído"          nothing   event_kind "$FX_SYS_INIT"
+  assert_out "system/thinking_tokens é ruído" nothing event_kind "$FX_SYS_TOK"
+  assert_out "tool_result do usuário é ruído" nothing event_kind "$FX_USER_TR"
+  assert_out "rate limit allowed é ruído"   nothing   event_kind "$FX_RL_OK"
+  assert_out "rate limit não-allowed"       ratelimit event_kind "$FX_RL_BAD"
+  # O aviso NÃO é ruído: deixou de abortar, mas continua na tela, porque 90% da
+  # janela com excedente indisponível é a informação que decide se vale começar
+  # outra rodada agora ou esperar o reset.
+  assert_out "rate limit allowed_warning é narrado" ratelimit event_kind "$FX_RL_WARN"
+
+  assert_out "allowed não aborta"                 nao fatal_str allowed
+  assert_out "allowed_warning não aborta"         nao fatal_str allowed_warning
+  assert_out "qualquer allowed_* não aborta"      nao fatal_str allowed_seja_o_que_for
+  assert_out "rejected aborta"                    sim fatal_str rejected
+  assert_out "status desconhecido aborta"         sim fatal_str '?'
+  assert_out "status vazio aborta"                sim fatal_str ''
+  assert_out "result"                       result    event_kind "$FX_RESULT"
+  assert_out "linha malformada não quebra"  nothing   event_kind "$FX_BAD"
+  assert_out "linha vazia não quebra"       nothing   event_kind ""
+
+  assert_out "thinking após thinking suprime"  nothing  dedup_kind thinking thinking
+  assert_out "thinking após tool passa"        thinking dedup_kind tool     thinking
+  assert_out "texto após texto passa"          text     dedup_kind text     text
+  assert_out "sem anterior passa"              tool     dedup_kind ""       tool
+
+  assert_out "marcador plain preenche 8 colunas" '[tool]  ' mon_marker plain tool
+  assert_out "marcador tty é um símbolo"         '⚙'        mon_marker tty   tool
+  # A largura reservada não é mais observável direto: observa-se onde a
+  # truncagem cai. Com w=40, plain reserva 19 e sobra 21; tty reserva 12 e
+  # sobra 28. São os mesmos 19 e 12 de antes, agora medidos no resultado.
+  assert_out "prefixo plain reserva 19 colunas na truncagem" \
+    '  01:23  [tool]    Bash     check-prere…' \
+    render_line plain 40 '01:23' tool "$FX_TOOL_BASH"
+  assert_out "prefixo tty reserva 12 colunas na truncagem" \
+    "$(printf '  01:23  ⚙  \033[2mBash     check-prerequisite…\033[0m')" \
+    render_line tty 40 '01:23' tool "$FX_TOOL_BASH"
+  assert_out "cabeçalho monta a linha"           '  01:23  [ok]      pronto' \
+    mon_head '01:23' '[ok]    ' 'pronto'
+  assert_out "perfil plain não pinta"            'nu'       mon_paint plain red 'nu'
+  assert_out "truncagem curta não mexe"          'abc'      mon_trunc 'abc' 10
+  assert_out "truncagem longa corta com reticências" 'abcdefg…' mon_trunc 'abcdefghijklmno' 8
+  assert_out "resumo de Bash usa o command" \
+    "$(printf 'Bash\tcheck-prerequisites.sh --json --paths-only')" \
+    tool_summary "$FX_TOOL_BASH"
+  assert_out "resumo de Read usa só o basename" \
+    "$(printf 'Read\tspec.md')" \
+    tool_summary "$FX_TOOL_READ"
+  assert_out "resumo de ferramenta desconhecida cai no genérico" \
+    "$(printf 'WebSearch\tquery=spec kit clarify')" \
+    tool_summary "$FX_TOOL_OTHER"
+  assert_out "resumo de linha sem tool_use é vazio" '' tool_summary "$FX_THINK"
+
+  assert_out "tabela markdown escapa da dobra" \
+    '         | Opção | Descrição |' \
+    mon_fold_str 40 '| Opção | Descrição |'
+  assert_out "prosa longa dobra e indenta em 9" \
+    "$(printf '         palavra palavra palavra\n         palavra palavra')" \
+    mon_fold_str 40 'palavra palavra palavra palavra palavra'
+  # Verificado: `fold -s -w 31` quebra essa frase em "palavra palavra palavra "
+  # (COM espaço à direita) e "palavra palavra". O `sed` de mon_fold apara esse
+  # espaço — se não aparasse, o log ficaria cheio de espaço invisível no fim da
+  # linha e esta expectativa seria impossível de escrever à mão.
+  assert_out "linha vazia continua vazia" '' mon_fold_str 40 ''
+
+  assert_out "tool_use Bash mostra o comando" \
+    '  01:23  [tool]    Bash     check-prerequisites.sh --json --paths-only' \
+    render_line plain 80 '01:23' tool "$FX_TOOL_BASH"
+  assert_out "tool_use Read mostra só o basename" \
+    '  01:23  [tool]    Read     spec.md' \
+    render_line plain 80 '01:23' tool "$FX_TOOL_READ"
+  assert_out "ferramenta desconhecida não quebra" \
+    '  01:23  [tool]    WebSearch query=spec kit clarify' \
+    render_line plain 80 '01:23' tool "$FX_TOOL_OTHER"
+  assert_out "thinking vira marcador sem conteúdo" \
+    '  01:23  [...]     pensando…' \
+    render_line plain 80 '01:23' thinking "$FX_THINK"
+  assert_out "texto imprime cabeçalho e preserva a tabela" \
+    "$(printf '  01:23  [claude]  claude\n         **Recomendado: Opção B**\n\n         | Opção | Descrição |\n         |---|---|\n         | A | Manter o silêncio |')" \
+    render_line plain 80 '01:23' text "$FX_TEXT"
+  assert_out "rate limit não-allowed avisa" \
+    '  01:23  [!]       rate limit: rejected' \
+    render_line plain 80 '01:23' ratelimit "$FX_RL_BAD"
+  assert_out "result NÃO reimprime a prosa" '' render_line plain 80 '01:23' result "$FX_RESULT"
+  assert_out "kind nothing não imprime nada"  '' render_line plain 80 '01:23' nothing "$FX_SYS_INIT"
+  assert_out "linha malformada não imprime nada" '' render_line plain 80 '01:23' tool "$FX_BAD"
+  SECONDS=125
+  assert_out "relógio formata mm:ss" '02:05' mon_clock
+
+  # A cola tem estado, então o teste a exercita com destinos controlados:
+  # sem log em arquivo (STEP_LOG vazio) e com o perfil plain forçado.
+  #
+  # E com o relógio congelado: emit_event gasta três `jq` antes de chamar
+  # mon_clock, e sob carga isso vira a casa do segundo — o teste passava a
+  # falhar por 00:01 em vez de 00:00, sem nada de errado no código. O relógio
+  # real fica coberto pelo assert de mm:ss logo acima, que é determinístico.
+  mon_clock() { printf '00:00'; }
+  MON_PROFILE=plain; MON_WIDTH=80; QUIET=0; STEP_LOG=""; LAST_KIND=""
+  assert_emit "emit_note ecoa a linha do motor" \
+    '  00:00  [você]    yes                    (pergunta 1/5)' \
+    emit_note you 'yes                    (pergunta 1/5)'
+
+  # R-2: o kind `info` do aviso. mon_marker é pura e exata nos dois perfis; o
+  # assert_emit prova que emit_note ROTEIA o kind info (mesmo espaçamento do
+  # `you`, porque [nota] e [você] têm 6 chars → marcador de 8 colunas idêntico).
+  # bold só pinta no tty; aqui o perfil é plain, então o texto sai literal.
+  assert_out "marcador info no tty é o glifo ⓘ" 'ⓘ' mon_marker tty info
+  assert_out "marcador info no plain tem 8 colunas" '[nota]  ' mon_marker plain info
+  assert_emit "emit_note roteia o kind info" \
+    '  00:00  [nota]    considere parar (teste)' \
+    emit_note info 'considere parar (teste)'
+
+  assert_emit "emit_rule não leva relógio" \
+    '── rodada 01/10 ──' \
+    emit_rule '── rodada 01/10 ──'
+
+  LAST_KIND=""
+  assert_emit "emit_event narra o primeiro thinking" \
+    '  00:00  [...]     pensando…' \
+    emit_event "$FX_THINK"
+  assert_emit "emit_event suprime o thinking seguinte" '' emit_event "$FX_THINK"
+  assert_emit "system entre thinkings não imprime nada" '' emit_event "$FX_SYS_TOK"
+  assert_emit "thinking após ruído continua suprimido"  '' emit_event "$FX_THINK"
+  assert_emit "tool reabre a supressão" \
+    '  00:00  [tool]    Bash     check-prerequisites.sh --json --paths-only' \
+    emit_event "$FX_TOOL_BASH"
+  assert_emit "thinking após tool volta a narrar" \
+    '  00:00  [...]     pensando…' \
+    emit_event "$FX_THINK"
+
+  QUIET=1
+  assert_emit "--quiet cala o stdout" '' emit_event "$FX_TOOL_BASH"
+  QUIET=0
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
   fi
