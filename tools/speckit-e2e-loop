@@ -226,6 +226,55 @@ gate_action() {  # nº de confirmações já injetadas → confirma|aborta
   if [ "${1:-0}" -lt "$GATE_MAX" ]; then printf 'confirma'; else printf 'aborta'; fi
 }
 
+# --- Estado, retomada e limpeza a jusante ----------------------------------
+# Retomada idempotente (design #6): specify é o caso crítico — re-rodá-lo recria a
+# branch e regenera o spec.md, apagando as edições do clarify. Por isso specify
+# pula se o spec.md JÁ EXISTE, mesmo sem marcador. Os demais pulam por marcador.
+should_skip() {  # step  is_done(sim|nao)  artifact(sim|nao|na) → sim|nao
+  case "${1:-}" in
+    specify)
+      if [ "${2:-nao}" = sim ] || [ "${3:-na}" = sim ]; then printf sim; else printf nao; fi ;;
+    *)
+      if [ "${2:-nao}" = sim ]; then printf sim; else printf nao; fi ;;
+  esac
+}
+
+# --from limpa os marcadores do passo e de tudo a jusante. Esta função pura decide,
+# por linha do state, se ela sobrevive: linha que não é `done=` sempre sobrevive;
+# `done=<s>` sobrevive só se <s> NÃO está em steps_from(from).
+state_keep_line() {  # linha  from-step → rc 0 se a linha sobrevive
+  case "${1:-}" in
+    done=*) ;;
+    *) return 0 ;;
+  esac
+  local s="${1#done=}" f d
+  for d in $(steps_from "${2:-}"); do
+    [ "$d" = "$s" ] && return 1
+  done
+  return 0
+}
+
+# Impuras: o state é key=value, uma por linha, em $STATE_FILE.
+state_mark_done() { printf 'done=%s\n' "${1:-}" >> "$STATE_FILE"; }
+state_is_done()   { grep -qxF "done=${1:-}" "$STATE_FILE" 2>/dev/null; }
+state_get()       { grep -m1 "^${1:-}=" "$STATE_FILE" 2>/dev/null | sed "s/^${1:-}=//"; }
+state_set() {  # chave valor — substitui a linha se existe, senão anexa
+  local k="${1:-}" v="${2:-}" tmp
+  tmp="$(mktemp)"
+  grep -v "^${k}=" "$STATE_FILE" 2>/dev/null > "$tmp" || true
+  printf '%s=%s\n' "$k" "$v" >> "$tmp"
+  mv -- "$tmp" "$STATE_FILE"
+}
+state_clear_from() {  # from-step — apaga done= do passo e a jusante
+  local from="${1:-}" tmp line
+  [ -f "$STATE_FILE" ] || return 0
+  tmp="$(mktemp)"
+  while IFS= read -r line || [ -n "$line" ]; do
+    state_keep_line "$line" "$from" && printf '%s\n' "$line" >> "$tmp"
+  done < "$STATE_FILE"
+  mv -- "$tmp" "$STATE_FILE"
+}
+
 # --- Auto-teste embutido ---------------------------------------------------
 
 # --- Fixtures do classificador do analyze (Task 4) --------------------------
@@ -322,6 +371,7 @@ next_ready_str() { if next_ready "${1:-}"; then printf 'sim'; else printf 'nao';
 is_stack_finding_str() { if is_stack_finding "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
 env_resolve_check_prd() { SPECKIT_E2E_CHECK_PRD="${1:-}" resolve_check_prd; }
 cost_exceeded_str() { if cost_exceeded "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
+state_keep_line_str() { if state_keep_line "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
 
 self_test() {
   # As Tasks 2–7 penduram asserções aqui.
@@ -403,6 +453,20 @@ self_test() {
   assert_out "cost_exceeded igual ao teto não estoura" nao cost_exceeded_str 2.0 2.0
   assert_out "gate abaixo do teto confirma"     confirma   gate_action 0
   assert_out "gate no teto aborta"              aborta     gate_action 3
+
+  # --- Task 7: estado, retomada idempotente, limpeza do --from ---
+  assert_out "specify pula se o spec.md existe, mesmo sem done" sim should_skip specify nao sim
+  assert_out "specify pula se done, mesmo sem artefato"         sim should_skip specify sim nao
+  assert_out "specify NÃO pula se nem done nem artefato"        nao should_skip specify nao nao
+  assert_out "plan pula só por done"                            sim should_skip plan sim na
+  assert_out "plan NÃO pula sem done, mesmo com artefato"       nao should_skip plan nao sim
+  assert_out "trace pula só por done"                           sim should_skip trace sim na
+  assert_out "trace NÃO pula sem done"                          nao should_skip trace nao na
+  # A limpeza do --from: done= de passo a jusante do from NÃO sobrevive; a montante sobrevive.
+  assert_out "done a montante do from sobrevive"  sim state_keep_line_str 'done=specify' plan-prompt
+  assert_out "done do próprio from NÃO sobrevive" nao state_keep_line_str 'done=plan-prompt' plan-prompt
+  assert_out "done a jusante do from NÃO sobrevive" nao state_keep_line_str 'done=tasks' plan-prompt
+  assert_out "linha que não é done= sobrevive"    sim state_keep_line_str 'branch=specs/003-x' plan-prompt
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
