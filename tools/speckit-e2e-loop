@@ -811,6 +811,14 @@ run_clarify() {
   return 0
 }
 
+# --- Passo de trace (reconcilia o canon do produto) ------------------------
+# One-shot: injeta /zion-prd-trace (step_initial, Task 10), reconcilia e encerra.
+# A mutação do canon (PRD §12, backlog, architecture.md) fica no diff único — A2
+# nunca commita, máximo de revisão (design #5/#10).
+handle_turn_trace() {  # texto do turno
+  STEP_OUTCOME=completo
+}
+
 # --- Auto-teste embutido ---------------------------------------------------
 
 # --- Fixtures do classificador do analyze (Task 4) --------------------------
@@ -1208,6 +1216,12 @@ self_test() {
   assert_out "clarify rc 0 vira completo"  completo clarify_outcome 0
   assert_out "clarify rc 1 vira parada"    parada   clarify_outcome 1
   assert_out "clarify rc 2 vira parada"    parada   clarify_outcome 2
+
+  # --- Task 12: passo de trace (handle_turn_trace) ---
+  STEP_OUTCOME=""; QUIET=1
+  handle_turn_trace 'reconciliei a §12, o backlog e o architecture.md' >/dev/null
+  assert_out "trace fecha no result" completo printf '%s' "$STEP_OUTCOME"
+  QUIET=0
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
