@@ -112,6 +112,38 @@ step_type() {  # name → bridge|speckit|clarify|trace|unknown
   esac
 }
 
+# --- Leitores do file-drop (funções puras) ---------------------------------
+# next.txt: o comando /speckit.* que a ponte gravou. Válido = existe, não-vazio,
+# 1ª linha começa com /speckit. — daí ler o conteúdo INTEIRO (o prompt do
+# specify/plan é prosa longa e pode ter várias linhas). Ausente/vazio/inválido →
+# vazio, que é a falha DETECTÁVEL do design (não um parser que pega string errada
+# em silêncio).
+read_next() {  # file → comando inteiro se válido, senão vazio
+  local first
+  [ -f "${1:-}" ] || return 0
+  [ -s "${1:-}" ] || return 0
+  first="$(head -n1 -- "$1" 2>/dev/null)"
+  case "$first" in
+    /speckit.*) cat -- "$1" ;;
+    *)          : ;;
+  esac
+  return 0
+}
+
+# O next.txt dobra como sinal de "ponte terminou": após cada `result`, se
+# read_next não é vazio, o passo de ponte está feito (design §Sessão e extração).
+next_ready() {  # file → rc 0 se read_next não é vazio
+  [ -n "$(read_next "${1:-}")" ]
+}
+
+# signal.txt: OK | SUFFICIENCY_STOP. Âncora `^…$` — o sinal ocupa a linha inteira,
+# não conta citado em prosa. tail -n1: se houver mais de um, o último vence.
+read_signal() {  # file → OK|SUFFICIENCY_STOP|vazio
+  [ -f "${1:-}" ] || return 0
+  grep -oE '^(OK|SUFFICIENCY_STOP)$' -- "$1" 2>/dev/null | tail -n1
+  return 0
+}
+
 # --- Arcabouço de teste (copiado verbatim do speckit-clarify-loop) ----------
 ST_FAIL=0
 # Contador de casos: cresce sozinho a cada asserção. O literal que ele substitui
@@ -152,9 +184,12 @@ assert_emit() {  # descrição  esperado  comando…
 # --- Adaptadores de teste (junto de self_test) -----------------------------
 # step_valid responde por status de saída, assert_out compara stdout.
 step_valid_str() { if step_valid "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
+next_ready_str() { if next_ready "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
 
 self_test() {
   # As Tasks 2–7 penduram asserções aqui.
+  local st_dir
+  st_dir="$(mktemp -d "${TMPDIR:-/tmp}/speckit-e2e-loop-fx.XXXXXX")"
 
   # --- Task 2: máquina de estados dos 8 passos ---
   assert_out "specify-prompt é passo válido"   sim step_valid_str specify-prompt
@@ -174,6 +209,32 @@ self_test() {
   assert_out "tipo de analyze é speckit"         speckit step_type analyze
   assert_out "tipo de clarify é clarify"         clarify step_type clarify
   assert_out "tipo de trace é trace"             trace   step_type trace
+
+  # --- Task 3: leitores de extração e sinal ---
+  # Fixtures de arquivo do leitor de extração/sinal.
+  local st_next_ok="$st_dir/next-ok.txt" st_next_multi="$st_dir/next-multi.txt"
+  local st_next_bad="$st_dir/next-bad.txt" st_next_empty="$st_dir/next-empty.txt"
+  local st_sig_ok="$st_dir/sig-ok.txt" st_sig_stop="$st_dir/sig-stop.txt"
+  printf '/speckit.tasks\n' > "$st_next_ok"
+  printf '/speckit.specify "faça a spec do preview\ncom resultado observável X"\n' > "$st_next_multi"
+  printf 'blah não é comando\n' > "$st_next_bad"
+  : > "$st_next_empty"
+  printf 'OK\n' > "$st_sig_ok"
+  printf 'SUFFICIENCY_STOP\n' > "$st_sig_stop"
+
+  assert_out "next válido de uma linha é lido inteiro" '/speckit.tasks' read_next "$st_next_ok"
+  assert_out "next multi-linha é lido inteiro" \
+    "$(printf '/speckit.specify "faça a spec do preview\ncom resultado observável X"')" \
+    read_next "$st_next_multi"
+  assert_out "next que não começa com /speckit. é vazio" '' read_next "$st_next_bad"
+  assert_out "next vazio é vazio"       '' read_next "$st_next_empty"
+  assert_out "next ausente é vazio"     '' read_next "$st_dir/nao-existe.txt"
+  assert_out "next_ready sim quando válido"  sim next_ready_str "$st_next_ok"
+  assert_out "next_ready nao quando inválido" nao next_ready_str "$st_next_bad"
+  assert_out "sinal OK é lido"               'OK'               read_signal "$st_sig_ok"
+  assert_out "sinal SUFFICIENCY_STOP é lido" 'SUFFICIENCY_STOP' read_signal "$st_sig_stop"
+  assert_out "sinal ausente é vazio"         '' read_signal "$st_dir/nao-existe.txt"
+  assert_out "sinal com lixo não casa"       '' read_signal "$st_next_bad"
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
