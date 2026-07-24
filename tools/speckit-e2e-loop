@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# speckit-e2e-loop — orquestra a spec inteira do backlog até "pronta para codar",
+# encadeando os 8 passos que cruzam a fronteira harness↔Spec Kit, cada um em
+# sessão limpa. Irmã do speckit-clarify-loop; reusa a invariante e o padrão dele.
+#
+# Invariante: um passo = um processo `claude`. O término do processo É o `/clear`.
+# Nunca usa --continue, --resume ou --dangerously-skip-permissions.
+#
+# Passos: specify-prompt → specify → clarify → plan-prompt → plan → tasks →
+#         analyze → trace. Hands-off até bater num achado curado (vazamento de
+#         stack, analyze crítico, clarify que não convergiu, guarda de suficiência
+#         do plan-prompt), e aí para e entrega ao humano.
+#
+# Uso:
+#   speckit-e2e-loop <slug> [--repo DIR] [--from PASSO] [--max-cost USD]
+#                           [--allow-dirty] [--dry-run] [--quiet] [--self-test]
+#
+# Exit: 0 completou até o trace (ou --self-test/--dry-run limpo)
+#       1 parou antes do trace (parada-por-achado ou aborto)
+#       2 erro de uso ou de ambiente
+#
+# Ferramenta pessoal, fora do canon do zion-build-prd. Checa as próprias
+# dependências no arranque.
+# Reinstalar após editar:  install -m 755 tools/speckit-e2e-loop ~/.local/bin/
+set -u
+
+SLUG=""
+REPO="$PWD"
+FROM=""
+MAX_COST=""
+ALLOW_DIRTY=0
+DRY_RUN=0
+QUIET=0
+
+# Teto de "confirma, siga" por sessão de ponte — nunca fica pendurado num gate
+# que se repete (design §Sessão e extração).
+GATE_MAX=3
+# Rede contra um passo que trava sem emitir `result`. Herdado do clarify-loop
+# (speckit-clarify-loop:133): 1800s é teto, não expectativa.
+STEP_TIMEOUT=1800
+
+LOG_ROOT=/tmp/speckit-e2e-loop
+STATE_DIR=""     # /tmp/speckit-e2e-loop/<slug> — definido no preflight
+STATE_FILE=""    # $STATE_DIR/state
+NEXT_FILE=""     # $STATE_DIR/next.txt
+SIGNAL_FILE=""   # $STATE_DIR/signal.txt
+CHECK_PRD=""     # resolvido na Task 5
+
+die() { printf 'speckit-e2e-loop: %s\n' "$1" >&2; exit "${2:-2}"; }
+
+usage() {
+  cat >&2 <<'EOF'
+uso: speckit-e2e-loop <slug> [--repo DIR] [--from PASSO] [--max-cost USD]
+                            [--allow-dirty] [--dry-run] [--quiet] [--self-test]
+
+  <slug>           slug da spec no docs/backlog.md (obrigatório)
+  --repo DIR       repo alvo (default: cwd)
+  --from PASSO     retoma de um passo, forçando re-execução e limpando os a jusante
+                   ∈ {specify-prompt, specify, clarify, plan-prompt, plan, tasks, analyze, trace}
+  --max-cost USD   teto global de custo somado; estourou, aborta
+  --allow-dirty    dispensa a exigência de working tree limpo
+  --dry-run        roda só o passo 1 (specify-prompt) sem Edit/Write; reporta o que capturaria
+  --quiet          cala a narração no stdout; os logs por passo e o resumo continuam
+  --self-test      roda os testes embutidos do núcleo puro e sai
+EOF
+  exit 2
+}
+
+need_deps() {
+  local missing="" c
+  for c in claude jq git mkfifo awk tail timeout sed grep cat head cp date mktemp; do
+    command -v "$c" >/dev/null 2>&1 || missing="$missing $c"
+  done
+  command -v speckit-clarify-loop >/dev/null 2>&1 \
+    || missing="$missing speckit-clarify-loop"
+  [ -z "$missing" ] || die "dependência ausente:$missing — instale antes de rodar"
+}
+
+# --- Arcabouço de teste (copiado verbatim do speckit-clarify-loop) ----------
+ST_FAIL=0
+# Contador de casos: cresce sozinho a cada asserção. O literal que ele substitui
+# era uma segunda verdade sobre o tamanho da suíte — acrescentar um teste e
+# esquecer de somar 1 não deixava rastro nenhum.
+ST_COUNT=0
+assert_out() {  # descrição  esperado  comando…
+  local desc="$1" want="$2"; shift 2
+  ST_COUNT=$((ST_COUNT + 1))
+  local got; got="$("$@")"
+  if [ "$got" = "$want" ]; then
+    printf 'ok: %s\n' "$desc"
+  else
+    printf 'FALHOU: %s\n  esperado: [%s]\n  veio:     [%s]\n' "$desc" "$want" "$got"
+    ST_FAIL=1
+  fi
+}
+
+# Irmão do assert_out para as funções COM estado. A diferença é só a captura:
+# `$(...)` roda em subshell, e a atribuição de globais dentro do handler morreria
+# ali. Redirecionar para arquivo mantém a chamada no shell corrente.
+assert_emit() {  # descrição  esperado  comando…
+  local desc="$1" want="$2"; shift 2
+  ST_COUNT=$((ST_COUNT + 1))
+  local tmp got
+  tmp="$(mktemp "${TMPDIR:-/tmp}/speckit-e2e-loop-st.XXXXXX")"
+  SECONDS=0
+  "$@" > "$tmp"
+  got="$(cat "$tmp")"; rm -f "$tmp"
+  if [ "$got" = "$want" ]; then
+    printf 'ok: %s\n' "$desc"
+  else
+    printf 'FALHOU: %s\n  esperado: [%s]\n  veio:     [%s]\n' "$desc" "$want" "$got"
+    ST_FAIL=1
+  fi
+}
+
+self_test() {
+  # As Tasks 2–7 penduram asserções aqui.
+  if [ "$ST_FAIL" -eq 0 ]; then
+    printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
+  fi
+  printf 'speckit-e2e-loop: self-test COM FALHAS (%d casos)\n' "$ST_COUNT" >&2; exit 1
+}
+
+# --- Parser de flags -------------------------------------------------------
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --repo)        [ $# -ge 2 ] || usage; REPO="$2"; shift 2 ;;
+    --from)        [ $# -ge 2 ] || usage; FROM="$2"; shift 2 ;;
+    --max-cost)    [ $# -ge 2 ] || usage; MAX_COST="$2"; shift 2 ;;
+    --allow-dirty) ALLOW_DIRTY=1; shift ;;
+    --dry-run)     DRY_RUN=1; shift ;;
+    --quiet)       QUIET=1; shift ;;
+    --self-test)   self_test ;;
+    -h|--help)     usage ;;
+    --*)           printf 'speckit-e2e-loop: flag desconhecida: %s\n' "$1" >&2; usage ;;
+    *)             [ -z "$SLUG" ] || { printf 'speckit-e2e-loop: slug repetido: %s\n' "$1" >&2; usage; }
+                   SLUG="$1"; shift ;;
+  esac
+done
+
+[ -n "$SLUG" ] || { printf 'speckit-e2e-loop: slug obrigatório\n' >&2; usage; }
+
+if [ -n "$MAX_COST" ]; then
+  case "$MAX_COST" in
+    ''|*[!0-9.]*|*.*.*) die "--max-cost exige um número (veio: $MAX_COST)" ;;
+  esac
+fi
+
+if [ -n "$FROM" ]; then
+  step_valid "$FROM" || die "--from inválido: $FROM (∈ $STEPS)"
+fi
+
+need_deps
+# preflight e main_loop entram nas Tasks 5/7/13; por ora o arquivo já roda
+# --self-test e valida flags.
