@@ -195,6 +195,37 @@ stack_findings() {  # check-prd-path  file → linhas de achado stack, ou vazio
   return 0
 }
 
+# --- Custo e teto de gate (funções puras) ----------------------------------
+add_cost() {  # a b → a+b com 6 casas
+  awk -v a="$1" -v b="$2" 'BEGIN{printf "%.6f", a+b}'
+}
+
+# total_cost_usd é ACUMULADO da sessão (speckit-clarify-loop:368-374): dentro de
+# um passo, o custo é o ÚLTIMO valor. Entre passos (cada um um processo/sessão
+# nova), o main_loop SOMA via add_cost.
+pick_cost() {  # linha-jsonl  custo-atual → custo do passo até aqui
+  local c
+  c="$(printf '%s' "${1:-}" | jq -r '.total_cost_usd // empty' 2>/dev/null)"
+  case "$c" in
+    ''|null) printf '%s' "${2:-0}" ;;
+    *)       printf '%s' "$c" ;;
+  esac
+  return 0
+}
+
+# Teto global somado (#9). ceiling vazio = sem limite. Estritamente maior: bater
+# o teto exato não aborta.
+cost_exceeded() {  # total  ceiling → rc 0 se total > ceiling
+  [ -n "${2:-}" ] || return 1
+  awk -v t="${1:-0}" -v c="$2" 'BEGIN{exit !(t > c)}'
+}
+
+# Teto de "confirma, siga" por sessão de ponte (design #1/§Sessão): nunca fica
+# pendurado num gate que se repete. Espelha o miss_action do clarify.
+gate_action() {  # nº de confirmações já injetadas → confirma|aborta
+  if [ "${1:-0}" -lt "$GATE_MAX" ]; then printf 'confirma'; else printf 'aborta'; fi
+}
+
 # --- Auto-teste embutido ---------------------------------------------------
 
 # --- Fixtures do classificador do analyze (Task 4) --------------------------
@@ -243,6 +274,10 @@ Everything is consistent between spec, plan and tasks.
 EOF
 )"
 
+# --- Fixtures de custo/permissão (Task 6, reusadas do speckit-clarify-loop) --
+FX_DENY_BASH='{"type":"result","is_error":false,"permission_denials":[{"tool_name":"Bash","tool_use_id":"toolu_01TX","tool_input":{"command":"grep -n '"'"'^#\\{1,4\\} '"'"' specs/001-cano-modelo-codigo/spec.md"}}]}'
+FX_RESULT='{"type":"result","is_error":false,"result":"prosa que NAO pode reaparecer","total_cost_usd":0.41}'
+
 # --- Arcabouço de teste (copiado verbatim do speckit-clarify-loop) ----------
 ST_FAIL=0
 # Contador de casos: cresce sozinho a cada asserção. O literal que ele substitui
@@ -286,6 +321,7 @@ step_valid_str() { if step_valid "${1:-}"; then printf 'sim'; else printf 'nao';
 next_ready_str() { if next_ready "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
 is_stack_finding_str() { if is_stack_finding "${1:-}"; then printf 'sim'; else printf 'nao'; fi; }
 env_resolve_check_prd() { SPECKIT_E2E_CHECK_PRD="${1:-}" resolve_check_prd; }
+cost_exceeded_str() { if cost_exceeded "${1:-}" "${2:-}"; then printf 'sim'; else printf 'nao'; fi; }
 
 self_test() {
   # As Tasks 2–7 penduram asserções aqui.
@@ -356,6 +392,17 @@ self_test() {
     "$PWD/scripts/check-prd.sh" \
     env_resolve_check_prd "$PWD/scripts/check-prd.sh"
   assert_out "override ausente não resolve" '' env_resolve_check_prd "/nao/existe/check-prd.sh"
+
+  # --- Task 6: custo, teto de custo, teto de gate ---
+  assert_out "add_cost soma com 6 casas"        '0.750000' add_cost 0.5 0.25
+  assert_out "pick_cost pega o total_cost_usd"  '0.41'     pick_cost "$FX_RESULT" '9.99'
+  assert_out "pick_cost sem custo preserva"     '2.50'     pick_cost "$FX_DENY_BASH" '2.50'
+  assert_out "cost_exceeded sem teto nunca estoura" nao    cost_exceeded_str 100 ''
+  assert_out "cost_exceeded abaixo do teto"     nao        cost_exceeded_str 1.0 2.0
+  assert_out "cost_exceeded acima do teto"      sim        cost_exceeded_str 2.5 2.0
+  assert_out "cost_exceeded igual ao teto não estoura" nao cost_exceeded_str 2.0 2.0
+  assert_out "gate abaixo do teto confirma"     confirma   gate_action 0
+  assert_out "gate no teto aborta"              aborta     gate_action 3
 
   if [ "$ST_FAIL" -eq 0 ]; then
     printf 'speckit-e2e-loop: self-test limpo (%d casos)\n' "$ST_COUNT"; exit 0
