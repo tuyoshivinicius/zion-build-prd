@@ -767,12 +767,14 @@ step_args() {  # step → preenche STEP_ARGS
   STEP_ARGS=()
   case "$(step_type "$1")" in
     bridge)
-      # O file-drop grava em $STATE_DIR (scratch em /tmp — FORA do cwd/repo). O
-      # padrão de path do Claude Code é gitignore-style: `//abs` ancora no
-      # filesystem, `/rel` seria relativo ao cwd. $STATE_DIR já começa com `/`, então
-      # o prefixo extra dá `//tmp/...` — âncora absoluta. Sem o `//`, o acceptEdits
-      # não cobre /tmp (fora do cwd) e o Write viraria negação silenciosa.
-      STEP_ARGS=( --allowedTools 'Read' 'Bash(*check-prd.sh*)' "Write(/$STATE_DIR/*)" ) ;;
+      # O file-drop grava em $STATE_DIR (scratch em /tmp — FORA do cwd/repo).
+      # CONFIRMADO empiricamente (2026-07-23, dry-run pago): sob --permission-mode
+      # acceptEdits, um allowedTools 'Write(<path>)' NÃO concede escrita fora do cwd
+      # — a Write ao next.txt era NEGADA (o modelo até tentou update-config para
+      # "add the directory to permissions"). O que concede é --add-dir: torna o
+      # scratch um diretório extra que o acceptEdits auto-aprova para edição. Read +
+      # Bash(check-prd) para a Fase 4 da ponte.
+      STEP_ARGS=( --add-dir "$STATE_DIR" --allowedTools 'Read' 'Bash(*check-prd.sh*)' ) ;;
     speckit)
       STEP_ARGS=( --allowedTools 'Bash(.specify/scripts/bash/*)' 'Read' 'Write' 'Edit' ) ;;
     trace)
@@ -1248,13 +1250,14 @@ self_test() {
   assert_out "trace fecha no result" completo printf '%s' "$STEP_OUTCOME"
   QUIET=0
 
-  # --- Fix do gap de Write no --dry-run (step_args) ---
-  # Com STATE_DIR=/tmp/sd e REPO=/tmp/rp: o file-drop precisa de âncora absoluta e
-  # o dry-run não pode nukar Write (nome nu removeria a ferramenta e mataria o
-  # file-drop). Verifica a construção dos args a custo zero; a SEMÂNTICA de
-  # permissão é confirmada na validação paga (Task 15).
-  assert_out "file-drop usa âncora absoluta // (com dry-run)"  sim args_has_exact 1 specify-prompt 'Write(//tmp/sd/*)'
-  assert_out "file-drop usa âncora absoluta // (sem dry-run)"  sim args_has_exact 0 specify-prompt 'Write(//tmp/sd/*)'
+  # --- Fix do file-drop + gap de Write no --dry-run (step_args) ---
+  # Com STATE_DIR=/tmp/sd e REPO=/tmp/rp. O file-drop escreve no scratch via
+  # --add-dir (confirmado pago: allowedTools 'Write(path)' não cobre fora do cwd).
+  # O dry-run nega o repo POR ESCOPO (nome nu removeria a ferramenta e mataria o
+  # file-drop). Verifica a construção dos args a custo zero.
+  assert_out "ponte adiciona o scratch via --add-dir (com dry-run)" sim args_has_exact 1 specify-prompt '--add-dir'
+  assert_out "ponte adiciona o scratch via --add-dir (sem dry-run)" sim args_has_exact 0 specify-prompt '--add-dir'
+  assert_out "o diretório do --add-dir é o STATE_DIR"          sim args_has_exact 0 specify-prompt '/tmp/sd'
   assert_out "dry-run NÃO usa Write nu (não nuka a ferramenta)" nao args_has_exact 1 specify-prompt 'Write'
   assert_out "dry-run nega Write do repo por escopo"           sim args_has_exact 1 specify-prompt 'Write(//tmp/rp/**)'
   assert_out "dry-run nega Edit do repo por escopo"            sim args_has_exact 1 specify-prompt 'Edit(//tmp/rp/**)'
