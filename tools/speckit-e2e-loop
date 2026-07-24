@@ -1229,6 +1229,171 @@ self_test() {
   printf 'speckit-e2e-loop: self-test COM FALHAS (%d casos)\n' "$ST_COUNT" >&2; exit 1
 }
 
+# --- Preflight -------------------------------------------------------------
+SPEC=""; BRANCH=""; WORK=""
+
+preflight() {
+  [ -d "$REPO" ] || die "repo não encontrado: $REPO"
+  REPO="$(cd "$REPO" && pwd)"
+  [ -d "$REPO/.specify" ] || die "não parece um repo Spec Kit (sem .specify/): $REPO"
+  [ -f "$REPO/docs/backlog.md" ] || die "sem docs/backlog.md em $REPO — rode /zion-prd-decompose antes"
+
+  git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 \
+    || die "repo alvo não é um repositório git: $REPO"
+  if [ "$ALLOW_DIRTY" -eq 0 ] && [ -n "$(git -C "$REPO" status --porcelain)" ]; then
+    die "working tree sujo em $REPO — commite ou descarte antes (ou passe --allow-dirty)"
+  fi
+
+  # O slug tem de existir no backlog (design: input = slug do backlog).
+  grep -qE "(^|[^a-z0-9-])$SLUG([^a-z0-9-]|\$)" "$REPO/docs/backlog.md" \
+    || die "slug '$SLUG' não encontrado em $REPO/docs/backlog.md"
+
+  CHECK_PRD="$(resolve_check_prd)" \
+    || die "check-prd.sh não resolvido — instale a harness (plugin) ou aponte \$SPECKIT_E2E_CHECK_PRD"
+
+  STATE_DIR="$LOG_ROOT/$SLUG"
+  mkdir -p "$STATE_DIR" || die "não consegui criar $STATE_DIR"
+  STATE_FILE="$STATE_DIR/state"; NEXT_FILE="$STATE_DIR/next.txt"; SIGNAL_FILE="$STATE_DIR/signal.txt"
+  [ -f "$STATE_FILE" ] || : > "$STATE_FILE"
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/speckit-e2e-loop.XXXXXX")" \
+    || die "não consegui criar diretório de trabalho"
+
+  # --from: força a re-execução a partir do passo e limpa os marcadores a jusante.
+  [ -z "$FROM" ] || state_clear_from "$FROM"
+}
+
+cleanup() { [ -n "$WORK" ] && rm -rf "$WORK"; }
+trap cleanup EXIT
+
+# --- Driver do laço --------------------------------------------------------
+# Resolve a branch/spec corrente pela MESMA fonte que o clarify e as skills usam,
+# quando ela já existe (após o passo 2).
+resolve_cursor() {  # seta BRANCH/SPEC se a branch de feature já existe; senão vazio
+  local prereq="$REPO/.specify/scripts/bash/check-prerequisites.sh" json
+  [ -f "$prereq" ] || return 0
+  json="$(cd "$REPO" && bash "$prereq" --json --paths-only 2>/dev/null)" || return 0
+  SPEC="$(printf '%s' "$json" | jq -r '.FEATURE_SPEC // empty' 2>/dev/null)"
+  BRANCH="$(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  return 0
+}
+
+# Artefato durável de um passo (para a retomada idempotente do should_skip).
+artifact_exists() {  # step → sim|nao|na
+  resolve_cursor
+  case "$1" in
+    specify) [ -n "$SPEC" ] && [ -f "$SPEC" ] && printf sim || printf nao ;;
+    plan)    [ -n "$SPEC" ] && [ -f "$(dirname "$SPEC")/plan.md" ]  && printf sim || printf nao ;;
+    tasks)   [ -n "$SPEC" ] && [ -f "$(dirname "$SPEC")/tasks.md" ] && printf sim || printf nao ;;
+    *)       printf na ;;
+  esac
+}
+
+main_loop() {
+  local total_cost=0 stop_reason="" rc=1 step done_flag skip art
+  local -a plan_steps
+  # --dry-run roda SÓ o passo 1 (design §Interface).
+  if [ "$DRY_RUN" -eq 1 ]; then plan_steps=( specify-prompt ); else plan_steps=( $STEPS ); fi
+
+  printf 'speckit-e2e-loop: %s\n  slug: %s\n' "$REPO" "$SLUG"
+  [ "$DRY_RUN" -eq 1 ] && printf '  modo: --dry-run (só o passo 1, sem Edit/Write)\n'
+  [ -z "$FROM" ] || printf '  from: %s (re-executa daqui, limpa a jusante)\n' "$FROM"
+
+  for step in "${plan_steps[@]}"; do
+    # Retomada idempotente: pula passo já feito (marcador) ou cujo artefato existe.
+    if [ "$DRY_RUN" -eq 0 ]; then
+      done_flag=nao; state_is_done "$step" && done_flag=sim
+      art="$(artifact_exists "$step")"
+      skip="$(should_skip "$step" "$done_flag" "$art")"
+      if [ "$skip" = sim ]; then
+        emit_rule "── passo $(step_index "$step")/8: $step — já feito, pulando ──"
+        continue
+      fi
+    fi
+
+    # Antes de um passo de ponte, limpa o file-drop anterior (não false-sinaliza).
+    if [ "$(step_type "$step")" = bridge ]; then : > "$NEXT_FILE"; : > "$SIGNAL_FILE"; fi
+
+    emit_rule ''
+    emit_rule "$(printf '── passo %s/8: %s ──' "$(step_index "$step")" "$step")"
+
+    if [ "$step" = clarify ]; then run_clarify; else run_step "$step"; fi
+
+    total_cost="$(add_cost "$total_cost" "$STEP_COST")"
+
+    # Abortos e paradas vindas do passo.
+    case "$STEP_OUTCOME" in
+      aborto)  stop_reason="aborto no passo $step — $STEP_ABORT"; rc=1; break ;;
+      parada)  stop_reason="parada no passo $step — $STEP_STOP_WHY"; rc=1; break ;;
+      indeterminada)
+        stop_reason="indeterminada no passo $step — turno inesperado (ver $STATE_DIR)"; rc=1; break ;;
+    esac
+
+    # --- Parada-por-achado avaliada pelo orquestrador (design §Protocolo) ---
+    # Vazamento de stack após o passo 1 (prompt do specify, em next.txt).
+    if [ "$step" = specify-prompt ]; then
+      local sf; sf="$(stack_findings "$CHECK_PRD" "$NEXT_FILE")"
+      if [ -n "$sf" ]; then
+        emit_note warn "vazamento de stack no prompt do specify:"; printf '%s\n' "$sf"
+        stop_reason="parada — vazamento de stack no prompt do specify (a stack vai no plan)"; rc=1; break
+      fi
+    fi
+    # Vazamento de stack após o passo 2 (spec.md gerado).
+    if [ "$step" = specify ]; then
+      resolve_cursor
+      if [ -n "$SPEC" ] && [ -f "$SPEC" ]; then
+        local sf2; sf2="$(stack_findings "$CHECK_PRD" "$SPEC")"
+        if [ -n "$sf2" ]; then
+          emit_note warn "vazamento de stack no spec.md gerado:"; printf '%s\n' "$sf2"
+          stop_reason="parada — vazamento de stack no spec.md (a stack vai no plan)"; rc=1; break
+        fi
+      fi
+    fi
+    # analyze crítico após o passo 7 (único classificador de prosa).
+    if [ "$step" = analyze ]; then
+      if [ "$(classify_analyze "$STEP_LAST_TEXT")" = critico ]; then
+        stop_reason="parada — /speckit.analyze reportou inconsistência crítica"; rc=1; break
+      fi
+      emit_note ok "analyze sem achado crítico — segue"
+    fi
+
+    # Passo concluído: marca no estado e checa o teto de custo.
+    state_mark_done "$step"
+    state_set cost "$total_cost"
+    if cost_exceeded "$total_cost" "$MAX_COST"; then
+      stop_reason="aborto — teto de custo estourado (US\$ $total_cost > US\$ $MAX_COST)"; rc=1; break
+    fi
+
+    # Chegou ao trace com sucesso: o laço completou.
+    [ "$step" = trace ] && { stop_reason="completo — spec pronta para codar (até o trace)"; rc=0; }
+  done
+
+  # --dry-run: o passo 1 rodou; reporta sem tocar canon.
+  if [ "$DRY_RUN" -eq 1 ] && [ -z "$stop_reason" ]; then
+    stop_reason="--dry-run: passo 1 rodado; comando capturado em $NEXT_FILE"; rc=0
+  fi
+  [ -n "$stop_reason" ] || { stop_reason="laço encerrou sem classificar (ver $STATE_DIR)"; rc=1; }
+
+  print_summary "$total_cost" "$stop_reason"
+  return "$rc"
+}
+
+print_summary() {  # total_cost  stop_reason
+  resolve_cursor
+  printf '\n—— resumo ——\n'
+  printf 'repo:     %s\n' "$REPO"
+  printf 'slug:     %s\n' "$SLUG"
+  printf 'branch:   %s\n' "${BRANCH:-(ainda não criada)}"
+  printf 'spec:     %s\n' "${SPEC:-(ainda não criada)}"
+  printf 'custo:    US$ %s (passos do e2e-loop; o clarify tem custo próprio)\n' "${1:-0}"
+  printf 'estado:   %s\n' "$STATE_DIR"
+  printf 'parada:   %s\n' "${2:-?}"
+  if [ -n "${BRANCH:-}" ] && [ "$DRY_RUN" -eq 0 ]; then
+    printf '\nrevisar:  git -C %s diff\n' "$REPO"
+    printf 'reverter: git -C %s checkout -- . && git -C %s branch -D %s\n' "$REPO" "$REPO" "$BRANCH"
+  fi
+  return 0
+}
+
 # --- Parser de flags -------------------------------------------------------
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -1258,6 +1423,8 @@ if [ -n "$FROM" ]; then
   step_valid "$FROM" || die "--from inválido: $FROM (∈ $STEPS)"
 fi
 
+# --- Costura final: deps → monitor → preflight → laço ----------------------
 need_deps
-# preflight e main_loop entram nas Tasks 5/7/13; por ora o arquivo já roda
-# --self-test e valida flags.
+mon_setup
+preflight
+main_loop
